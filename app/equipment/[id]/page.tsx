@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { use, useState } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
@@ -17,11 +17,12 @@ import {
 import { EQUIPMENT_DATA } from "@/lib/equipment-data";
 
 interface EquipmentDetailProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export default function EquipmentDetailPage({ params }: EquipmentDetailProps) {
-  const equipment = EQUIPMENT_DATA.find((item) => item.id === params.id);
+  const { id } = use(params);
+  const equipment = EQUIPMENT_DATA.find((item) => item.id === id);
   const [rentalPeriod, setRentalPeriod] = useState<"hourly" | "daily" | "weekly">("daily");
   const [quantity, setQuantity] = useState(1);
   const [duration, setDuration] = useState(1);
