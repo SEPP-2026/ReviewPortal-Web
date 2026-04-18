@@ -1,0 +1,100 @@
+# ============================================================
+# CI/CD Pipeline for ReviewPortal Frontend
+# ============================================================
+# Workflow:
+#   - Every push/PR to any branch  → Lint + Build check (CI)
+#   - Push to main                 → Lint + Build + Deploy to Azure (Production)
+#   - Push to develop              → Lint + Build + Deploy to Azure (Staging slot) [optional]
+# ============================================================
+
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+env:
+  NODE_VERSION: "22"
+  AZURE_WEBAPP_NAME: "reviewportal-frontend"
+
+# Cancel any in-progress runs for the same branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ──────────────────────────────────────────────────────
+  # Job 1: CI — Lint & Build
+  # Runs on every push and every pull request
+  # ──────────────────────────────────────────────────────
+  ci:
+    name: Lint & Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run linter
+        run: npm run lint
+
+      - name: Build application
+        run: npm run build
+        env:
+          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
+
+  # ──────────────────────────────────────────────────────
+  # Job 2: Deploy to Azure App Service (Production)
+  # Only runs on push to main (not on PRs)
+  # ──────────────────────────────────────────────────────
+  deploy-production:
+    name: Deploy to Production
+    needs: ci
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    environment:
+      name: production
+      url: https://reviewportal-frontend-dccvarataff4a8hq.southeastasia-01.azurewebsites.net
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build for production
+        run: npm run build
+        env:
+          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
+
+      # Next.js standalone output needs these files copied
+      - name: Prepare standalone package
+        run: |
+          cp -r .next/static .next/standalone/.next/static
+          cp -r public .next/standalone/public
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: .next/standalone
