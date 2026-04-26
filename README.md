@@ -2,7 +2,7 @@
 
 A modern Next.js 15 application built with React 19, TypeScript, and TailwindCSS 4.
 
-## 🚀 Tech Stack
+## Tech Stack
 
 ### Core
 - **Next.js** 15.5.9 (App Router)
@@ -75,7 +75,7 @@ frontend/
 
 ```
 
-## 🛠️ Getting Started
+## Getting Started
 
 ### Prerequisites
 - Node.js 18.17 or later
@@ -109,7 +109,7 @@ frontend/
 4. **Open your browser:**
    Navigate to [http://localhost:3000](http://localhost:3000)
 
-## 📝 Available Scripts
+## Available Scripts
 
 - `npm run dev` - Start development server
 - `npm run build` - Build for production
@@ -117,7 +117,7 @@ frontend/
 - `npm run lint` - Run ESLint
 - `npm run format` - Format code with Prettier
 
-## 🎨 Styling
+## Styling
 
 This project uses **TailwindCSS 4** with CSS variables for theming. The design system includes:
 
@@ -133,7 +133,7 @@ import { cn } from "@/lib/utils";
 <div className={cn("base-class", condition && "conditional-class")} />
 ```
 
-## 🔌 API Integration
+## API Integration
 
 The project includes a pre-configured API client for communicating with the .NET backend:
 
@@ -160,7 +160,7 @@ Use the app router API handlers to keep JWTs server-side. These routes set and r
 - `GET /api/auth/me` returns the current user
 - `GET/POST/PATCH/PUT/DELETE /api/backend/*` proxies to the .NET API and attaches the cookie token
 
-## 📦 State Management
+## State Management
 
 Using Zustand for state management:
 
@@ -178,7 +178,7 @@ export const useStore = create<Store>((set) => ({
 }));
 ```
 
-## 🧩 Adding UI Components
+## Adding UI Components
 
 This project follows the shadcn/ui pattern. To add components:
 
@@ -197,7 +197,7 @@ import { cn } from "@/lib/utils";
 // Define variants, create component...
 ```
 
-## 🔧 Configuration Files
+## Configuration Files
 
 - **next.config.ts** - Next.js configuration with image optimization
 - **tsconfig.json** - TypeScript compiler options
@@ -206,7 +206,7 @@ import { cn } from "@/lib/utils";
 - **.prettierrc** - Code formatting rules
 - **eslint.config.mjs** - Linting rules
 
-## 🚢 Deployment
+## Deployment
 
 ### Build for Production
 ```bash
@@ -219,18 +219,18 @@ npm run start
 vercel
 ```
 
-## 🤝 Contributing
+## Contributing
 
 1. Create a feature branch
 2. Make your changes
 3. Run linting and type checks
 4. Submit a pull request
 
-## 📄 License
+## License
 
 This project is part of the ReviewPortal system.
 
-## 🔗 Backend Integration
+## Backend Integration
 
 This frontend is designed to work with a **.NET backend** and **MySQL database**. Ensure your backend API is running and accessible at the URL specified in your environment variables.
 
@@ -248,7 +248,7 @@ const response = await apiClient.get("/user/profile", {
 });
 ```
 
-## 📚 Learn More
+## Learn More
 
 - [Next.js Documentation](https://nextjs.org/docs)
 - [React Documentation](https://react.dev)
