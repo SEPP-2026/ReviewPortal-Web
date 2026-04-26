@@ -1,6 +1,8 @@
 import { ApiError, ApiResponse } from "@/types/api";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL ||
+  "https://reviewportal-api-escdb3f2epg8eeha.southeastasia-01.azurewebsites.net/api";
 
 interface RequestOptions extends RequestInit {
   token?: string;

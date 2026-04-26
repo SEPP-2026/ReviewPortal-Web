@@ -152,6 +152,14 @@ const response = await apiClient.get("/protected", {
 });
 ```
 
+### Server-side authentication (recommended)
+Use the app router API handlers to keep JWTs server-side. These routes set and read an httpOnly cookie:
+
+- `POST /api/auth/login` (body: `{ email, password }`) sets the auth cookie
+- `POST /api/auth/logout` clears the auth cookie
+- `GET /api/auth/me` returns the current user
+- `GET/POST/PATCH/PUT/DELETE /api/backend/*` proxies to the .NET API and attaches the cookie token
+
 ## State Management
 
 Using Zustand for state management:

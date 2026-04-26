@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Menu, X, Phone, ChevronDown } from "lucide-react";
 
@@ -27,6 +27,52 @@ const NAV_LINKS = [
 export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const [userName, setUserName] = useState<string | null>(null);
+  const [isAuthResolved, setIsAuthResolved] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadUser = async () => {
+      try {
+        const response = await fetch("/api/auth/me");
+        if (!response.ok) {
+          if (isMounted) setUserName(null);
+          return;
+        }
+
+        const data = (await response.json()) as { name?: string };
+        if (isMounted) setUserName(data?.name || null);
+      } catch {
+        if (isMounted) setUserName(null);
+      } finally {
+        if (isMounted) setIsAuthResolved(true);
+      }
+    };
+
+    loadUser();
+
+    const handleAuthChange = () => {
+      loadUser();
+    };
+
+    window.addEventListener("auth:changed", handleAuthChange);
+
+    return () => {
+      isMounted = false;
+      window.removeEventListener("auth:changed", handleAuthChange);
+    };
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } finally {
+      document.cookie = "rp_auth=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+      setUserName(null);
+      window.dispatchEvent(new Event("auth:changed"));
+    }
+  };
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50">
@@ -45,13 +91,29 @@ export function Navbar() {
             </span>
           </div>
           <div className="hidden md:flex items-center gap-4 text-gray-300">
-            <Link href="/login" className="hover:text-accent transition-colors">
-              Login
-            </Link>
-            <span className="text-gray-600">|</span>
-            <Link href="/register" className="hover:text-accent transition-colors">
-              Register
-            </Link>
+            {isAuthResolved && userName ? (
+              <>
+                <span className="text-white">Hi, {userName}</span>
+                <span className="text-gray-600">|</span>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="hover:text-accent transition-colors"
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <>
+                <Link href="/login" className="hover:text-accent transition-colors">
+                  Login
+                </Link>
+                <span className="text-gray-600">|</span>
+                <Link href="/register" className="hover:text-accent transition-colors">
+                  Register
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -154,6 +216,39 @@ export function Navbar() {
                 </div>
               ))}
               <div className="mt-4 pt-4 border-t border-gray-200">
+                {isAuthResolved && userName ? (
+                  <div className="flex items-center justify-between pb-4">
+                    <span className="text-sm text-[#111111]">Hi, {userName}</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        handleLogout();
+                        setMobileMenuOpen(false);
+                      }}
+                      className="text-sm text-accent font-semibold"
+                    >
+                      Logout
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-3 pb-4 text-sm">
+                    <Link
+                      href="/login"
+                      className="text-[#111111] hover:text-accent transition-colors"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      Login
+                    </Link>
+                    <span className="text-gray-400">|</span>
+                    <Link
+                      href="/register"
+                      className="text-[#111111] hover:text-accent transition-colors"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      Register
+                    </Link>
+                  </div>
+                )}
                 <Link
                   href="/equipment"
                   className="block w-full bg-accent hover:bg-accent-dark text-black font-semibold px-6 py-3 rounded-lg text-center transition-colors duration-200"
