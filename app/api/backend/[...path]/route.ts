@@ -18,7 +18,8 @@ const normalizeApiBase = (baseUrl: string) => {
 const API_BASE_URL = normalizeApiBase(DEFAULT_API_URL);
 
 const forwardRequest = async (request: NextRequest, path: string) => {
-  const token = cookies().get(AUTH_COOKIE_NAME)?.value;
+  const cookieStore = await cookies();
+  const token = cookieStore.get(AUTH_COOKIE_NAME)?.value;
   const url = new URL(request.url);
   const targetUrl = `${API_BASE_URL}/${path}${url.search}`;
 
@@ -50,27 +51,36 @@ const forwardRequest = async (request: NextRequest, path: string) => {
   });
 };
 
+const resolvePath = async (context: {
+  params: Promise<Record<string, string | string[]>>;
+}) => {
+  const params = await context.params;
+  const rawPath = params.path;
+  if (!rawPath) return "";
+  return Array.isArray(rawPath) ? rawPath.join("/") : rawPath;
+};
+
 export const GET = async (
   request: NextRequest,
-  context: { params: { path: string[] } }
-) => forwardRequest(request, context.params.path.join("/"));
+  context: { params: Promise<Record<string, string | string[]>> }
+) => forwardRequest(request, await resolvePath(context));
 
 export const POST = async (
   request: NextRequest,
-  context: { params: { path: string[] } }
-) => forwardRequest(request, context.params.path.join("/"));
+  context: { params: Promise<Record<string, string | string[]>> }
+) => forwardRequest(request, await resolvePath(context));
 
 export const PUT = async (
   request: NextRequest,
-  context: { params: { path: string[] } }
-) => forwardRequest(request, context.params.path.join("/"));
+  context: { params: Promise<Record<string, string | string[]>> }
+) => forwardRequest(request, await resolvePath(context));
 
 export const PATCH = async (
   request: NextRequest,
-  context: { params: { path: string[] } }
-) => forwardRequest(request, context.params.path.join("/"));
+  context: { params: Promise<Record<string, string | string[]>> }
+) => forwardRequest(request, await resolvePath(context));
 
 export const DELETE = async (
   request: NextRequest,
-  context: { params: { path: string[] } }
-) => forwardRequest(request, context.params.path.join("/"));
+  context: { params: Promise<Record<string, string | string[]>> }
+) => forwardRequest(request, await resolvePath(context));
