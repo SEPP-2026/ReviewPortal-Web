@@ -66,7 +66,7 @@ jobs:
 
     environment:
       name: production
-      url: https://reviewportal-frontend-dccvarataff4a8hq.southeastasia-01.azurewebsites.net
+      url: https://reviewportal-frontend-dccvarataff4a8hg.southeastasia-01.azurewebsites.net
 
     steps:
       - name: Checkout code
