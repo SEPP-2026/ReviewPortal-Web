@@ -81,9 +81,9 @@ export function ModerationQueue() {
     };
   }, []);
 
-  const reviews = queue?.items ?? [];
-
   const summary = useMemo(() => {
+    const reviews = queue?.items ?? [];
+
     if (reviews.length === 0) {
       return {
         averageRating: 0,
@@ -104,7 +104,9 @@ export function ModerationQueue() {
       averageRating,
       oldestLabel: oldestReview ? formatSubmittedDate(oldestReview.createdDate) : "Recently",
     };
-  }, [reviews]);
+  }, [queue]);
+
+  const reviews = queue?.items ?? [];
 
   if (isLoading) {
     return (
