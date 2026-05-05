@@ -227,3 +227,16 @@ export const getToolReviews = (
 
   return backendFetch<BackendToolReviews>(`/tools/${toolId}/reviews${query}`);
 };
+
+export const getPendingModerationReviews = (
+  options: { page?: number; pageSize?: number } = {}
+) => {
+  const query = buildQuery({
+    page: options.page ?? 1,
+    pageSize: options.pageSize ?? 20,
+  });
+
+  return backendFetch<BackendPagedList<BackendReview>>(
+    `/admin/moderation/pending${query}`
+  );
+};
