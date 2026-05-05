@@ -24,10 +24,14 @@ const NAV_LINKS = [
   { name: "Contact", href: "/contact" },
 ];
 
+const STAFF_ROLES = new Set(["Admin", "Moderator"]);
+const ADMIN_LINK = { name: "Moderation Queue", href: "/admin/moderation", submenu: undefined };
+
 export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [userName, setUserName] = useState<string | null>(null);
+  const [userRole, setUserRole] = useState<string | null>(null);
   const [isAuthResolved, setIsAuthResolved] = useState(false);
 
   useEffect(() => {
@@ -41,10 +45,12 @@ export function Navbar() {
           return;
         }
 
-        const data = (await response.json()) as { name?: string };
+        const data = (await response.json()) as { name?: string; role?: string };
         if (isMounted) setUserName(data?.name || null);
+        if (isMounted) setUserRole(data?.role || null);
       } catch {
         if (isMounted) setUserName(null);
+        if (isMounted) setUserRole(null);
       } finally {
         if (isMounted) setIsAuthResolved(true);
       }
@@ -74,6 +80,9 @@ export function Navbar() {
     }
   };
 
+  const isStaff = userRole ? STAFF_ROLES.has(userRole) : false;
+  const navLinks = isStaff ? [...NAV_LINKS, ADMIN_LINK] : NAV_LINKS;
+
   return (
     <header className="fixed top-0 left-0 right-0 z-50">
       {/* Top Bar */}
@@ -94,6 +103,11 @@ export function Navbar() {
             {isAuthResolved && userName ? (
               <>
                 <span className="text-white">Hi, {userName}</span>
+                {isStaff && (
+                  <span className="rounded-full border border-accent/30 bg-accent/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-accent">
+                    Staff
+                  </span>
+                )}
                 <span className="text-gray-600">|</span>
                 <button
                   type="button"
@@ -135,7 +149,7 @@ export function Navbar() {
 
             {/* Desktop Navigation */}
             <div className="hidden lg:flex items-center gap-8">
-              {NAV_LINKS.map((link) => (
+              {navLinks.map((link) => (
                 <div
                   key={link.name}
                   className="relative"
@@ -190,7 +204,7 @@ export function Navbar() {
           {/* Mobile Navigation */}
           {mobileMenuOpen && (
             <div className="lg:hidden border-t border-gray-200 py-4">
-              {NAV_LINKS.map((link) => (
+              {navLinks.map((link) => (
                 <div key={link.name}>
                   <Link
                     href={link.href}
