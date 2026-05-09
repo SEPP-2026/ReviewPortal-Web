@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { EquipmentCatalogue } from "@/components/equipment";
+import { Spinner } from "@/components/ui/spinner";
 
 export const metadata = {
   title: "Equipment Catalogue | Shelton Tool-Hire",
@@ -11,9 +12,7 @@ export default function EquipmentPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-[#F2F2F2] flex items-center justify-center">
-          <div className="text-[#111111]">Loading...</div>
-        </div>
+        <Spinner fullHeight text="Loading equipment catalogue..." />
       }
     >
       <EquipmentCatalogue />

@@ -15,6 +15,7 @@ import {
   Calculator,
   MessageCircle,
 } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
 import {
   calculateRental,
   type BackendReview,
@@ -246,7 +247,9 @@ export default function EquipmentDetailPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[#F2F2F2] pt-40 pb-20">
-        <div className="max-w-7xl mx-auto px-4 text-[#666666]">Loading tool details...</div>
+        <div className="max-w-7xl mx-auto px-4">
+          <Spinner size="md" text="Loading tool details..." />
+        </div>
       </div>
     );
   }
@@ -668,7 +671,7 @@ export default function EquipmentDetailPage() {
                     disabled={isLoadingMoreReviews}
                     className="px-8 py-3 bg-white border border-gray-200 rounded-xl text-[#111111] hover:border-accent hover:text-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {isLoadingMoreReviews ? "Loading..." : "Load More Reviews"}
+                    {isLoadingMoreReviews ? <Spinner size="sm" /> : "Load More Reviews"}
                   </button>
                 </div>
               )}
