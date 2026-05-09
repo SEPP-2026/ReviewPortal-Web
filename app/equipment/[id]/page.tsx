@@ -86,6 +86,14 @@ export default function EquipmentDetailPage() {
 
   const [tool, setTool] = useState<BackendTool | null>(null);
   const [reviews, setReviews] = useState<BackendReview[]>([]);
+  const [reviewsMeta, setReviewsMeta] = useState<{
+    avgRating: number | null;
+    totalApproved: number;
+    emptyMessage: string | null;
+    hasNextPage: boolean;
+  } | null>(null);
+  const [reviewPage, setReviewPage] = useState(1);
+  const [isLoadingMoreReviews, setIsLoadingMoreReviews] = useState(false);
   const [relatedTools, setRelatedTools] = useState<BackendToolSummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -128,6 +136,13 @@ export default function EquipmentDetailPage() {
 
         setTool(toolData);
         setReviews(reviewData.reviews.items);
+        setReviewsMeta({
+          avgRating: reviewData.averageOverallRating,
+          totalApproved: reviewData.totalApprovedReviews,
+          emptyMessage: reviewData.emptyStateMessage,
+          hasNextPage: reviewData.reviews.hasNextPage,
+        });
+        setReviewPage(1);
         setRelatedTools(relatedData.items.filter((item) => item.id !== toolData.id).slice(0, 4));
       } catch (loadError) {
         if (!isMounted) return;
@@ -188,6 +203,24 @@ export default function EquipmentDetailPage() {
       isMounted = false;
     };
   }, [tool, rentalPeriod, duration, quantity]);
+
+  const loadMoreReviews = async () => {
+    if (!tool || isLoadingMoreReviews) return;
+    setIsLoadingMoreReviews(true);
+    try {
+      const nextPage = reviewPage + 1;
+      const moreData = await getToolReviews(toolId, { page: nextPage, pageSize: 6 });
+      setReviews((prev) => [...prev, ...moreData.reviews.items]);
+      setReviewsMeta((prev) =>
+        prev ? { ...prev, hasNextPage: moreData.reviews.hasNextPage } : null
+      );
+      setReviewPage(nextPage);
+    } catch {
+      // silently ignore load-more failures
+    } finally {
+      setIsLoadingMoreReviews(false);
+    }
+  };
 
   const features = useMemo(() => parseFeatureList(tool?.specialNotes ?? null), [tool]);
 
@@ -519,45 +552,131 @@ export default function EquipmentDetailPage() {
         </div>
 
         <div className="mt-12">
-          <h2 className="text-2xl font-bold text-[#111111] mb-6">Approved Reviews</h2>
-          {reviews.length > 0 ? (
-            <div className="space-y-4">
-              {reviews.map((review) => (
-                <div
-                  key={review.id}
-                  className="bg-white border border-gray-200 rounded-xl p-5"
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="font-semibold text-[#111111]">{review.reviewerName}</p>
-                    <p className="text-xs text-[#666666]">{formatDate(review.createdDate)}</p>
-                  </div>
-                  <div className="flex items-center gap-1 mb-2">
-                    {[...Array(5)].map((_, index) => (
-                      <Star
-                        key={index}
-                        className={`w-4 h-4 ${
-                          index < Math.round(review.overallRating)
-                            ? "text-accent fill-accent"
-                            : "text-gray"
-                        }`}
-                      />
-                    ))}
-                    <span className="text-sm text-[#666666] ml-2">
-                      {review.overallRating.toFixed(1)}
-                    </span>
-                  </div>
-                  <p className="text-[#666666]">{review.reviewText}</p>
-                  {review.comments.length > 0 && (
-                    <p className="text-xs text-[#666666] mt-3 flex items-center gap-1">
-                      <MessageCircle className="w-3 h-3" />
-                      {review.comments.length} comment(s)
-                    </p>
-                  )}
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-[#111111]">Customer Reviews</h2>
+            {reviewsMeta && reviewsMeta.totalApproved > 0 && (
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
+                  {[...Array(5)].map((_, i) => (
+                    <Star
+                      key={i}
+                      className={`w-5 h-5 ${
+                        i < Math.floor(reviewsMeta.avgRating ?? 0)
+                          ? "text-accent fill-accent"
+                          : "text-gray-300"
+                      }`}
+                    />
+                  ))}
                 </div>
-              ))}
-            </div>
+                <span className="font-bold text-[#111111]">
+                  {(reviewsMeta.avgRating ?? 0).toFixed(1)}
+                </span>
+                <span className="text-[#666666] text-sm">
+                  ({reviewsMeta.totalApproved} {reviewsMeta.totalApproved === 1 ? "review" : "reviews"})
+                </span>
+              </div>
+            )}
+          </div>
+
+          {reviews.length > 0 ? (
+            <>
+              <div className="space-y-5">
+                {reviews.map((review) => (
+                  <div
+                    key={review.id}
+                    className="bg-white border border-gray-200 rounded-2xl p-6"
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <div>
+                        <p className="font-semibold text-[#111111]">{review.reviewerName}</p>
+                        <p className="text-xs text-[#666666] mt-0.5">{formatDate(review.createdDate)}</p>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <div className="flex items-center gap-0.5">
+                          {[...Array(5)].map((_, index) => (
+                            <Star
+                              key={index}
+                              className={`w-4 h-4 ${
+                                index < Math.round(review.overallRating)
+                                  ? "text-accent fill-accent"
+                                  : "text-gray-300"
+                              }`}
+                            />
+                          ))}
+                        </div>
+                        <span className="text-sm font-semibold text-[#111111]">
+                          {review.overallRating.toFixed(1)}
+                        </span>
+                      </div>
+                    </div>
+
+                    <p className="text-[#444444] leading-relaxed mb-4">{review.reviewText}</p>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-4 p-3 bg-[#F8F8F8] rounded-xl">
+                      {([
+                        { label: "Equipment", value: review.equipmentRating },
+                        { label: "Service", value: review.customerServiceRating },
+                        { label: "Tech Support", value: review.technicalSupportRating },
+                        { label: "After Sales", value: review.afterSalesRating },
+                        { label: "Value", value: review.valueForMoneyRating },
+                      ] as { label: string; value: number }[]).map(({ label, value }) => (
+                        <div key={label} className="text-center">
+                          <p className="text-xs text-[#666666] mb-1">{label}</p>
+                          <div className="flex items-center justify-center gap-0.5">
+                            {[...Array(5)].map((_, i) => (
+                              <Star
+                                key={i}
+                                className={`w-3 h-3 ${
+                                  i < value ? "text-accent fill-accent" : "text-gray-300"
+                                }`}
+                              />
+                            ))}
+                          </div>
+                          <p className="text-xs font-medium text-[#111111] mt-0.5">{value}/5</p>
+                        </div>
+                      ))}
+                    </div>
+
+                    {review.companyResponse && (
+                      <div className="border-l-4 border-accent bg-accent/5 rounded-r-xl p-4 mt-4">
+                        <p className="text-xs font-semibold text-accent mb-1">
+                          Response from {review.companyResponse.staffName}
+                        </p>
+                        <p className="text-sm text-[#444444] leading-relaxed">
+                          {review.companyResponse.responseText}
+                        </p>
+                        <p className="text-xs text-[#666666] mt-2">
+                          {formatDate(review.companyResponse.createdDate)}
+                        </p>
+                      </div>
+                    )}
+
+                    {review.comments.length > 0 && (
+                      <p className="text-xs text-[#666666] mt-3 flex items-center gap-1">
+                        <MessageCircle className="w-3 h-3" />
+                        {review.comments.length} comment{review.comments.length !== 1 ? "s" : ""}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {reviewsMeta?.hasNextPage && (
+                <div className="mt-6 text-center">
+                  <button
+                    onClick={loadMoreReviews}
+                    disabled={isLoadingMoreReviews}
+                    className="px-8 py-3 bg-white border border-gray-200 rounded-xl text-[#111111] hover:border-accent hover:text-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isLoadingMoreReviews ? "Loading..." : "Load More Reviews"}
+                  </button>
+                </div>
+              )}
+            </>
           ) : (
-            <p className="text-[#666666]">No approved reviews yet for this tool.</p>
+            <p className="text-[#666666]">
+              {reviewsMeta?.emptyMessage ?? "No approved reviews yet for this tool."}
+            </p>
           )}
         </div>
 
