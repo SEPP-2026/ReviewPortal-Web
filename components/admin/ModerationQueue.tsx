@@ -9,6 +9,7 @@ import {
   ShieldCheck,
   UserRound,
 } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
 import {
   getPendingModerationReviews,
   type BackendPagedList,
@@ -111,10 +112,7 @@ export function ModerationQueue() {
   if (isLoading) {
     return (
       <div className="rounded-3xl border border-white/60 bg-white p-8 shadow-[0_20px_60px_rgba(15,23,42,0.08)]">
-        <div className="flex items-center gap-3 text-slate-500">
-          <Clock3 className="h-5 w-5 animate-pulse text-amber-500" />
-          Loading moderation queue...
-        </div>
+        <Spinner size="md" text="Loading moderation queue..." />
       </div>
     );
   }

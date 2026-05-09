@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { Star, ThumbsUp, MessageCircle, Filter } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
 import {
   getCategories,
   getToolReviews,
@@ -251,7 +252,9 @@ export default function ReviewsPage() {
         )}
 
         {isLoading ? (
-          <div className="text-center py-20 text-[#666666]">Loading reviews...</div>
+          <div className="py-20">
+            <Spinner size="md" text="Loading reviews..." />
+          </div>
         ) : (
           <div className="space-y-6">
             {filteredReviews.map((review) => (

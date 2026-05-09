@@ -12,6 +12,7 @@ import {
   Grid3X3,
   List,
 } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
 import { useDebounce } from "@/hooks/use-debounce";
 import {
   type BackendToolSummary,
@@ -427,7 +428,9 @@ export function EquipmentCatalogue() {
         )}
 
         {isLoading ? (
-          <div className="text-center py-20 text-[#666666]">Loading tools...</div>
+          <div className="py-20">
+            <Spinner size="md" text="Loading tools..." />
+          </div>
         ) : items.length > 0 ? (
           <div
             className={
