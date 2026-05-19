@@ -11,9 +11,6 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const apiBaseUrl =
-    process.env.NEXT_PUBLIC_API_URL ||
-    "https://reviewportal-api-escdb3f2epg8eeha.southeastasia-01.azurewebsites.net/api";
 
   const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -21,7 +18,7 @@ export default function LoginPage() {
     setErrorMessage(null);
 
     try {
-      const response = await fetch(`${apiBaseUrl}/auth/login`, {
+      const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -33,19 +30,10 @@ export default function LoginPage() {
         return;
       }
 
-      if (data?.token) {
-        const expires = data.expiry
-          ? `; expires=${new Date(data.expiry).toUTCString()}`
-          : "";
-        const secure =
-          typeof window !== "undefined" && window.location.protocol === "https:"
-            ? "; secure"
-            : "";
-        document.cookie = `rp_auth=${data.token}; path=/; samesite=lax${secure}${expires}`;
-        window.dispatchEvent(new Event("auth:changed"));
-      }
+      window.dispatchEvent(new Event("auth:changed"));
 
-      router.push("/");
+      const nextParam = new URLSearchParams(window.location.search).get("next");
+      router.push(nextParam || "/");
       router.refresh();
     } catch {
       setErrorMessage("Unable to connect. Please try again.");
@@ -124,12 +112,23 @@ export default function LoginPage() {
               </Button>
             </form>
 
-            <p className="text-sm text-gray mt-6">
-              New here?{" "}
-              <Link className="text-accent font-semibold" href="/register">
-                Create an account
-              </Link>
-            </p>
+            <div className="mt-6 flex flex-col gap-2 text-sm text-gray">
+              <span>
+                New here?{" "}
+                <Link className="text-accent font-semibold" href="/register">
+                  Create an account
+                </Link>
+              </span>
+              <span>
+                Forgot your password?{" "}
+                <Link
+                  className="text-accent font-semibold"
+                  href="/forgot-password"
+                >
+                  Reset it here
+                </Link>
+              </span>
+            </div>
           </div>
         </div>
       </div>

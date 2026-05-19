@@ -25,7 +25,25 @@ const NAV_LINKS = [
 ];
 
 const STAFF_ROLES = new Set(["Admin", "Moderator"]);
-const ADMIN_LINK = { name: "Moderation Queue", href: "/admin/moderation", submenu: undefined };
+
+const ADMIN_LINK = {
+  name: "Admin",
+  href: "/admin",
+  submenu: [
+    { name: "Dashboard", href: "/admin" },
+    { name: "Moderation Queue", href: "/admin/moderation" },
+    { name: "Manage Tools", href: "/admin/tools" },
+    { name: "Manage Categories", href: "/admin/categories" },
+  ],
+};
+
+const MODERATOR_LINK = {
+  name: "Admin",
+  href: "/admin/moderation",
+  submenu: [
+    { name: "Moderation Queue", href: "/admin/moderation" },
+  ],
+};
 
 export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -81,7 +99,9 @@ export function Navbar() {
   };
 
   const isStaff = userRole ? STAFF_ROLES.has(userRole) : false;
-  const navLinks = isStaff ? [...NAV_LINKS, ADMIN_LINK] : NAV_LINKS;
+  const isAdmin = userRole === "Admin";
+  const adminLink = isAdmin ? ADMIN_LINK : MODERATOR_LINK;
+  const navLinks = isStaff ? [...NAV_LINKS, adminLink] : NAV_LINKS;
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50">
@@ -108,6 +128,20 @@ export function Navbar() {
                     Staff
                   </span>
                 )}
+                <span className="text-gray-600">|</span>
+                <Link
+                  href="/account/reviews"
+                  className="hover:text-accent transition-colors"
+                >
+                  My reviews
+                </Link>
+                <span className="text-gray-600">|</span>
+                <Link
+                  href="/account/change-password"
+                  className="hover:text-accent transition-colors"
+                >
+                  Account
+                </Link>
                 <span className="text-gray-600">|</span>
                 <button
                   type="button"
@@ -231,18 +265,34 @@ export function Navbar() {
               ))}
               <div className="mt-4 pt-4 border-t border-gray-200">
                 {isAuthResolved && userName ? (
-                  <div className="flex items-center justify-between pb-4">
-                    <span className="text-sm text-[#111111]">Hi, {userName}</span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        handleLogout();
-                        setMobileMenuOpen(false);
-                      }}
-                      className="text-sm text-accent font-semibold"
+                  <div className="space-y-2 pb-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-[#111111]">Hi, {userName}</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          handleLogout();
+                          setMobileMenuOpen(false);
+                        }}
+                        className="text-sm text-accent font-semibold"
+                      >
+                        Logout
+                      </button>
+                    </div>
+                    <Link
+                      href="/account/reviews"
+                      className="block text-sm text-[#666666] hover:text-accent"
+                      onClick={() => setMobileMenuOpen(false)}
                     >
-                      Logout
-                    </button>
+                      My reviews
+                    </Link>
+                    <Link
+                      href="/account/change-password"
+                      className="block text-sm text-[#666666] hover:text-accent"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      Change password
+                    </Link>
                   </div>
                 ) : (
                   <div className="flex items-center gap-3 pb-4 text-sm">

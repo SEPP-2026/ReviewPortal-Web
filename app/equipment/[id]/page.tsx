@@ -13,9 +13,11 @@ import {
   Shield,
   Phone,
   Calculator,
-  MessageCircle,
 } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
+import { ReviewSubmitForm } from "@/components/equipment/ReviewSubmitForm";
+import { ReviewItem } from "@/components/equipment/ReviewItem";
+import { useCurrentUser } from "@/hooks/use-current-user";
 import {
   calculateRental,
   type BackendReview,
@@ -84,6 +86,7 @@ const createRentalWindow = (
 export default function EquipmentDetailPage() {
   const params = useParams<{ id: string }>();
   const toolId = Number(params?.id);
+  const { user: currentUser, isStaff } = useCurrentUser();
 
   const [tool, setTool] = useState<BackendTool | null>(null);
   const [reviews, setReviews] = useState<BackendReview[]>([]);
@@ -98,6 +101,7 @@ export default function EquipmentDetailPage() {
   const [relatedTools, setRelatedTools] = useState<BackendToolSummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [reviewSuccess, setReviewSuccess] = useState(false);
 
   const [rentalPeriod, setRentalPeriod] = useState<"hourly" | "daily" | "weekly">(
     "daily"
@@ -581,86 +585,31 @@ export default function EquipmentDetailPage() {
             )}
           </div>
 
+          <ReviewSubmitForm
+            toolId={tool.id}
+            user={currentUser}
+            onSubmitted={() => {
+              setReviewSuccess(true);
+            }}
+          />
+
+          {reviewSuccess && (
+            <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-700">
+              Your review has been submitted and is awaiting moderation. It will
+              appear here once approved.
+            </div>
+          )}
+
           {reviews.length > 0 ? (
             <>
               <div className="space-y-5">
                 {reviews.map((review) => (
-                  <div
+                  <ReviewItem
                     key={review.id}
-                    className="bg-white border border-gray-200 rounded-2xl p-6"
-                  >
-                    <div className="flex items-start justify-between mb-3">
-                      <div>
-                        <p className="font-semibold text-[#111111]">{review.reviewerName}</p>
-                        <p className="text-xs text-[#666666] mt-0.5">{formatDate(review.createdDate)}</p>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <div className="flex items-center gap-0.5">
-                          {[...Array(5)].map((_, index) => (
-                            <Star
-                              key={index}
-                              className={`w-4 h-4 ${
-                                index < Math.round(review.overallRating)
-                                  ? "text-accent fill-accent"
-                                  : "text-gray-300"
-                              }`}
-                            />
-                          ))}
-                        </div>
-                        <span className="text-sm font-semibold text-[#111111]">
-                          {review.overallRating.toFixed(1)}
-                        </span>
-                      </div>
-                    </div>
-
-                    <p className="text-[#444444] leading-relaxed mb-4">{review.reviewText}</p>
-
-                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-4 p-3 bg-[#F8F8F8] rounded-xl">
-                      {([
-                        { label: "Equipment", value: review.equipmentRating },
-                        { label: "Service", value: review.customerServiceRating },
-                        { label: "Tech Support", value: review.technicalSupportRating },
-                        { label: "After Sales", value: review.afterSalesRating },
-                        { label: "Value", value: review.valueForMoneyRating },
-                      ] as { label: string; value: number }[]).map(({ label, value }) => (
-                        <div key={label} className="text-center">
-                          <p className="text-xs text-[#666666] mb-1">{label}</p>
-                          <div className="flex items-center justify-center gap-0.5">
-                            {[...Array(5)].map((_, i) => (
-                              <Star
-                                key={i}
-                                className={`w-3 h-3 ${
-                                  i < value ? "text-accent fill-accent" : "text-gray-300"
-                                }`}
-                              />
-                            ))}
-                          </div>
-                          <p className="text-xs font-medium text-[#111111] mt-0.5">{value}/5</p>
-                        </div>
-                      ))}
-                    </div>
-
-                    {review.companyResponse && (
-                      <div className="border-l-4 border-accent bg-accent/5 rounded-r-xl p-4 mt-4">
-                        <p className="text-xs font-semibold text-accent mb-1">
-                          Response from {review.companyResponse.staffName}
-                        </p>
-                        <p className="text-sm text-[#444444] leading-relaxed">
-                          {review.companyResponse.responseText}
-                        </p>
-                        <p className="text-xs text-[#666666] mt-2">
-                          {formatDate(review.companyResponse.createdDate)}
-                        </p>
-                      </div>
-                    )}
-
-                    {review.comments.length > 0 && (
-                      <p className="text-xs text-[#666666] mt-3 flex items-center gap-1">
-                        <MessageCircle className="w-3 h-3" />
-                        {review.comments.length} comment{review.comments.length !== 1 ? "s" : ""}
-                      </p>
-                    )}
-                  </div>
+                    review={review}
+                    currentUser={currentUser}
+                    isStaff={isStaff}
+                  />
                 ))}
               </div>
 
