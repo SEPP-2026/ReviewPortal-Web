@@ -31,6 +31,7 @@ export default function RegisterPage() {
         return;
       }
 
+      window.dispatchEvent(new Event("auth:changed"));
       router.push("/");
       router.refresh();
     } catch {

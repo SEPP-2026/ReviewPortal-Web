@@ -32,12 +32,12 @@ const forwardRequest = async (request: NextRequest, path: string) => {
   }
 
   const shouldIncludeBody = !["GET", "HEAD"].includes(request.method);
-  const body = shouldIncludeBody ? await request.text() : undefined;
+  const body = shouldIncludeBody ? await request.arrayBuffer() : undefined;
 
   const response = await fetch(targetUrl, {
     method: request.method,
     headers,
-    body: body && body.length > 0 ? body : undefined,
+    body: body && body.byteLength > 0 ? body : undefined,
   });
 
   const contentType = response.headers.get("content-type") || "text/plain";

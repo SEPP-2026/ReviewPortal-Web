@@ -60,6 +60,23 @@ export interface BackendTool {
   updatedDate: string;
 }
 
+export interface BackendAdminToolSummary {
+  id: number;
+  categoryId: number;
+  categoryName: string;
+  name: string;
+  hourlyRate: number;
+  dailyRate: number;
+  weeklyRate: number;
+  isActive: boolean;
+  overallRating: number | null;
+  reviewCount: number;
+  hasEnoughReviewsToRate: boolean;
+  ratingMessage: string | null;
+  thumbnailUrl: string | null;
+  updatedDate: string;
+}
+
 export interface BackendReviewComment {
   id: number;
   commenterName: string;
@@ -116,16 +133,93 @@ export interface BackendRentalCalculationResponse {
   totalCost: number;
 }
 
+export interface BackendDashboardStats {
+  totalActiveTools: number;
+  totalInactiveTools: number;
+  pendingModerationCount: number;
+  reviewsPublishedThisMonth: number;
+  topRatedTools: BackendToolRanking[];
+  mostReviewedTools: BackendToolRanking[];
+}
+
+export interface BackendToolRanking {
+  toolId: number;
+  toolName: string;
+  overallRating: number | null;
+  reviewCount: number;
+}
+
+export interface CreateReviewPayload {
+  reviewerName: string;
+  reviewerEmail: string;
+  reviewText: string;
+  equipmentRating: number;
+  customerServiceRating: number;
+  technicalSupportRating: number;
+  afterSalesRating: number;
+  valueForMoneyRating: number;
+}
+
+export interface CreateCommentPayload {
+  commenterName: string;
+  commentText: string;
+}
+
+export interface CreateCompanyResponsePayload {
+  responseText: string;
+}
+
+export interface ModerateReviewPayload {
+  approved: boolean;
+  rejectionReason?: string;
+}
+
+export interface CreateCategoryPayload {
+  name: string;
+  description?: string;
+  imageUrl?: string;
+}
+
+export interface UpdateCategoryPayload {
+  name: string;
+  description?: string;
+  imageUrl?: string;
+}
+
+export interface CreateToolPayload {
+  categoryId: number;
+  name: string;
+  description: string;
+  hourlyRate: number;
+  dailyRate: number;
+  weeklyRate: number;
+  specialNotes?: string;
+  depositRequired: boolean;
+  depositAmount?: number;
+}
+
+export interface UpdateToolPayload {
+  categoryId: number;
+  name: string;
+  description: string;
+  hourlyRate: number;
+  dailyRate: number;
+  weeklyRate: number;
+  specialNotes?: string;
+  depositRequired: boolean;
+  depositAmount?: number;
+}
+
 interface BackendProblemDetails {
   detail?: string;
   title?: string;
 }
 
-const buildQuery = (params: Record<string, string | number | undefined>) => {
+const buildQuery = (params: Record<string, string | number | undefined | null>) => {
   const searchParams = new URLSearchParams();
 
   Object.entries(params).forEach(([key, value]) => {
-    if (value === undefined || value === "") return;
+    if (value === undefined || value === null || value === "") return;
     searchParams.set(key, String(value));
   });
 
@@ -155,8 +249,21 @@ async function backendFetch<T>(path: string, init?: RequestInit): Promise<T> {
     throw new Error(getErrorMessage(errorBody));
   }
 
-  return response.json() as Promise<T>;
+  if (response.status === 204) {
+    return undefined as T;
+  }
+
+  try {
+    return (await response.json()) as T;
+  } catch {
+    return undefined as T;
+  }
 }
+
+const jsonBody = (payload: unknown): RequestInit => ({
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify(payload),
+});
 
 export const toCategorySlug = (name: string) =>
   name
@@ -165,7 +272,14 @@ export const toCategorySlug = (name: string) =>
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
 
+// ===== Categories =====
 export const getCategories = () => backendFetch<BackendCategory[]>("/categories");
+
+export const getFeaturedCategories = () =>
+  backendFetch<BackendCategory[]>("/categories/featured");
+
+export const getCategoryById = (id: number) =>
+  backendFetch<BackendCategory>(`/categories/${id}`);
 
 export const getToolsByCategory = (
   categoryId: number,
@@ -174,6 +288,8 @@ export const getToolsByCategory = (
     pageSize?: number;
     sortBy?: string;
     sortOrder?: "asc" | "desc";
+    minPrice?: number;
+    maxPrice?: number;
   } = {}
 ) => {
   const query = buildQuery({
@@ -181,6 +297,8 @@ export const getToolsByCategory = (
     pageSize: options.pageSize ?? 12,
     sortBy: options.sortBy,
     sortOrder: options.sortOrder,
+    minPrice: options.minPrice,
+    maxPrice: options.maxPrice,
   });
 
   return backendFetch<BackendPagedList<BackendToolSummary>>(
@@ -188,6 +306,7 @@ export const getToolsByCategory = (
   );
 };
 
+// ===== Tools =====
 export const searchTools = (
   query: string,
   options: { page?: number; pageSize?: number } = {}
@@ -211,11 +330,11 @@ export const calculateRental = (
     `/tools/${toolId}/rental-calculation`,
     {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      ...jsonBody(payload),
     }
   );
 
+// ===== Reviews =====
 export const getToolReviews = (
   toolId: number,
   options: { page?: number; pageSize?: number } = {}
@@ -228,6 +347,64 @@ export const getToolReviews = (
   return backendFetch<BackendToolReviews>(`/tools/${toolId}/reviews${query}`);
 };
 
+export const createToolReview = (toolId: number, payload: CreateReviewPayload) =>
+  backendFetch<BackendReview>(`/tools/${toolId}/reviews`, {
+    method: "POST",
+    ...jsonBody(payload),
+  });
+
+// ===== Review comments =====
+export const getReviewComments = (reviewId: number) =>
+  backendFetch<BackendReviewComment[]>(`/reviews/${reviewId}/comments`);
+
+export const createReviewComment = (
+  reviewId: number,
+  payload: CreateCommentPayload
+) =>
+  backendFetch<BackendReviewComment>(`/reviews/${reviewId}/comments`, {
+    method: "POST",
+    ...jsonBody(payload),
+  });
+
+// ===== Company response =====
+export const createCompanyResponse = (
+  reviewId: number,
+  payload: CreateCompanyResponsePayload
+) =>
+  backendFetch<BackendCompanyResponse>(`/reviews/${reviewId}/response`, {
+    method: "POST",
+    ...jsonBody(payload),
+  });
+
+export const updateCompanyResponse = (
+  reviewId: number,
+  payload: CreateCompanyResponsePayload
+) =>
+  backendFetch<BackendCompanyResponse>(`/reviews/${reviewId}/response`, {
+    method: "PUT",
+    ...jsonBody(payload),
+  });
+
+export const deleteCompanyResponse = (reviewId: number) =>
+  backendFetch<void>(`/reviews/${reviewId}/response`, { method: "DELETE" });
+
+// ===== User reviews =====
+export const getMyReviews = (
+  options: { page?: number; pageSize?: number } = {}
+) => {
+  const query = buildQuery({
+    page: options.page ?? 1,
+    pageSize: options.pageSize ?? 10,
+  });
+
+  return backendFetch<BackendPagedList<BackendReview>>(`/users/me/reviews${query}`);
+};
+
+// ===== Admin: Dashboard =====
+export const getDashboardStats = () =>
+  backendFetch<BackendDashboardStats>("/admin/dashboard/stats");
+
+// ===== Admin: Moderation =====
 export const getPendingModerationReviews = (
   options: { page?: number; pageSize?: number } = {}
 ) => {
@@ -240,3 +417,153 @@ export const getPendingModerationReviews = (
     `/admin/moderation/pending${query}`
   );
 };
+
+export const moderateReview = (id: number, payload: ModerateReviewPayload) =>
+  backendFetch<BackendReview>(`/admin/moderation/reviews/${id}`, {
+    method: "PUT",
+    ...jsonBody(payload),
+  });
+
+export const moderateComment = (id: number, payload: ModerateReviewPayload) =>
+  backendFetch<BackendReviewComment>(`/admin/moderation/comments/${id}`, {
+    method: "PUT",
+    ...jsonBody(payload),
+  });
+
+// ===== Admin: Categories =====
+export const createCategory = (payload: CreateCategoryPayload) =>
+  backendFetch<BackendCategory>(`/admin/categories`, {
+    method: "POST",
+    ...jsonBody(payload),
+  });
+
+export const updateCategory = (id: number, payload: UpdateCategoryPayload) =>
+  backendFetch<BackendCategory>(`/admin/categories/${id}`, {
+    method: "PUT",
+    ...jsonBody(payload),
+  });
+
+export const deleteCategory = (id: number) =>
+  backendFetch<void>(`/admin/categories/${id}`, { method: "DELETE" });
+
+// ===== Admin: Tools =====
+export const getAdminTools = (
+  options: {
+    page?: number;
+    pageSize?: number;
+    searchTerm?: string;
+    categoryId?: number;
+    status?: string;
+    sortBy?: string;
+  } = {}
+) => {
+  const query = buildQuery({
+    page: options.page ?? 1,
+    pageSize: options.pageSize ?? 20,
+    searchTerm: options.searchTerm,
+    categoryId: options.categoryId,
+    status: options.status,
+    sortBy: options.sortBy,
+  });
+
+  return backendFetch<BackendPagedList<BackendAdminToolSummary>>(
+    `/admin/tools${query}`
+  );
+};
+
+export const getAdminToolById = (id: number) =>
+  backendFetch<BackendTool>(`/admin/tools/${id}`);
+
+export const createTool = async (payload: CreateToolPayload, imageFile: File) => {
+  const formData = new FormData();
+  formData.append("CategoryId", String(payload.categoryId));
+  formData.append("Name", payload.name);
+  formData.append("Description", payload.description);
+  formData.append("HourlyRate", String(payload.hourlyRate));
+  formData.append("DailyRate", String(payload.dailyRate));
+  formData.append("WeeklyRate", String(payload.weeklyRate));
+  if (payload.specialNotes !== undefined && payload.specialNotes !== "") {
+    formData.append("SpecialNotes", payload.specialNotes);
+  }
+  formData.append("DepositRequired", String(payload.depositRequired));
+  if (payload.depositAmount !== undefined && payload.depositAmount !== null) {
+    formData.append("DepositAmount", String(payload.depositAmount));
+  }
+  formData.append("file", imageFile);
+
+  return backendFetch<BackendTool>(`/admin/tools`, {
+    method: "POST",
+    body: formData,
+  });
+};
+
+export const updateTool = (id: number, payload: UpdateToolPayload) =>
+  backendFetch<BackendTool>(`/admin/tools/${id}`, {
+    method: "PUT",
+    ...jsonBody(payload),
+  });
+
+export const setToolStatus = (id: number, isActive: boolean) =>
+  backendFetch<BackendTool>(`/admin/tools/${id}/status`, {
+    method: "PATCH",
+    ...jsonBody({ isActive }),
+  });
+
+export const uploadToolImage = (id: number, imageFile: File) => {
+  const formData = new FormData();
+  formData.append("file", imageFile);
+
+  return backendFetch<BackendToolImage>(`/admin/tools/${id}/images`, {
+    method: "POST",
+    body: formData,
+  });
+};
+
+export const deleteToolImage = (toolId: number, imageId: number) =>
+  backendFetch<void>(`/admin/tools/${toolId}/images/${imageId}`, {
+    method: "DELETE",
+  });
+
+// ===== Auth (password mgmt) =====
+export interface ChangePasswordPayload {
+  currentPassword: string;
+  newPassword: string;
+}
+
+export interface ForgotPasswordPayload {
+  email: string;
+}
+
+export interface ResetPasswordPayload {
+  email: string;
+  resetToken: string;
+  newPassword: string;
+}
+
+export interface PasswordActionResponse {
+  message: string;
+}
+
+export interface ForgotPasswordResponse {
+  message: string;
+  resetToken: string | null;
+  resetTokenExpiresAtUtc: string | null;
+}
+
+export const changePassword = (payload: ChangePasswordPayload) =>
+  backendFetch<PasswordActionResponse>(`/auth/change-password`, {
+    method: "POST",
+    ...jsonBody(payload),
+  });
+
+export const forgotPassword = (payload: ForgotPasswordPayload) =>
+  backendFetch<ForgotPasswordResponse>(`/auth/forgot-password`, {
+    method: "POST",
+    ...jsonBody(payload),
+  });
+
+export const resetPassword = (payload: ResetPasswordPayload) =>
+  backendFetch<PasswordActionResponse>(`/auth/reset-password`, {
+    method: "POST",
+    ...jsonBody(payload),
+  });
