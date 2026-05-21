@@ -1,7 +1,21 @@
 "use client";
 
-import { useState } from "react";
-import { Star, MessageCircle, ChevronDown, ChevronUp, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
+import {
+  Star,
+  MessageCircle,
+  ChevronDown,
+  ChevronUp,
+  Trash2,
+} from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   createReviewComment,
   createCompanyResponse,
@@ -11,6 +25,12 @@ import {
   type BackendReviewComment,
   type BackendCompanyResponse,
 } from "@/lib/backend-api";
+import {
+  commentSchema,
+  companyResponseSchema,
+  type CommentValues,
+  type CompanyResponseValues,
+} from "@/lib/form-schemas";
 import type { CurrentUser } from "@/hooks/use-current-user";
 
 interface ReviewItemProps {
@@ -28,95 +48,95 @@ const formatDate = (value: string) =>
 
 export function ReviewItem({ review, currentUser, isStaff }: ReviewItemProps) {
   const [comments, setComments] = useState<BackendReviewComment[]>(
-    review.comments ?? []
+    review.comments ?? [],
   );
   const [companyResponse, setCompanyResponse] =
     useState<BackendCompanyResponse | null>(review.companyResponse ?? null);
-
   const [showComments, setShowComments] = useState(false);
-  const [commentText, setCommentText] = useState("");
-  const [commenterName, setCommenterName] = useState(currentUser?.name ?? "");
-  const [isCommenting, setIsCommenting] = useState(false);
-  const [commentError, setCommentError] = useState<string | null>(null);
-
-  const [responseText, setResponseText] = useState(
-    companyResponse?.responseText ?? ""
-  );
-  const [isSavingResponse, setIsSavingResponse] = useState(false);
-  const [responseError, setResponseError] = useState<string | null>(null);
   const [showResponseForm, setShowResponseForm] = useState(false);
+  const [isDeletingResponse, setIsDeletingResponse] = useState(false);
 
-  const handleAddComment = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setCommentError(null);
+  const commentForm = useForm<CommentValues>({
+    resolver: zodResolver(commentSchema),
+    defaultValues: {
+      commenterName: currentUser?.name ?? "",
+      commentText: "",
+    },
+  });
 
-    if (commentText.trim().length < 3 || commenterName.trim().length < 2) {
-      setCommentError("Please provide your name and a comment (min 3 chars).");
-      return;
-    }
+  // Keep the commenter name in sync with the current user once auth resolves.
+  useEffect(() => {
+    commentForm.setValue("commenterName", currentUser?.name ?? "");
+  }, [currentUser, commentForm]);
 
-    setIsCommenting(true);
+  const responseForm = useForm<CompanyResponseValues>({
+    resolver: zodResolver(companyResponseSchema),
+    defaultValues: {
+      responseText: companyResponse?.responseText ?? "",
+    },
+  });
+
+  const handleAddComment = async (values: CommentValues) => {
     try {
       const created = await createReviewComment(review.id, {
-        commenterName: commenterName.trim(),
-        commentText: commentText.trim(),
+        commenterName: values.commenterName.trim(),
+        commentText: values.commentText.trim(),
       });
       setComments((prev) => [...prev, created]);
-      setCommentText("");
+      commentForm.reset({
+        commenterName: currentUser?.name ?? values.commenterName,
+        commentText: "",
+      });
+      toast.success("Comment submitted", {
+        description: "It will appear after a moderator approves it.",
+      });
     } catch (error) {
-      setCommentError(
-        error instanceof Error ? error.message : "Failed to post comment."
-      );
-    } finally {
-      setIsCommenting(false);
+      toast.error("Could not post comment", {
+        description:
+          error instanceof Error ? error.message : "Please try again.",
+      });
     }
   };
 
-  const handleSaveResponse = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setResponseError(null);
-
-    if (responseText.trim().length < 5) {
-      setResponseError("Response must be at least 5 characters.");
-      return;
-    }
-
-    setIsSavingResponse(true);
+  const handleSaveResponse = async (values: CompanyResponseValues) => {
     try {
       const saved = companyResponse
         ? await updateCompanyResponse(review.id, {
-            responseText: responseText.trim(),
+            responseText: values.responseText.trim(),
           })
         : await createCompanyResponse(review.id, {
-            responseText: responseText.trim(),
+            responseText: values.responseText.trim(),
           });
       setCompanyResponse(saved);
       setShowResponseForm(false);
-    } catch (error) {
-      setResponseError(
-        error instanceof Error ? error.message : "Failed to save response."
+      toast.success(
+        companyResponse ? "Response updated" : "Response posted",
       );
-    } finally {
-      setIsSavingResponse(false);
+    } catch (error) {
+      toast.error("Could not save response", {
+        description:
+          error instanceof Error ? error.message : "Please try again.",
+      });
     }
   };
 
   const handleDeleteResponse = async () => {
     if (!companyResponse) return;
-    if (!confirm("Delete this company response?")) return;
+    if (!window.confirm("Delete this company response?")) return;
 
-    setIsSavingResponse(true);
-    setResponseError(null);
+    setIsDeletingResponse(true);
     try {
       await deleteCompanyResponse(review.id);
       setCompanyResponse(null);
-      setResponseText("");
+      responseForm.reset({ responseText: "" });
+      toast.success("Response deleted");
     } catch (error) {
-      setResponseError(
-        error instanceof Error ? error.message : "Failed to delete response."
-      );
+      toast.error("Could not delete response", {
+        description:
+          error instanceof Error ? error.message : "Please try again.",
+      });
     } finally {
-      setIsSavingResponse(false);
+      setIsDeletingResponse(false);
     }
   };
 
@@ -193,7 +213,9 @@ export function ReviewItem({ review, currentUser, isStaff }: ReviewItemProps) {
               <button
                 type="button"
                 onClick={() => {
-                  setResponseText(companyResponse.responseText);
+                  responseForm.reset({
+                    responseText: companyResponse.responseText,
+                  });
                   setShowResponseForm(true);
                 }}
                 className="text-xs font-semibold text-accent hover:underline"
@@ -203,7 +225,7 @@ export function ReviewItem({ review, currentUser, isStaff }: ReviewItemProps) {
               <button
                 type="button"
                 onClick={handleDeleteResponse}
-                disabled={isSavingResponse}
+                disabled={isDeletingResponse}
                 className="inline-flex items-center gap-1 text-xs font-semibold text-red-600 hover:underline disabled:opacity-60"
               >
                 <Trash2 className="h-3 w-3" />
@@ -216,45 +238,58 @@ export function ReviewItem({ review, currentUser, isStaff }: ReviewItemProps) {
 
       {isStaff && (!companyResponse || showResponseForm) && (
         <form
-          onSubmit={handleSaveResponse}
+          onSubmit={responseForm.handleSubmit(handleSaveResponse)}
           className="mt-4 rounded-xl border border-accent/30 bg-accent/5 p-4 space-y-3"
+          noValidate
         >
           <p className="text-xs font-semibold uppercase tracking-wide text-accent">
             {companyResponse ? "Edit response" : "Add a company response"}
           </p>
-          {responseError && (
-            <p className="text-xs text-red-700">{responseError}</p>
-          )}
-          <textarea
-            value={responseText}
-            onChange={(event) => setResponseText(event.target.value)}
-            rows={3}
-            placeholder="Reply on behalf of Shelton Tool-Hire..."
-            className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
-          />
+          <div className="space-y-1.5">
+            <Label htmlFor={`response-${review.id}`} className="sr-only">
+              Response text
+            </Label>
+            <Textarea
+              id={`response-${review.id}`}
+              rows={3}
+              placeholder="Reply on behalf of Shelton Tool-Hire..."
+              aria-invalid={
+                responseForm.formState.errors.responseText ? "true" : undefined
+              }
+              {...responseForm.register("responseText")}
+            />
+            {responseForm.formState.errors.responseText && (
+              <p className="text-xs text-red-600">
+                {responseForm.formState.errors.responseText.message}
+              </p>
+            )}
+          </div>
           <div className="flex items-center gap-3">
-            <button
+            <Button
               type="submit"
-              disabled={isSavingResponse}
-              className="rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-black hover:bg-[#C97F00] disabled:opacity-60"
+              size="sm"
+              disabled={responseForm.formState.isSubmitting}
             >
-              {isSavingResponse
+              {responseForm.formState.isSubmitting
                 ? "Saving..."
                 : companyResponse
-                ? "Update response"
-                : "Post response"}
-            </button>
+                  ? "Update response"
+                  : "Post response"}
+            </Button>
             {companyResponse && (
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="sm"
                 onClick={() => {
                   setShowResponseForm(false);
-                  setResponseText(companyResponse.responseText);
+                  responseForm.reset({
+                    responseText: companyResponse.responseText,
+                  });
                 }}
-                className="text-sm font-semibold text-[#666666] hover:text-[#111111]"
               >
                 Cancel
-              </button>
+              </Button>
             )}
           </div>
         </form>
@@ -305,35 +340,67 @@ export function ReviewItem({ review, currentUser, isStaff }: ReviewItemProps) {
               ))
             )}
 
-            <form onSubmit={handleAddComment} className="space-y-2">
-              {commentError && (
-                <p className="text-xs text-red-700">{commentError}</p>
-              )}
+            <form
+              onSubmit={commentForm.handleSubmit(handleAddComment)}
+              className="space-y-2"
+              noValidate
+            >
               <div className="grid sm:grid-cols-2 gap-2">
-                <input
-                  type="text"
-                  value={commenterName}
-                  onChange={(event) => setCommenterName(event.target.value)}
-                  required
-                  placeholder="Your name"
-                  className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
-                />
+                <div className="space-y-1">
+                  <Label
+                    htmlFor={`comment-name-${review.id}`}
+                    className="sr-only"
+                  >
+                    Your name
+                  </Label>
+                  <Input
+                    id={`comment-name-${review.id}`}
+                    placeholder="Your name"
+                    aria-invalid={
+                      commentForm.formState.errors.commenterName
+                        ? "true"
+                        : undefined
+                    }
+                    {...commentForm.register("commenterName")}
+                  />
+                  {commentForm.formState.errors.commenterName && (
+                    <p className="text-xs text-red-600">
+                      {commentForm.formState.errors.commenterName.message}
+                    </p>
+                  )}
+                </div>
               </div>
-              <textarea
-                value={commentText}
-                onChange={(event) => setCommentText(event.target.value)}
-                rows={2}
-                required
-                placeholder="Add a public comment..."
-                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
-              />
-              <button
+              <div className="space-y-1">
+                <Label htmlFor={`comment-text-${review.id}`} className="sr-only">
+                  Comment
+                </Label>
+                <Textarea
+                  id={`comment-text-${review.id}`}
+                  rows={2}
+                  placeholder="Add a public comment (at least 10 characters)..."
+                  aria-invalid={
+                    commentForm.formState.errors.commentText
+                      ? "true"
+                      : undefined
+                  }
+                  {...commentForm.register("commentText")}
+                />
+                {commentForm.formState.errors.commentText && (
+                  <p className="text-xs text-red-600">
+                    {commentForm.formState.errors.commentText.message}
+                  </p>
+                )}
+              </div>
+              <Button
                 type="submit"
-                disabled={isCommenting}
-                className="rounded-lg bg-[#111111] px-4 py-2 text-sm font-semibold text-white hover:bg-black disabled:opacity-60"
+                variant="default"
+                size="sm"
+                disabled={commentForm.formState.isSubmitting}
               >
-                {isCommenting ? "Posting..." : "Post comment"}
-              </button>
+                {commentForm.formState.isSubmitting
+                  ? "Posting..."
+                  : "Post comment"}
+              </Button>
             </form>
           </div>
         )}

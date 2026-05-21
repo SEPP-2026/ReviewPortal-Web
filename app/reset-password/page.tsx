@@ -1,52 +1,66 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { resetPassword } from "@/lib/backend-api";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
+
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
+import { resetPassword } from "@/lib/backend-api";
+import {
+  resetPasswordSchema,
+  type ResetPasswordValues,
+} from "@/lib/form-schemas";
 
 function ResetPasswordContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [email, setEmail] = useState(searchParams.get("email") ?? "");
-  const [token, setToken] = useState(searchParams.get("token") ?? "");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  const {
+    register,
+    handleSubmit,
+    reset,
+    setError,
+    formState: { errors, isSubmitting },
+  } = useForm<ResetPasswordValues>({
+    resolver: zodResolver(resetPasswordSchema),
+    defaultValues: {
+      email: searchParams.get("email") ?? "",
+      token: searchParams.get("token") ?? "",
+      newPassword: "",
+      confirmPassword: "",
+    },
+  });
+
+  // Re-sync when the query params change (e.g. arriving from the forgot flow).
   useEffect(() => {
-    setEmail(searchParams.get("email") ?? "");
-    setToken(searchParams.get("token") ?? "");
-  }, [searchParams]);
+    reset({
+      email: searchParams.get("email") ?? "",
+      token: searchParams.get("token") ?? "",
+      newPassword: "",
+      confirmPassword: "",
+    });
+  }, [searchParams, reset]);
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setSuccessMessage(null);
-    setErrorMessage(null);
-
-    if (newPassword !== confirmPassword) {
-      setErrorMessage("Passwords do not match.");
-      return;
-    }
-
-    setIsSubmitting(true);
+  const onSubmit = async (values: ResetPasswordValues) => {
     try {
       const result = await resetPassword({
-        email,
-        resetToken: token,
-        newPassword,
+        email: values.email,
+        resetToken: values.token,
+        newPassword: values.newPassword,
       });
-      setSuccessMessage(result.message || "Password reset successfully.");
-      setTimeout(() => router.push("/login"), 1500);
+      toast.success(result.message || "Password reset successfully");
+      setTimeout(() => router.push("/login"), 1200);
     } catch (error) {
-      setErrorMessage(
-        error instanceof Error ? error.message : "Failed to reset password."
-      );
-    } finally {
-      setIsSubmitting(false);
+      setError("token", {
+        message:
+          error instanceof Error ? error.message : "Failed to reset password.",
+      });
     }
   };
 
@@ -59,75 +73,78 @@ function ResetPasswordContent() {
             Enter your reset token and choose a new password.
           </p>
 
-          {successMessage && (
-            <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700">
-              {successMessage}
-            </div>
-          )}
-          {errorMessage && (
-            <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-              {errorMessage}
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Email
-              </label>
-              <input
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="mt-6 space-y-4"
+            noValidate
+          >
+            <div className="space-y-1.5">
+              <Label htmlFor="reset-email">Email</Label>
+              <Input
+                id="reset-email"
                 type="email"
-                required
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                autoComplete="email"
+                aria-invalid={errors.email ? "true" : undefined}
+                {...register("email")}
               />
+              {errors.email && (
+                <p className="text-xs text-red-600">{errors.email.message}</p>
+              )}
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Reset token
-              </label>
-              <input
+
+            <div className="space-y-1.5">
+              <Label htmlFor="reset-token">Reset token</Label>
+              <Input
+                id="reset-token"
                 type="text"
-                required
-                value={token}
-                onChange={(event) => setToken(event.target.value)}
-                className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                aria-invalid={errors.token ? "true" : undefined}
+                {...register("token")}
               />
+              {errors.token && (
+                <p className="text-xs text-red-600">{errors.token.message}</p>
+              )}
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                New password
-              </label>
-              <input
+
+            <div className="space-y-1.5">
+              <Label htmlFor="reset-new-password">New password</Label>
+              <Input
+                id="reset-new-password"
                 type="password"
-                required
-                minLength={8}
-                value={newPassword}
-                onChange={(event) => setNewPassword(event.target.value)}
-                className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                autoComplete="new-password"
+                aria-invalid={errors.newPassword ? "true" : undefined}
+                {...register("newPassword")}
               />
+              {errors.newPassword && (
+                <p className="text-xs text-red-600">
+                  {errors.newPassword.message}
+                </p>
+              )}
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Confirm new password
-              </label>
-              <input
+
+            <div className="space-y-1.5">
+              <Label htmlFor="reset-confirm-password">Confirm new password</Label>
+              <Input
+                id="reset-confirm-password"
                 type="password"
-                required
-                minLength={8}
-                value={confirmPassword}
-                onChange={(event) => setConfirmPassword(event.target.value)}
-                className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                autoComplete="new-password"
+                aria-invalid={errors.confirmPassword ? "true" : undefined}
+                {...register("confirmPassword")}
               />
+              {errors.confirmPassword && (
+                <p className="text-xs text-red-600">
+                  {errors.confirmPassword.message}
+                </p>
+              )}
             </div>
-            <button
+
+            <Button
               type="submit"
+              size="lg"
+              className="w-full"
               disabled={isSubmitting}
-              className="w-full rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-black hover:bg-[#C97F00] disabled:opacity-60"
             >
               {isSubmitting ? "Resetting..." : "Reset password"}
-            </button>
+            </Button>
           </form>
 
           <p className="mt-6 text-center text-sm text-gray-600">

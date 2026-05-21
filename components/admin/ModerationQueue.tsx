@@ -1,6 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import {
   AlertCircle,
@@ -12,7 +15,11 @@ import {
   UserRound,
   X,
 } from "lucide-react";
+
 import { Spinner } from "@/components/ui/spinner";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   getPendingModerationReviews,
   moderateComment,
@@ -20,6 +27,10 @@ import {
   type BackendPagedList,
   type BackendModerationItem,
 } from "@/lib/backend-api";
+import {
+  rejectionReasonSchema,
+  type RejectionReasonValues,
+} from "@/lib/form-schemas";
 
 const ratingFields = [
   { key: "equipmentRating", label: "Equipment" },
@@ -49,12 +60,16 @@ export function ModerationQueue() {
     kind: "review" | "comment";
     id: number;
   } | null>(null);
-  const [rejectionReason, setRejectionReason] = useState("");
   const [actionError, setActionError] = useState<string | null>(null);
   const [rejectingTarget, setRejectingTarget] = useState<{
     kind: "review" | "comment";
     id: number;
   } | null>(null);
+
+  const rejectionForm = useForm<RejectionReasonValues>({
+    resolver: zodResolver(rejectionReasonSchema),
+    defaultValues: { reason: "" },
+  });
 
   const loadQueue = useCallback(async () => {
     setIsLoading(true);
@@ -120,6 +135,7 @@ export function ModerationQueue() {
     setActionError(null);
     try {
       await moderateReview(id, { approved: true });
+      toast.success("Review approved");
       await loadQueue();
     } catch (error) {
       setActionError(
@@ -135,6 +151,7 @@ export function ModerationQueue() {
     setActionError(null);
     try {
       await moderateComment(id, { approved: true });
+      toast.success("Comment approved");
       await loadQueue();
     } catch (error) {
       setActionError(
@@ -145,13 +162,13 @@ export function ModerationQueue() {
     }
   };
 
-  const handleConfirmReject = async () => {
+  const handleConfirmReject = async (values: RejectionReasonValues) => {
     if (!rejectingTarget) return;
     setActiveId(rejectingTarget);
     setActionError(null);
 
     try {
-      const reason = rejectionReason.trim() || undefined;
+      const reason = values.reason.trim();
       if (rejectingTarget.kind === "review") {
         await moderateReview(rejectingTarget.id, {
           approved: false,
@@ -163,8 +180,11 @@ export function ModerationQueue() {
           rejectionReason: reason,
         });
       }
+      toast.success(
+        `${rejectingTarget.kind === "review" ? "Review" : "Comment"} rejected`,
+      );
       setRejectingTarget(null);
-      setRejectionReason("");
+      rejectionForm.reset({ reason: "" });
       await loadQueue();
     } catch (error) {
       setActionError(
@@ -173,6 +193,16 @@ export function ModerationQueue() {
     } finally {
       setActiveId(null);
     }
+  };
+
+  const openReject = (kind: "review" | "comment", id: number) => {
+    rejectionForm.reset({ reason: "" });
+    setRejectingTarget({ kind, id });
+  };
+
+  const closeReject = () => {
+    setRejectingTarget(null);
+    rejectionForm.reset({ reason: "" });
   };
 
   if (isLoading) {
@@ -330,10 +360,7 @@ export function ModerationQueue() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => {
-                    setRejectingTarget({ kind: "review", id: item.itemId });
-                    setRejectionReason("");
-                  }}
+                  onClick={() => openReject("review", item.itemId)}
                   disabled={isBusyOn("review", item.itemId)}
                   className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-60"
                 >
@@ -395,10 +422,7 @@ export function ModerationQueue() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => {
-                        setRejectingTarget({ kind: "comment", id: item.itemId });
-                        setRejectionReason("");
-                      }}
+                      onClick={() => openReject("comment", item.itemId)}
                       disabled={isBusyOn("comment", item.itemId)}
                       className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-60"
                     >
@@ -416,47 +440,63 @@ export function ModerationQueue() {
       {/* Rejection modal */}
       {rejectingTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl">
+          <form
+            onSubmit={rejectionForm.handleSubmit(handleConfirmReject)}
+            className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl"
+            noValidate
+          >
             <h3 className="text-xl font-semibold text-slate-950">
               Reject {rejectingTarget.kind === "review" ? "review" : "comment"}
             </h3>
             <p className="mt-2 text-sm text-slate-600">
-              Provide a brief reason. This is stored on the submission for the audit trail.
+              Provide a brief reason. This is stored on the submission for the
+              audit trail and is shared with the customer in their My Reviews
+              page.
             </p>
 
-            <textarea
-              value={rejectionReason}
-              onChange={(event) => setRejectionReason(event.target.value)}
-              rows={4}
-              placeholder="Reason for rejection (optional)"
-              className="mt-4 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
-            />
+            <div className="mt-4 space-y-1.5">
+              <Label htmlFor="rejection-reason" className="sr-only">
+                Rejection reason
+              </Label>
+              <Textarea
+                id="rejection-reason"
+                rows={4}
+                placeholder="Why is this being rejected?"
+                aria-invalid={
+                  rejectionForm.formState.errors.reason ? "true" : undefined
+                }
+                {...rejectionForm.register("reason")}
+              />
+              {rejectionForm.formState.errors.reason && (
+                <p className="text-xs text-red-600">
+                  {rejectionForm.formState.errors.reason.message}
+                </p>
+              )}
+            </div>
 
             <div className="mt-5 flex items-center justify-end gap-3">
-              <button
+              <Button
                 type="button"
-                onClick={() => {
-                  setRejectingTarget(null);
-                  setRejectionReason("");
-                }}
-                className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                variant="outline"
+                onClick={closeReject}
+                disabled={rejectionForm.formState.isSubmitting}
               >
                 Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleConfirmReject}
+              </Button>
+              <Button
+                type="submit"
+                variant="destructive"
                 disabled={
-                  rejectingTarget
+                  rejectionForm.formState.isSubmitting ||
+                  (rejectingTarget
                     ? isBusyOn(rejectingTarget.kind, rejectingTarget.id)
-                    : false
+                    : false)
                 }
-                className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-60"
               >
                 Confirm reject
-              </button>
+              </Button>
             </div>
-          </div>
+          </form>
         </div>
       )}
     </div>

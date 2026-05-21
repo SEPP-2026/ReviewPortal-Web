@@ -17,6 +17,7 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 import { ReviewSubmitForm } from "@/components/equipment/ReviewSubmitForm";
 import { ReviewItem } from "@/components/equipment/ReviewItem";
+import { BookingRequestDialog } from "@/components/equipment/BookingRequestDialog";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import {
   calculateRental,
@@ -112,6 +113,7 @@ export default function EquipmentDetailPage() {
   const [costBreakdown, setCostBreakdown] = useState<string | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
+  const [bookingDialogOpen, setBookingDialogOpen] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -509,7 +511,9 @@ export default function EquipmentDetailPage() {
 
             <div className="flex gap-4 mb-8">
               <button
+                type="button"
                 disabled={!tool.isActive}
+                onClick={() => setBookingDialogOpen(true)}
                 className={`flex-1 py-4 rounded-xl font-semibold text-lg transition-colors ${
                   tool.isActive
                     ? "bg-accent hover:bg-[#C97F00] text-black"
@@ -658,6 +662,17 @@ export default function EquipmentDetailPage() {
             </p>
           )}
         </div>
+
+        <BookingRequestDialog
+          open={bookingDialogOpen}
+          onOpenChange={setBookingDialogOpen}
+          tool={tool}
+          user={currentUser}
+          rentalPeriod={rentalPeriod}
+          quantity={quantity}
+          duration={duration}
+          estimatedCost={estimatedCost}
+        />
 
         {relatedTools.length > 0 && (
           <div className="mt-16">

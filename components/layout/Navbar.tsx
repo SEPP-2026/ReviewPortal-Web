@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Menu, X, Phone, ChevronDown } from "lucide-react";
 
 const NAV_LINKS = [
@@ -32,6 +33,7 @@ const ADMIN_LINK = {
   submenu: [
     { name: "Dashboard", href: "/admin" },
     { name: "Moderation Queue", href: "/admin/moderation" },
+    { name: "Bookings", href: "/admin/bookings" },
     { name: "Manage Tools", href: "/admin/tools" },
     { name: "Manage Categories", href: "/admin/categories" },
   ],
@@ -42,10 +44,12 @@ const MODERATOR_LINK = {
   href: "/admin/moderation",
   submenu: [
     { name: "Moderation Queue", href: "/admin/moderation" },
+    { name: "Bookings", href: "/admin/bookings" },
   ],
 };
 
 export function Navbar() {
+  const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [userName, setUserName] = useState<string | null>(null);
@@ -92,9 +96,13 @@ export function Navbar() {
     try {
       await fetch("/api/auth/logout", { method: "POST" });
     } finally {
-      document.cookie = "rp_auth=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
       setUserName(null);
+      setUserRole(null);
       window.dispatchEvent(new Event("auth:changed"));
+      // Send the user to the login screen and force RSC re-render so guarded
+      // pages (admin/account) lose their session-rendered content immediately.
+      router.replace("/login");
+      router.refresh();
     }
   };
 

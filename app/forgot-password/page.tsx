@@ -2,34 +2,52 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
+
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { forgotPassword } from "@/lib/backend-api";
+import {
+  forgotPasswordSchema,
+  type ForgotPasswordValues,
+} from "@/lib/form-schemas";
 
 export default function ForgotPasswordPage() {
-  const [email, setEmail] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [resetToken, setResetToken] = useState<string | null>(null);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setIsSubmitting(true);
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setError,
+    formState: { errors, isSubmitting },
+  } = useForm<ForgotPasswordValues>({
+    resolver: zodResolver(forgotPasswordSchema),
+    defaultValues: { email: "" },
+  });
+
+  const email = watch("email");
+
+  const onSubmit = async (values: ForgotPasswordValues) => {
     setMessage(null);
-    setErrorMessage(null);
     setResetToken(null);
 
     try {
-      const result = await forgotPassword({ email });
+      const result = await forgotPassword({ email: values.email });
       setMessage(result.message);
       if (result.resetToken) {
         setResetToken(result.resetToken);
       }
+      toast.success("Reset email sent if the address exists");
     } catch (error) {
-      setErrorMessage(
-        error instanceof Error ? error.message : "Failed to request reset."
-      );
-    } finally {
-      setIsSubmitting(false);
+      setError("email", {
+        message:
+          error instanceof Error ? error.message : "Failed to request reset.",
+      });
     }
   };
 
@@ -39,7 +57,7 @@ export default function ForgotPasswordPage() {
         <div className="rounded-2xl bg-white p-8 text-black shadow-xl">
           <h1 className="text-2xl font-semibold">Forgot your password?</h1>
           <p className="mt-2 text-sm text-gray-600">
-            Enter your email and we will send instructions for resetting.
+            Enter your email and we&apos;ll send instructions for resetting.
           </p>
 
           {message && (
@@ -48,7 +66,9 @@ export default function ForgotPasswordPage() {
               {resetToken && (
                 <div className="mt-2">
                   <p className="font-semibold">Reset token (development):</p>
-                  <p className="break-all text-xs text-emerald-900">{resetToken}</p>
+                  <p className="break-all text-xs text-emerald-900">
+                    {resetToken}
+                  </p>
                   <Link
                     href={`/reset-password?email=${encodeURIComponent(email)}&token=${encodeURIComponent(resetToken)}`}
                     className="mt-2 inline-block rounded-lg bg-accent px-3 py-1.5 text-xs font-semibold text-black hover:bg-[#C97F00]"
@@ -59,37 +79,42 @@ export default function ForgotPasswordPage() {
               )}
             </div>
           )}
-          {errorMessage && (
-            <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-              {errorMessage}
-            </div>
-          )}
 
-          <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Email
-              </label>
-              <input
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="mt-6 space-y-4"
+            noValidate
+          >
+            <div className="space-y-1.5">
+              <Label htmlFor="forgot-email">Email</Label>
+              <Input
+                id="forgot-email"
                 type="email"
-                required
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                autoComplete="email"
                 placeholder="you@example.com"
+                aria-invalid={errors.email ? "true" : undefined}
+                {...register("email")}
               />
+              {errors.email && (
+                <p className="text-xs text-red-600">{errors.email.message}</p>
+              )}
             </div>
-            <button
+
+            <Button
               type="submit"
+              size="lg"
+              className="w-full"
               disabled={isSubmitting}
-              className="w-full rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-black hover:bg-[#C97F00] disabled:opacity-60"
             >
               {isSubmitting ? "Sending..." : "Send reset instructions"}
-            </button>
+            </Button>
           </form>
 
           <p className="mt-6 text-center text-sm text-gray-600">
-            <Link href="/login" className="font-semibold text-accent hover:underline">
+            <Link
+              href="/login"
+              className="font-semibold text-accent hover:underline"
+            >
               Back to sign in
             </Link>
           </p>
