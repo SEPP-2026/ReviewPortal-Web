@@ -88,7 +88,7 @@ For each form (`ReviewForm`, `AdminToolForm`, `AdminCategoryForm`, `CommentForm`
 ## 5. End-to-End Tests
 
 **Tool:** Playwright
-**Location:** `tests/e2e/` (added in Sprint 4 — see [agile/SPRINT-PLANNING.md](agile/SPRINT-PLANNING.md))
+**Location:** `tests/e2e/` (integrated and planned in Sprint 4 — see the complete setup and code specs in [PLAYWRIGHT-INTEGRATION.md](PLAYWRIGHT-INTEGRATION.md))
 
 ### 5.1 Critical User Journeys
 
