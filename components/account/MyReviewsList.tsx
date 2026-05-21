@@ -7,7 +7,7 @@ import { Spinner } from "@/components/ui/spinner";
 import {
   getMyReviews,
   type BackendPagedList,
-  type BackendReview,
+  type BackendReviewSummary,
 } from "@/lib/backend-api";
 
 const formatDate = (value: string) =>
@@ -42,7 +42,7 @@ const statusBadge = (status: string) => {
 
 export function MyReviewsList() {
   const [page, setPage] = useState(1);
-  const [data, setData] = useState<BackendPagedList<BackendReview> | null>(null);
+  const [data, setData] = useState<BackendPagedList<BackendReviewSummary> | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -146,7 +146,7 @@ export function MyReviewsList() {
               </span>
             </div>
 
-            <p className="mt-3 text-sm text-[#444444]">{review.reviewText}</p>
+            <p className="mt-3 text-sm text-[#444444]">{review.reviewTextSnippet}</p>
 
             {review.rejectionReason && (
               <div className="mt-3 rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-800">
@@ -155,22 +155,25 @@ export function MyReviewsList() {
               </div>
             )}
 
-            {review.companyResponse && (
+            {review.hasCompanyResponse && (
               <div className="mt-3 rounded-xl border-l-4 border-accent bg-accent/5 p-3">
                 <p className="text-xs font-semibold text-accent">
-                  Response from {review.companyResponse.staffName}
+                  Company response attached
                 </p>
                 <p className="mt-1 text-sm text-[#444444]">
-                  {review.companyResponse.responseText}
+                  View the full review to see the company&apos;s reply.
                 </p>
               </div>
             )}
 
             <div className="mt-3 flex items-center gap-3 text-xs text-[#666666]">
-              <span className="inline-flex items-center gap-1">
+              <Link
+                href={`/equipment/${review.toolId}`}
+                className="inline-flex items-center gap-1 text-accent hover:underline"
+              >
                 <MessageCircle className="h-3.5 w-3.5" />
-                {review.comments.length} comment{review.comments.length !== 1 ? "s" : ""}
-              </span>
+                View full review
+              </Link>
             </div>
           </div>
         );

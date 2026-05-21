@@ -8,6 +8,7 @@ import {
   Clock3,
   Star,
   ShieldCheck,
+  MessageCircle,
   UserRound,
   X,
 } from "lucide-react";
@@ -17,7 +18,7 @@ import {
   moderateComment,
   moderateReview,
   type BackendPagedList,
-  type BackendReview,
+  type BackendModerationItem,
 } from "@/lib/backend-api";
 
 const ratingFields = [
@@ -34,10 +35,13 @@ const formatSubmittedDate = (isoDate: string) => {
   return formatDistanceToNow(date, { addSuffix: true });
 };
 
-const formatRating = (value: number) => value.toFixed(1);
+const formatRating = (value: number | null) =>
+  value != null ? value.toFixed(1) : "—";
 
 export function ModerationQueue() {
-  const [queue, setQueue] = useState<BackendPagedList<BackendReview> | null>(null);
+  const [queue, setQueue] = useState<BackendPagedList<BackendModerationItem> | null>(
+    null
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -57,7 +61,7 @@ export function ModerationQueue() {
     setErrorMessage(null);
 
     try {
-      const data = await getPendingModerationReviews({ page: 1, pageSize: 20 });
+      const data = await getPendingModerationReviews({ page: 1, pageSize: 50 });
       setQueue(data);
     } catch (error) {
       setQueue(null);
@@ -73,30 +77,43 @@ export function ModerationQueue() {
     loadQueue();
   }, [loadQueue]);
 
-  const summary = useMemo(() => {
-    const reviews = queue?.items ?? [];
+  const items = queue?.items ?? [];
 
-    if (reviews.length === 0) {
+  const reviewItems = useMemo(
+    () => items.filter((item) => item.itemType.toLowerCase() === "review"),
+    [items]
+  );
+
+  const commentItems = useMemo(
+    () => items.filter((item) => item.itemType.toLowerCase() === "comment"),
+    [items]
+  );
+
+  const summary = useMemo(() => {
+    if (reviewItems.length === 0) {
       return { averageRating: 0, oldestLabel: "No pending reviews" };
     }
 
+    const ratedReviews = reviewItems.filter((r) => r.overallRating != null);
     const averageRating =
-      reviews.reduce((total, review) => total + review.overallRating, 0) /
-      reviews.length;
+      ratedReviews.length > 0
+        ? ratedReviews.reduce((total, r) => total + (r.overallRating ?? 0), 0) /
+          ratedReviews.length
+        : 0;
 
-    const oldestReview = [...reviews].sort(
+    const oldestReview = [...reviewItems].sort(
       (left, right) =>
-        new Date(left.createdDate).getTime() -
-        new Date(right.createdDate).getTime()
+        new Date(left.submittedDate).getTime() -
+        new Date(right.submittedDate).getTime()
     )[0];
 
     return {
       averageRating,
       oldestLabel: oldestReview
-        ? formatSubmittedDate(oldestReview.createdDate)
+        ? formatSubmittedDate(oldestReview.submittedDate)
         : "Recently",
     };
-  }, [queue]);
+  }, [reviewItems]);
 
   const handleApproveReview = async (id: number) => {
     setActiveId({ kind: "review", id });
@@ -136,9 +153,15 @@ export function ModerationQueue() {
     try {
       const reason = rejectionReason.trim() || undefined;
       if (rejectingTarget.kind === "review") {
-        await moderateReview(rejectingTarget.id, { approved: false, rejectionReason: reason });
+        await moderateReview(rejectingTarget.id, {
+          approved: false,
+          rejectionReason: reason,
+        });
       } else {
-        await moderateComment(rejectingTarget.id, { approved: false, rejectionReason: reason });
+        await moderateComment(rejectingTarget.id, {
+          approved: false,
+          rejectionReason: reason,
+        });
       }
       setRejectingTarget(null);
       setRejectionReason("");
@@ -151,8 +174,6 @@ export function ModerationQueue() {
       setActiveId(null);
     }
   };
-
-  const reviews = queue?.items ?? [];
 
   if (isLoading) {
     return (
@@ -181,13 +202,17 @@ export function ModerationQueue() {
 
   return (
     <div className="space-y-6">
+      {/* Stats */}
       <div className="grid gap-4 md:grid-cols-3">
         <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_20px_60px_rgba(15,23,42,0.05)]">
           <p className="text-sm uppercase tracking-[0.24em] text-slate-500">Pending items</p>
           <p className="mt-3 text-4xl font-semibold text-slate-950">
             {queue?.totalCount ?? 0}
           </p>
-          <p className="mt-2 text-sm text-slate-600">Reviews waiting for a staff decision.</p>
+          <p className="mt-2 text-sm text-slate-600">
+            {reviewItems.length} review{reviewItems.length !== 1 ? "s" : ""},{" "}
+            {commentItems.length} comment{commentItems.length !== 1 ? "s" : ""}
+          </p>
         </div>
 
         <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_20px_60px_rgba(15,23,42,0.05)]">
@@ -217,7 +242,7 @@ export function ModerationQueue() {
         </div>
       )}
 
-      {reviews.length === 0 ? (
+      {items.length === 0 ? (
         <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-10 text-center shadow-[0_20px_60px_rgba(15,23,42,0.05)]">
           <ShieldCheck className="mx-auto h-12 w-12 text-emerald-500" />
           <h2 className="mt-4 text-2xl font-semibold text-slate-950">No pending reviews</h2>
@@ -227,9 +252,10 @@ export function ModerationQueue() {
         </div>
       ) : (
         <div className="space-y-4">
-          {reviews.map((review) => (
+          {/* Pending Reviews */}
+          {reviewItems.map((item) => (
             <article
-              key={review.id}
+              key={`review-${item.itemId}`}
               className="rounded-3xl border border-amber-200 bg-white p-6 shadow-[0_20px_60px_rgba(15,23,42,0.05)]"
             >
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
@@ -242,130 +268,152 @@ export function ModerationQueue() {
                   </div>
 
                   <div>
-                    <h2 className="text-2xl font-semibold text-slate-950">{review.toolName}</h2>
+                    <h2 className="text-2xl font-semibold text-slate-950">{item.toolName}</h2>
                     <div className="mt-2 flex flex-wrap items-center gap-4 text-sm text-slate-600">
                       <span className="inline-flex items-center gap-2">
                         <UserRound className="h-4 w-4 text-slate-400" />
-                        {review.reviewerName}
+                        {item.authorName}
                       </span>
                       <span className="inline-flex items-center gap-2">
                         <Clock3 className="h-4 w-4 text-slate-400" />
-                        Submitted {formatSubmittedDate(review.createdDate)}
+                        Submitted {formatSubmittedDate(item.submittedDate)}
                       </span>
                     </div>
                   </div>
                 </div>
 
-                <div className="rounded-2xl bg-slate-50 px-4 py-3 text-right">
-                  <p className="text-xs uppercase tracking-[0.24em] text-slate-500">Overall rating</p>
-                  <div className="mt-1 flex items-center justify-end gap-2">
-                    <span className="text-3xl font-semibold text-slate-950">
-                      {formatRating(review.overallRating)}
-                    </span>
-                    <Star className="h-5 w-5 fill-amber-400 text-amber-400" />
+                {item.overallRating != null && (
+                  <div className="rounded-2xl bg-slate-50 px-4 py-3 text-right">
+                    <p className="text-xs uppercase tracking-[0.24em] text-slate-500">Overall rating</p>
+                    <div className="mt-1 flex items-center justify-end gap-2">
+                      <span className="text-3xl font-semibold text-slate-950">
+                        {formatRating(item.overallRating)}
+                      </span>
+                      <Star className="h-5 w-5 fill-amber-400 text-amber-400" />
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
 
               <p className="mt-6 whitespace-pre-wrap rounded-2xl bg-slate-50 p-4 text-slate-700">
-                {review.reviewText}
+                {item.text}
               </p>
 
-              <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-                {ratingFields.map((field) => {
-                  const value = review[field.key];
-                  return (
-                    <div key={field.key} className="rounded-2xl border border-slate-200 px-4 py-3">
-                      <p className="text-xs uppercase tracking-[0.2em] text-slate-500">{field.label}</p>
-                      <div className="mt-2 flex items-center gap-2 text-slate-950">
-                        <span className="text-xl font-semibold">{value.toFixed(1)}</span>
-                        <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+              {item.equipmentRating != null && (
+                <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+                  {ratingFields.map((field) => {
+                    const value = item[field.key];
+                    return (
+                      <div key={field.key} className="rounded-2xl border border-slate-200 px-4 py-3">
+                        <p className="text-xs uppercase tracking-[0.2em] text-slate-500">{field.label}</p>
+                        <div className="mt-2 flex items-center gap-2 text-slate-950">
+                          <span className="text-xl font-semibold">
+                            {value != null ? value.toFixed(1) : "—"}
+                          </span>
+                          <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
+                    );
+                  })}
+                </div>
+              )}
 
               <div className="mt-6 flex flex-wrap items-center gap-3">
                 <button
                   type="button"
-                  onClick={() => handleApproveReview(review.id)}
-                  disabled={isBusyOn("review", review.id)}
+                  onClick={() => handleApproveReview(item.itemId)}
+                  disabled={isBusyOn("review", item.itemId)}
                   className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
                 >
                   <Check className="h-4 w-4" />
-                  {isBusyOn("review", review.id) ? "Approving..." : "Approve review"}
+                  {isBusyOn("review", item.itemId) ? "Approving..." : "Approve review"}
                 </button>
                 <button
                   type="button"
                   onClick={() => {
-                    setRejectingTarget({ kind: "review", id: review.id });
+                    setRejectingTarget({ kind: "review", id: item.itemId });
                     setRejectionReason("");
                   }}
-                  disabled={isBusyOn("review", review.id)}
+                  disabled={isBusyOn("review", item.itemId)}
                   className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-60"
                 >
                   <X className="h-4 w-4" />
                   Reject
                 </button>
               </div>
-
-              {review.comments && review.comments.length > 0 && (
-                <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
-                    Pending comments on this review ({review.comments.filter((c) => c.status.toLowerCase() === "pending").length})
-                  </p>
-                  <div className="mt-3 space-y-3">
-                    {review.comments
-                      .filter((comment) => comment.status.toLowerCase() === "pending")
-                      .map((comment) => (
-                        <div
-                          key={comment.id}
-                          className="rounded-xl border border-slate-200 bg-white p-3"
-                        >
-                          <div className="flex flex-wrap items-center justify-between gap-2">
-                            <p className="text-sm font-semibold text-slate-900">
-                              {comment.commenterName}
-                            </p>
-                            <p className="text-xs text-slate-500">
-                              {formatSubmittedDate(comment.createdDate)}
-                            </p>
-                          </div>
-                          <p className="mt-1 text-sm text-slate-700">{comment.commentText}</p>
-
-                          <div className="mt-3 flex items-center gap-2">
-                            <button
-                              type="button"
-                              onClick={() => handleApproveComment(comment.id)}
-                              disabled={isBusyOn("comment", comment.id)}
-                              className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
-                            >
-                              <Check className="h-3 w-3" />
-                              Approve
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setRejectingTarget({ kind: "comment", id: comment.id });
-                                setRejectionReason("");
-                              }}
-                              disabled={isBusyOn("comment", comment.id)}
-                              className="inline-flex items-center gap-1 rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-60"
-                            >
-                              <X className="h-3 w-3" />
-                              Reject
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                  </div>
-                </div>
-              )}
             </article>
           ))}
+
+          {/* Pending Comments */}
+          {commentItems.length > 0 && (
+            <>
+              <div className="pt-4">
+                <h3 className="flex items-center gap-2 text-lg font-semibold text-slate-950">
+                  <MessageCircle className="h-5 w-5 text-slate-600" />
+                  Pending comments ({commentItems.length})
+                </h3>
+              </div>
+              {commentItems.map((item) => (
+                <article
+                  key={`comment-${item.itemId}`}
+                  className="rounded-3xl border border-blue-200 bg-white p-6 shadow-[0_20px_60px_rgba(15,23,42,0.05)]"
+                >
+                  <div className="flex flex-wrap items-center gap-3 mb-4">
+                    <span className="inline-flex items-center gap-2 rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-blue-900">
+                      <MessageCircle className="h-3.5 w-3.5" />
+                      Pending comment
+                    </span>
+                    <span className="text-sm text-slate-600">
+                      on <span className="font-semibold">{item.toolName}</span>
+                    </span>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-4 text-sm text-slate-600 mb-4">
+                    <span className="inline-flex items-center gap-2">
+                      <UserRound className="h-4 w-4 text-slate-400" />
+                      {item.authorName}
+                    </span>
+                    <span className="inline-flex items-center gap-2">
+                      <Clock3 className="h-4 w-4 text-slate-400" />
+                      Submitted {formatSubmittedDate(item.submittedDate)}
+                    </span>
+                  </div>
+
+                  <p className="whitespace-pre-wrap rounded-2xl bg-slate-50 p-4 text-slate-700">
+                    {item.text}
+                  </p>
+
+                  <div className="mt-4 flex flex-wrap items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => handleApproveComment(item.itemId)}
+                      disabled={isBusyOn("comment", item.itemId)}
+                      className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
+                    >
+                      <Check className="h-3 w-3" />
+                      {isBusyOn("comment", item.itemId) ? "Approving..." : "Approve"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setRejectingTarget({ kind: "comment", id: item.itemId });
+                        setRejectionReason("");
+                      }}
+                      disabled={isBusyOn("comment", item.itemId)}
+                      className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-60"
+                    >
+                      <X className="h-3 w-3" />
+                      Reject
+                    </button>
+                  </div>
+                </article>
+              ))}
+            </>
+          )}
         </div>
       )}
 
+      {/* Rejection modal */}
       {rejectingTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl">

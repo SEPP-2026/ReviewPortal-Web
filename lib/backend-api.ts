@@ -149,6 +149,36 @@ export interface BackendToolRanking {
   reviewCount: number;
 }
 
+export interface BackendModerationItem {
+  itemType: string;
+  itemId: number;
+  reviewId: number;
+  toolId: number;
+  toolName: string;
+  authorName: string;
+  text: string;
+  submittedDate: string;
+  status: string;
+  equipmentRating: number | null;
+  customerServiceRating: number | null;
+  technicalSupportRating: number | null;
+  afterSalesRating: number | null;
+  valueForMoneyRating: number | null;
+  overallRating: number | null;
+}
+
+export interface BackendReviewSummary {
+  id: number;
+  toolId: number;
+  toolName: string;
+  reviewTextSnippet: string;
+  overallRating: number;
+  status: string;
+  rejectionReason: string | null;
+  createdDate: string;
+  hasCompanyResponse: boolean;
+}
+
 export interface CreateReviewPayload {
   reviewerName: string;
   reviewerEmail: string;
@@ -397,7 +427,7 @@ export const getMyReviews = (
     pageSize: options.pageSize ?? 10,
   });
 
-  return backendFetch<BackendPagedList<BackendReview>>(`/users/me/reviews${query}`);
+  return backendFetch<BackendPagedList<BackendReviewSummary>>(`/users/me/reviews${query}`);
 };
 
 // ===== Admin: Dashboard =====
@@ -413,7 +443,7 @@ export const getPendingModerationReviews = (
     pageSize: options.pageSize ?? 20,
   });
 
-  return backendFetch<BackendPagedList<BackendReview>>(
+  return backendFetch<BackendPagedList<BackendModerationItem>>(
     `/admin/moderation/pending${query}`
   );
 };
