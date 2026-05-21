@@ -1,44 +1,59 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
+
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Spinner } from "@/components/ui/spinner";
+import { loginSchema, type LoginValues } from "@/lib/form-schemas";
 
-export default function LoginPage() {
+function LoginContent() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const searchParams = useSearchParams();
 
-  const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setIsSubmitting(true);
-    setErrorMessage(null);
+  const {
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { email: "", password: "" },
+  });
 
+  const onSubmit = async (values: LoginValues) => {
     try {
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify(values),
       });
 
-      const data = await response.json().catch(() => ({}));
+      const data = (await response.json().catch(() => ({}))) as {
+        message?: string;
+      };
+
       if (!response.ok) {
-        setErrorMessage(data?.message || "Login failed. Try again.");
+        setError("password", {
+          message: data?.message || "Login failed. Try again.",
+        });
         return;
       }
 
       window.dispatchEvent(new Event("auth:changed"));
-
-      const nextParam = new URLSearchParams(window.location.search).get("next");
-      router.push(nextParam || "/");
+      toast.success("Signed in");
+      router.push(searchParams.get("next") || "/");
       router.refresh();
     } catch {
-      setErrorMessage("Unable to connect. Please try again.");
-    } finally {
-      setIsSubmitting(false);
+      setError("password", {
+        message: "Unable to connect. Please try again.",
+      });
     }
   };
 
@@ -66,42 +81,46 @@ export default function LoginPage() {
 
           <div className="bg-white text-black rounded-2xl shadow-xl p-8 border border-white/10">
             <h2 className="text-2xl font-semibold">Sign in</h2>
-            <p className="text-sm text-gray mt-2">
+            <p className="text-sm text-gray-600 mt-2">
               Use your ReviewPortal credentials.
             </p>
 
-            <form onSubmit={onSubmit} className="mt-6 space-y-5">
-              <label className="block">
-                <span className="text-sm font-medium">Email</span>
-                <input
+            <form
+              onSubmit={handleSubmit(onSubmit)}
+              className="mt-6 space-y-5"
+              noValidate
+            >
+              <div className="space-y-1.5">
+                <Label htmlFor="login-email">Email</Label>
+                <Input
+                  id="login-email"
                   type="email"
-                  name="email"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  className="mt-2 w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                  autoComplete="email"
                   placeholder="you@example.com"
-                  required
+                  aria-invalid={errors.email ? "true" : undefined}
+                  {...register("email")}
                 />
-              </label>
+                {errors.email && (
+                  <p className="text-xs text-red-600">{errors.email.message}</p>
+                )}
+              </div>
 
-              <label className="block">
-                <span className="text-sm font-medium">Password</span>
-                <input
+              <div className="space-y-1.5">
+                <Label htmlFor="login-password">Password</Label>
+                <Input
+                  id="login-password"
                   type="password"
-                  name="password"
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  className="mt-2 w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                  autoComplete="current-password"
                   placeholder="Your password"
-                  required
+                  aria-invalid={errors.password ? "true" : undefined}
+                  {...register("password")}
                 />
-              </label>
-
-              {errorMessage && (
-                <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                  {errorMessage}
-                </div>
-              )}
+                {errors.password && (
+                  <p className="text-xs text-red-600">
+                    {errors.password.message}
+                  </p>
+                )}
+              </div>
 
               <Button
                 type="submit"
@@ -113,7 +132,7 @@ export default function LoginPage() {
               </Button>
             </form>
 
-            <div className="mt-6 flex flex-col gap-2 text-sm text-gray">
+            <div className="mt-6 flex flex-col gap-2 text-sm text-gray-600">
               <span>
                 New here?{" "}
                 <Link className="text-accent font-semibold" href="/register">
@@ -134,5 +153,13 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<Spinner fullHeight text="Loading..." />}>
+      <LoginContent />
+    </Suspense>
   );
 }

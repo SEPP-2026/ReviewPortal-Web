@@ -1,43 +1,67 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
+
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { registerSchema, type RegisterValues } from "@/lib/form-schemas";
 
 export default function RegisterPage() {
   const router = useRouter();
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setIsSubmitting(true);
-    setErrorMessage(null);
+  const {
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors, isSubmitting },
+  } = useForm<RegisterValues>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: { name: "", email: "", password: "" },
+  });
 
+  const onSubmit = async (values: RegisterValues) => {
     try {
       const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify(values),
       });
 
-      const data = await response.json().catch(() => ({}));
+      const data = (await response.json().catch(() => ({}))) as {
+        message?: string;
+        errors?: Record<string, string[]>;
+      };
+
       if (!response.ok) {
-        setErrorMessage(data?.message || "Registration failed. Try again.");
+        // Surface backend field errors inline if provided
+        if (data.errors) {
+          for (const [field, messages] of Object.entries(data.errors)) {
+            const key = field.charAt(0).toLowerCase() + field.slice(1);
+            if (key === "name" || key === "email" || key === "password") {
+              setError(key, { message: messages[0] });
+            }
+          }
+        } else {
+          setError("password", {
+            message: data?.message || "Registration failed. Try again.",
+          });
+        }
         return;
       }
 
       window.dispatchEvent(new Event("auth:changed"));
+      toast.success("Account created");
       router.push("/");
       router.refresh();
     } catch {
-      setErrorMessage("Unable to connect. Please try again.");
-    } finally {
-      setIsSubmitting(false);
+      setError("password", {
+        message: "Unable to connect. Please try again.",
+      });
     }
   };
 
@@ -65,55 +89,61 @@ export default function RegisterPage() {
 
           <div className="bg-white text-black rounded-2xl shadow-xl p-8 border border-white/10">
             <h2 className="text-2xl font-semibold">Create your account</h2>
-            <p className="text-sm text-gray mt-2">
-              It only takes a minute.
+            <p className="text-sm text-gray-600 mt-2">
+              It only takes a minute. Passwords need 8+ characters with an
+              uppercase letter and a digit.
             </p>
 
-            <form onSubmit={onSubmit} className="mt-6 space-y-5">
-              <label className="block">
-                <span className="text-sm font-medium">Full name</span>
-                <input
-                  type="text"
-                  name="name"
-                  value={name}
-                  onChange={(event) => setName(event.target.value)}
-                  className="mt-2 w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+            <form
+              onSubmit={handleSubmit(onSubmit)}
+              className="mt-6 space-y-5"
+              noValidate
+            >
+              <div className="space-y-1.5">
+                <Label htmlFor="register-name">Full name</Label>
+                <Input
+                  id="register-name"
+                  autoComplete="name"
                   placeholder="Jordan Smith"
-                  required
+                  aria-invalid={errors.name ? "true" : undefined}
+                  {...register("name")}
                 />
-              </label>
+                {errors.name && (
+                  <p className="text-xs text-red-600">{errors.name.message}</p>
+                )}
+              </div>
 
-              <label className="block">
-                <span className="text-sm font-medium">Email</span>
-                <input
+              <div className="space-y-1.5">
+                <Label htmlFor="register-email">Email</Label>
+                <Input
+                  id="register-email"
                   type="email"
-                  name="email"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  className="mt-2 w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                  autoComplete="email"
                   placeholder="you@example.com"
-                  required
+                  aria-invalid={errors.email ? "true" : undefined}
+                  {...register("email")}
                 />
-              </label>
+                {errors.email && (
+                  <p className="text-xs text-red-600">{errors.email.message}</p>
+                )}
+              </div>
 
-              <label className="block">
-                <span className="text-sm font-medium">Password</span>
-                <input
+              <div className="space-y-1.5">
+                <Label htmlFor="register-password">Password</Label>
+                <Input
+                  id="register-password"
                   type="password"
-                  name="password"
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  className="mt-2 w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                  autoComplete="new-password"
                   placeholder="Create a strong password"
-                  required
+                  aria-invalid={errors.password ? "true" : undefined}
+                  {...register("password")}
                 />
-              </label>
-
-              {errorMessage && (
-                <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                  {errorMessage}
-                </div>
-              )}
+                {errors.password && (
+                  <p className="text-xs text-red-600">
+                    {errors.password.message}
+                  </p>
+                )}
+              </div>
 
               <Button
                 type="submit"
@@ -125,7 +155,7 @@ export default function RegisterPage() {
               </Button>
             </form>
 
-            <p className="text-sm text-gray mt-6">
+            <p className="text-sm text-gray-600 mt-6">
               Already have an account?{" "}
               <Link className="text-accent font-semibold" href="/login">
                 Sign in

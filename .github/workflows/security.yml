@@ -1,0 +1,115 @@
+# ============================================================
+# Security Scans
+# ============================================================
+# Runs three independent scans on every push, every PR, and once
+# a week (Monday 09:00 UTC) so newly disclosed CVEs are caught
+# even when no commits are landing.
+#
+#   1. npm audit  - dependency vulnerability check (production deps)
+#   2. CodeQL     - static analysis (JS/TS) for XSS, prototype
+#                   pollution, hard-coded credentials, etc.
+#   3. Gitleaks   - committed secret scanning across full history
+#
+# Manual `workflow_dispatch` trigger is also available so anyone
+# can force a re-scan from the Actions tab.
+# ============================================================
+
+name: Security
+
+on:
+  push:
+  pull_request:
+  schedule:
+    # Mondays 09:00 UTC
+    - cron: "0 9 * * 1"
+  workflow_dispatch:
+
+# Scheduled runs should always complete - don't cancel them when
+# a new push arrives on the same ref.
+concurrency:
+  group: security-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  # ──────────────────────────────────────────────────────────
+  # 1. npm audit
+  # Fails the workflow if any production dependency has an
+  # advisory at severity "high" or above.
+  # ──────────────────────────────────────────────────────────
+  npm-audit:
+    name: npm audit (production deps)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install (skip lifecycle scripts)
+        run: npm ci --ignore-scripts
+
+      - name: npm audit
+        run: npm audit --omit=dev --audit-level=high
+
+  # ──────────────────────────────────────────────────────────
+  # 2. CodeQL (JavaScript / TypeScript SAST)
+  # Results appear under repository "Security" → "Code scanning".
+  # ──────────────────────────────────────────────────────────
+  codeql:
+    name: CodeQL (JS/TS)
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript-typescript
+          # security-extended adds higher-recall queries; quality
+          # adds maintainability and reliability checks.
+          queries: security-extended,security-and-quality
+
+      - name: Perform CodeQL analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:javascript-typescript"
+
+  # ──────────────────────────────────────────────────────────
+  # 3. Gitleaks (committed secret scanning)
+  # Free for public repos and personal accounts. If this repo
+  # lives under a GitHub organisation, set the GITLEAKS_LICENSE
+  # repo secret per https://gitleaks.io/products.html (free for
+  # academic / OSS use).
+  # ──────────────────────────────────────────────────────────
+  gitleaks:
+    name: Gitleaks (secret scan)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout (full history)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Uncomment after creating the secret if you hit the
+          # "organisation license required" error.
+          # GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}

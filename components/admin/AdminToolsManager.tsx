@@ -1,6 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
 import {
   AlertCircle,
   ImagePlus,
@@ -11,7 +14,12 @@ import {
   Trash2,
   X,
 } from "lucide-react";
+
 import { Spinner } from "@/components/ui/spinner";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   createTool,
   deleteToolImage,
@@ -24,42 +32,39 @@ import {
   type BackendAdminToolSummary,
   type BackendCategory,
   type BackendTool,
-  type CreateToolPayload,
-  type UpdateToolPayload,
 } from "@/lib/backend-api";
+import { adminToolSchema, type AdminToolValues } from "@/lib/form-schemas";
 
 type FormMode =
   | { kind: "closed" }
   | { kind: "create" }
   | { kind: "edit"; tool: BackendTool };
 
-interface ToolFormState {
-  categoryId: number | "";
-  name: string;
-  description: string;
-  hourlyRate: string;
-  dailyRate: string;
-  weeklyRate: string;
-  specialNotes: string;
-  depositRequired: boolean;
-  depositAmount: string;
-  imageFile: File | null;
-}
-
-const emptyForm: ToolFormState = {
-  categoryId: "",
+const EMPTY_FORM: AdminToolValues = {
+  categoryId: 0 as unknown as AdminToolValues["categoryId"],
   name: "",
   description: "",
-  hourlyRate: "",
-  dailyRate: "",
-  weeklyRate: "",
+  hourlyRate: 0,
+  dailyRate: 0,
+  weeklyRate: 0,
   specialNotes: "",
   depositRequired: false,
   depositAmount: "",
-  imageFile: null,
 };
 
-const parseNumber = (value: string) => Number.parseFloat(value);
+const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5 MB
+
+const validateImage = (file: File | null): string | null => {
+  if (!file) return null;
+  if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
+    return "Image must be JPG, PNG, or WebP.";
+  }
+  if (file.size > MAX_IMAGE_BYTES) {
+    return "Image must be 5 MB or smaller.";
+  }
+  return null;
+};
 
 export function AdminToolsManager() {
   const [tools, setTools] = useState<BackendAdminToolSummary[]>([]);
@@ -71,20 +76,33 @@ export function AdminToolsManager() {
   const [categoryFilter, setCategoryFilter] = useState<number | "">("");
 
   const [formMode, setFormMode] = useState<FormMode>({ kind: "closed" });
-  const [formState, setFormState] = useState<ToolFormState>(emptyForm);
-  const [formError, setFormError] = useState<string | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
-
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageError, setImageError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<number | null>(null);
 
   const [imagePanelTool, setImagePanelTool] = useState<BackendTool | null>(null);
   const [imagePanelError, setImagePanelError] = useState<string | null>(null);
 
+  const {
+    register,
+    handleSubmit,
+    reset,
+    watch,
+    setValue,
+    setError,
+    formState: { errors, isSubmitting },
+  } = useForm<AdminToolValues>({
+    resolver: zodResolver(adminToolSchema),
+    defaultValues: EMPTY_FORM,
+  });
+
+  const depositRequired = watch("depositRequired");
+
   const loadCategories = useCallback(async () => {
     try {
       setCategories(await getCategories());
     } catch {
-      // ignore - non-fatal
+      // non-fatal; the dropdown stays empty
     }
   }, []);
 
@@ -102,7 +120,7 @@ export function AdminToolsManager() {
       setTools(data.items);
     } catch (error) {
       setErrorMessage(
-        error instanceof Error ? error.message : "Failed to load tools."
+        error instanceof Error ? error.message : "Failed to load tools.",
       );
     } finally {
       setIsLoading(false);
@@ -118,32 +136,34 @@ export function AdminToolsManager() {
   }, [loadTools]);
 
   const openCreate = () => {
-    setFormState(emptyForm);
-    setFormError(null);
+    reset(EMPTY_FORM);
+    setImageFile(null);
+    setImageError(null);
     setFormMode({ kind: "create" });
   };
 
   const openEdit = async (id: number) => {
-    setFormError(null);
     setBusyId(id);
+    setErrorMessage(null);
     try {
       const tool = await getAdminToolById(id);
-      setFormState({
+      reset({
         categoryId: tool.categoryId,
         name: tool.name,
         description: tool.description,
-        hourlyRate: String(tool.hourlyRate),
-        dailyRate: String(tool.dailyRate),
-        weeklyRate: String(tool.weeklyRate),
+        hourlyRate: tool.hourlyRate,
+        dailyRate: tool.dailyRate,
+        weeklyRate: tool.weeklyRate,
         specialNotes: tool.specialNotes ?? "",
         depositRequired: tool.depositRequired,
-        depositAmount: tool.depositAmount != null ? String(tool.depositAmount) : "",
-        imageFile: null,
+        depositAmount: tool.depositAmount ?? "",
       });
+      setImageFile(null);
+      setImageError(null);
       setFormMode({ kind: "edit", tool });
     } catch (error) {
       setErrorMessage(
-        error instanceof Error ? error.message : "Failed to open tool for edit."
+        error instanceof Error ? error.message : "Failed to open tool for edit.",
       );
     } finally {
       setBusyId(null);
@@ -152,67 +172,50 @@ export function AdminToolsManager() {
 
   const closeForm = () => setFormMode({ kind: "closed" });
 
-  const validateForm = (mode: FormMode): string | null => {
-    if (formState.categoryId === "") return "Choose a category.";
-    if (!formState.name.trim()) return "Name is required.";
-    if (!formState.description.trim()) return "Description is required.";
-    if (!formState.hourlyRate || Number.isNaN(parseNumber(formState.hourlyRate)))
-      return "Hourly rate must be a number.";
-    if (!formState.dailyRate || Number.isNaN(parseNumber(formState.dailyRate)))
-      return "Daily rate must be a number.";
-    if (!formState.weeklyRate || Number.isNaN(parseNumber(formState.weeklyRate)))
-      return "Weekly rate must be a number.";
-    if (
-      formState.depositRequired &&
-      (!formState.depositAmount || Number.isNaN(parseNumber(formState.depositAmount)))
-    )
-      return "Deposit amount is required when deposit is on.";
-    if (mode.kind === "create" && !formState.imageFile)
-      return "Upload at least one image to create a tool.";
-    return null;
+  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0] ?? null;
+    const message = validateImage(file);
+    setImageError(message);
+    setImageFile(message ? null : file);
   };
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setFormError(null);
-
-    const validation = validateForm(formMode);
-    if (validation) {
-      setFormError(validation);
+  const onSubmit = async (values: AdminToolValues) => {
+    // Create mode requires an image; edit mode allows updating without one.
+    if (formMode.kind === "create" && !imageFile) {
+      setImageError("Upload at least one image to create a tool.");
       return;
     }
+    if (imageError) return;
 
-    setIsSaving(true);
     try {
       const sharedPayload = {
-        categoryId: Number(formState.categoryId),
-        name: formState.name.trim(),
-        description: formState.description.trim(),
-        hourlyRate: parseNumber(formState.hourlyRate),
-        dailyRate: parseNumber(formState.dailyRate),
-        weeklyRate: parseNumber(formState.weeklyRate),
-        specialNotes: formState.specialNotes.trim() || undefined,
-        depositRequired: formState.depositRequired,
-        depositAmount: formState.depositRequired
-          ? parseNumber(formState.depositAmount)
+        categoryId: Number(values.categoryId),
+        name: values.name.trim(),
+        description: values.description.trim(),
+        hourlyRate: Number(values.hourlyRate),
+        dailyRate: Number(values.dailyRate),
+        weeklyRate: Number(values.weeklyRate),
+        specialNotes: values.specialNotes?.trim() || undefined,
+        depositRequired: values.depositRequired,
+        depositAmount: values.depositRequired
+          ? Number(values.depositAmount || 0)
           : undefined,
       };
 
-      if (formMode.kind === "create") {
-        const payload: CreateToolPayload = sharedPayload;
-        await createTool(payload, formState.imageFile!);
+      if (formMode.kind === "create" && imageFile) {
+        await createTool(sharedPayload, imageFile);
+        toast.success("Tool created");
       } else if (formMode.kind === "edit") {
-        const payload: UpdateToolPayload = sharedPayload;
-        await updateTool(formMode.tool.id, payload);
+        await updateTool(formMode.tool.id, sharedPayload);
+        toast.success("Tool updated");
       }
       closeForm();
       await loadTools();
     } catch (error) {
-      setFormError(
-        error instanceof Error ? error.message : "Failed to save tool."
-      );
-    } finally {
-      setIsSaving(false);
+      setError("name", {
+        message:
+          error instanceof Error ? error.message : "Failed to save tool.",
+      });
     }
   };
 
@@ -221,10 +224,11 @@ export function AdminToolsManager() {
     setErrorMessage(null);
     try {
       await setToolStatus(tool.id, !tool.isActive);
+      toast.success(tool.isActive ? "Tool deactivated" : "Tool activated");
       await loadTools();
     } catch (error) {
       setErrorMessage(
-        error instanceof Error ? error.message : "Failed to update tool status."
+        error instanceof Error ? error.message : "Failed to update tool status.",
       );
     } finally {
       setBusyId(null);
@@ -239,7 +243,7 @@ export function AdminToolsManager() {
       setImagePanelTool(tool);
     } catch (error) {
       setErrorMessage(
-        error instanceof Error ? error.message : "Failed to load images."
+        error instanceof Error ? error.message : "Failed to load images.",
       );
     } finally {
       setBusyId(null);
@@ -251,15 +255,23 @@ export function AdminToolsManager() {
     const file = event.target.files?.[0];
     if (!file) return;
 
+    const message = validateImage(file);
+    if (message) {
+      setImagePanelError(message);
+      event.target.value = "";
+      return;
+    }
+
     setImagePanelError(null);
     try {
       await uploadToolImage(imagePanelTool.id, file);
       const refreshed = await getAdminToolById(imagePanelTool.id);
       setImagePanelTool(refreshed);
+      toast.success("Image uploaded");
       await loadTools();
     } catch (error) {
       setImagePanelError(
-        error instanceof Error ? error.message : "Failed to upload image."
+        error instanceof Error ? error.message : "Failed to upload image.",
       );
     } finally {
       event.target.value = "";
@@ -268,15 +280,20 @@ export function AdminToolsManager() {
 
   const handleDeleteImage = async (imageId: number) => {
     if (!imagePanelTool) return;
-    if (!confirm("Delete this image?")) return;
+    if (imagePanelTool.images.length <= 1) {
+      setImagePanelError("A tool must keep at least one image.");
+      return;
+    }
+    if (!window.confirm("Delete this image?")) return;
     setImagePanelError(null);
     try {
       await deleteToolImage(imagePanelTool.id, imageId);
       const refreshed = await getAdminToolById(imagePanelTool.id);
       setImagePanelTool(refreshed);
+      toast.success("Image deleted");
     } catch (error) {
       setImagePanelError(
-        error instanceof Error ? error.message : "Failed to delete image."
+        error instanceof Error ? error.message : "Failed to delete image.",
       );
     }
   };
@@ -287,22 +304,22 @@ export function AdminToolsManager() {
         <div className="flex flex-wrap items-center gap-3">
           <div className="relative flex-1 min-w-[220px]">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-            <input
+            <Input
               type="search"
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Search by name..."
-              className="w-full rounded-xl border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+              className="pl-9"
             />
           </div>
           <select
             value={categoryFilter}
             onChange={(event) =>
               setCategoryFilter(
-                event.target.value === "" ? "" : Number(event.target.value)
+                event.target.value === "" ? "" : Number(event.target.value),
               )
             }
-            className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+            className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-accent"
           >
             <option value="">All categories</option>
             {categories.map((category) => (
@@ -316,20 +333,16 @@ export function AdminToolsManager() {
             onChange={(event) =>
               setStatusFilter(event.target.value as "" | "active" | "inactive")
             }
-            className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+            className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-accent"
           >
             <option value="">All statuses</option>
             <option value="active">Active</option>
             <option value="inactive">Inactive</option>
           </select>
-          <button
-            type="button"
-            onClick={openCreate}
-            className="inline-flex items-center gap-2 rounded-xl bg-slate-950 px-4 py-2 text-sm font-semibold text-white hover:bg-black"
-          >
+          <Button type="button" variant="default" size="sm" onClick={openCreate}>
             <Plus className="h-4 w-4" />
             New tool
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -370,6 +383,7 @@ export function AdminToolsManager() {
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
                         {tool.thumbnailUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
                           <img
                             src={tool.thumbnailUrl}
                             alt={tool.name}
@@ -460,230 +474,211 @@ export function AdminToolsManager() {
           <div className="mt-12 w-full max-w-3xl rounded-3xl bg-white p-6 shadow-2xl">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold text-slate-950">
-                {formMode.kind === "create" ? "Create tool" : `Edit: ${formMode.tool.name}`}
+                {formMode.kind === "create"
+                  ? "Create tool"
+                  : `Edit: ${formMode.tool.name}`}
               </h2>
               <button
                 type="button"
                 onClick={closeForm}
                 className="rounded-full p-1 text-slate-500 hover:bg-slate-100"
+                aria-label="Close"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            {formError && (
-              <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-                {formError}
-              </div>
-            )}
-
-            <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+            <form
+              onSubmit={handleSubmit(onSubmit)}
+              className="mt-6 space-y-4"
+              noValidate
+            >
               <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700">
-                    Category
-                  </label>
+                <div className="space-y-1.5">
+                  <Label htmlFor="tool-category">Category</Label>
                   <select
-                    value={formState.categoryId}
-                    onChange={(event) =>
-                      setFormState((prev) => ({
-                        ...prev,
-                        categoryId:
-                          event.target.value === ""
-                            ? ""
-                            : Number(event.target.value),
-                      }))
-                    }
-                    className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                    id="tool-category"
+                    aria-invalid={errors.categoryId ? "true" : undefined}
+                    {...register("categoryId", { valueAsNumber: true })}
+                    className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-accent"
                   >
-                    <option value="">Select category</option>
+                    <option value={0}>Select category</option>
                     {categories.map((category) => (
                       <option key={category.id} value={category.id}>
                         {category.name}
                       </option>
                     ))}
                   </select>
+                  {errors.categoryId && (
+                    <p className="text-xs text-red-600">
+                      {errors.categoryId.message}
+                    </p>
+                  )}
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700">
-                    Name
-                  </label>
-                  <input
-                    type="text"
-                    value={formState.name}
-                    onChange={(event) =>
-                      setFormState((prev) => ({ ...prev, name: event.target.value }))
-                    }
-                    className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                <div className="space-y-1.5">
+                  <Label htmlFor="tool-name">Name</Label>
+                  <Input
+                    id="tool-name"
+                    aria-invalid={errors.name ? "true" : undefined}
+                    {...register("name")}
                   />
+                  {errors.name && (
+                    <p className="text-xs text-red-600">{errors.name.message}</p>
+                  )}
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-slate-700">
-                  Description
-                </label>
-                <textarea
+              <div className="space-y-1.5">
+                <Label htmlFor="tool-description">Description</Label>
+                <Textarea
+                  id="tool-description"
                   rows={3}
-                  value={formState.description}
-                  onChange={(event) =>
-                    setFormState((prev) => ({
-                      ...prev,
-                      description: event.target.value,
-                    }))
-                  }
-                  className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                  aria-invalid={errors.description ? "true" : undefined}
+                  {...register("description")}
                 />
+                {errors.description && (
+                  <p className="text-xs text-red-600">
+                    {errors.description.message}
+                  </p>
+                )}
               </div>
 
               <div className="grid gap-4 sm:grid-cols-3">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700">
-                    Hourly rate ($)
-                  </label>
-                  <input
+                <div className="space-y-1.5">
+                  <Label htmlFor="tool-hourly">Hourly rate ($)</Label>
+                  <Input
+                    id="tool-hourly"
                     type="number"
                     step="0.01"
-                    value={formState.hourlyRate}
-                    onChange={(event) =>
-                      setFormState((prev) => ({
-                        ...prev,
-                        hourlyRate: event.target.value,
-                      }))
-                    }
-                    className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                    aria-invalid={errors.hourlyRate ? "true" : undefined}
+                    {...register("hourlyRate", { valueAsNumber: true })}
                   />
+                  {errors.hourlyRate && (
+                    <p className="text-xs text-red-600">
+                      {errors.hourlyRate.message}
+                    </p>
+                  )}
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700">
-                    Daily rate ($)
-                  </label>
-                  <input
+                <div className="space-y-1.5">
+                  <Label htmlFor="tool-daily">Daily rate ($)</Label>
+                  <Input
+                    id="tool-daily"
                     type="number"
                     step="0.01"
-                    value={formState.dailyRate}
-                    onChange={(event) =>
-                      setFormState((prev) => ({
-                        ...prev,
-                        dailyRate: event.target.value,
-                      }))
-                    }
-                    className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                    aria-invalid={errors.dailyRate ? "true" : undefined}
+                    {...register("dailyRate", { valueAsNumber: true })}
                   />
+                  {errors.dailyRate && (
+                    <p className="text-xs text-red-600">
+                      {errors.dailyRate.message}
+                    </p>
+                  )}
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700">
-                    Weekly rate ($)
-                  </label>
-                  <input
+                <div className="space-y-1.5">
+                  <Label htmlFor="tool-weekly">Weekly rate ($)</Label>
+                  <Input
+                    id="tool-weekly"
                     type="number"
                     step="0.01"
-                    value={formState.weeklyRate}
-                    onChange={(event) =>
-                      setFormState((prev) => ({
-                        ...prev,
-                        weeklyRate: event.target.value,
-                      }))
-                    }
-                    className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                    aria-invalid={errors.weeklyRate ? "true" : undefined}
+                    {...register("weeklyRate", { valueAsNumber: true })}
                   />
+                  {errors.weeklyRate && (
+                    <p className="text-xs text-red-600">
+                      {errors.weeklyRate.message}
+                    </p>
+                  )}
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-slate-700">
-                  Special notes (optional)
-                </label>
-                <textarea
+              <div className="space-y-1.5">
+                <Label htmlFor="tool-notes">Special notes (optional)</Label>
+                <Textarea
+                  id="tool-notes"
                   rows={2}
-                  value={formState.specialNotes}
-                  onChange={(event) =>
-                    setFormState((prev) => ({
-                      ...prev,
-                      specialNotes: event.target.value,
-                    }))
-                  }
-                  className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                  aria-invalid={errors.specialNotes ? "true" : undefined}
+                  {...register("specialNotes")}
                 />
+                {errors.specialNotes && (
+                  <p className="text-xs text-red-600">
+                    {errors.specialNotes.message}
+                  </p>
+                )}
               </div>
 
               <div className="flex flex-wrap items-center gap-4">
                 <label className="inline-flex items-center gap-2 text-sm font-medium text-slate-700">
                   <input
                     type="checkbox"
-                    checked={formState.depositRequired}
-                    onChange={(event) =>
-                      setFormState((prev) => ({
-                        ...prev,
-                        depositRequired: event.target.checked,
-                      }))
-                    }
                     className="h-4 w-4 rounded border-slate-300"
+                    {...register("depositRequired", {
+                      onChange: (event) => {
+                        if (!event.target.checked) {
+                          setValue("depositAmount", "");
+                        }
+                      },
+                    })}
                   />
                   Deposit required
                 </label>
-                {formState.depositRequired && (
-                  <div>
-                    <label className="block text-xs font-medium text-slate-700">
+                {depositRequired && (
+                  <div className="space-y-1.5">
+                    <Label htmlFor="tool-deposit" className="text-xs">
                       Deposit amount ($)
-                    </label>
-                    <input
+                    </Label>
+                    <Input
+                      id="tool-deposit"
                       type="number"
                       step="0.01"
-                      value={formState.depositAmount}
-                      onChange={(event) =>
-                        setFormState((prev) => ({
-                          ...prev,
-                          depositAmount: event.target.value,
-                        }))
-                      }
-                      className="mt-1 w-40 rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                      className="w-40"
+                      aria-invalid={errors.depositAmount ? "true" : undefined}
+                      {...register("depositAmount")}
                     />
+                    {errors.depositAmount && (
+                      <p className="text-xs text-red-600">
+                        {errors.depositAmount.message}
+                      </p>
+                    )}
                   </div>
                 )}
               </div>
 
               {formMode.kind === "create" && (
-                <div>
-                  <label className="block text-sm font-medium text-slate-700">
-                    Cover image
-                  </label>
+                <div className="space-y-1.5">
+                  <Label htmlFor="tool-image">Cover image</Label>
                   <input
+                    id="tool-image"
                     type="file"
-                    accept="image/*"
-                    onChange={(event) =>
-                      setFormState((prev) => ({
-                        ...prev,
-                        imageFile: event.target.files?.[0] ?? null,
-                      }))
-                    }
-                    className="mt-1 w-full text-sm"
+                    accept="image/jpeg,image/png,image/webp"
+                    onChange={handleImageChange}
+                    className="w-full text-sm text-slate-900"
                   />
-                  <p className="mt-1 text-xs text-slate-500">
-                    Use the image panel after creation to add more photos.
+                  <p className="text-xs text-slate-500">
+                    JPG, PNG, or WebP. Maximum 5 MB. Use the image panel after
+                    creation to add more photos.
                   </p>
+                  {imageError && (
+                    <p className="text-xs text-red-600">{imageError}</p>
+                  )}
                 </div>
               )}
 
               <div className="flex items-center justify-end gap-3 pt-2">
-                <button
+                <Button
                   type="button"
+                  variant="outline"
                   onClick={closeForm}
-                  className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                  disabled={isSubmitting}
                 >
                   Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSaving}
-                  className="rounded-lg bg-slate-950 px-5 py-2 text-sm font-semibold text-white hover:bg-black disabled:opacity-60"
-                >
-                  {isSaving
+                </Button>
+                <Button type="submit" variant="default" disabled={isSubmitting}>
+                  {isSubmitting
                     ? "Saving..."
                     : formMode.kind === "create"
-                    ? "Create tool"
-                    : "Save changes"}
-                </button>
+                      ? "Create tool"
+                      : "Save changes"}
+                </Button>
               </div>
             </form>
           </div>
@@ -702,6 +697,7 @@ export function AdminToolsManager() {
                 type="button"
                 onClick={() => setImagePanelTool(null)}
                 className="rounded-full p-1 text-slate-500 hover:bg-slate-100"
+                aria-label="Close"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -715,10 +711,10 @@ export function AdminToolsManager() {
 
             <label className="mt-6 flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-300 p-6 text-sm font-medium text-slate-700 hover:border-accent hover:text-accent">
               <ImagePlus className="h-4 w-4" />
-              Upload new image
+              Upload new image (JPG / PNG / WebP, max 5 MB)
               <input
                 type="file"
-                accept="image/*"
+                accept="image/jpeg,image/png,image/webp"
                 className="hidden"
                 onChange={handleUploadImage}
               />
@@ -726,15 +722,19 @@ export function AdminToolsManager() {
 
             <div className="mt-6 grid gap-3 sm:grid-cols-3">
               {imagePanelTool.images.length === 0 ? (
-                <p className="col-span-full text-sm text-slate-600">No images yet.</p>
+                <p className="col-span-full text-sm text-slate-600">
+                  No images yet.
+                </p>
               ) : (
                 imagePanelTool.images
+                  .slice()
                   .sort((a, b) => a.displayOrder - b.displayOrder)
                   .map((image) => (
                     <div
                       key={image.id}
                       className="group relative overflow-hidden rounded-2xl border border-slate-200"
                     >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={image.imageUrl}
                         alt=""
@@ -743,8 +743,13 @@ export function AdminToolsManager() {
                       <button
                         type="button"
                         onClick={() => handleDeleteImage(image.id)}
-                        className="absolute right-2 top-2 rounded-full bg-white p-1.5 text-red-600 opacity-0 shadow-md transition-opacity group-hover:opacity-100"
-                        title="Delete image"
+                        disabled={imagePanelTool.images.length <= 1}
+                        className="absolute right-2 top-2 rounded-full bg-white p-1.5 text-red-600 opacity-0 shadow-md transition-opacity group-hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-40"
+                        title={
+                          imagePanelTool.images.length <= 1
+                            ? "A tool must keep at least one image"
+                            : "Delete image"
+                        }
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>

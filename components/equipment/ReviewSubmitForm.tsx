@@ -1,9 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect } from "react";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { PenSquare, Check } from "lucide-react";
+import { toast } from "sonner";
+
 import { StarRatingInput } from "@/components/equipment/StarRatingInput";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
 import { createToolReview, type BackendReview } from "@/lib/backend-api";
+import { reviewSchema, type ReviewValues } from "@/lib/form-schemas";
 import type { CurrentUser } from "@/hooks/use-current-user";
 
 interface ReviewSubmitFormProps {
@@ -12,18 +21,7 @@ interface ReviewSubmitFormProps {
   onSubmitted: (review: BackendReview) => void;
 }
 
-interface FormState {
-  reviewerName: string;
-  reviewerEmail: string;
-  reviewText: string;
-  equipmentRating: number;
-  customerServiceRating: number;
-  technicalSupportRating: number;
-  afterSalesRating: number;
-  valueForMoneyRating: number;
-}
-
-const ratingFields: Array<{ key: keyof FormState; label: string }> = [
+const ratingFields: Array<{ key: keyof ReviewValues; label: string }> = [
   { key: "equipmentRating", label: "Equipment quality" },
   { key: "customerServiceRating", label: "Customer service" },
   { key: "technicalSupportRating", label: "Technical support" },
@@ -31,15 +29,15 @@ const ratingFields: Array<{ key: keyof FormState; label: string }> = [
   { key: "valueForMoneyRating", label: "Value for money" },
 ];
 
-const initialState = (user: CurrentUser | null): FormState => ({
+const buildDefaults = (user: CurrentUser | null): ReviewValues => ({
   reviewerName: user?.name ?? "",
   reviewerEmail: user?.email ?? "",
   reviewText: "",
-  equipmentRating: 0,
-  customerServiceRating: 0,
-  technicalSupportRating: 0,
-  afterSalesRating: 0,
-  valueForMoneyRating: 0,
+  equipmentRating: 0 as unknown as ReviewValues["equipmentRating"],
+  customerServiceRating: 0 as unknown as ReviewValues["customerServiceRating"],
+  technicalSupportRating: 0 as unknown as ReviewValues["technicalSupportRating"],
+  afterSalesRating: 0 as unknown as ReviewValues["afterSalesRating"],
+  valueForMoneyRating: 0 as unknown as ReviewValues["valueForMoneyRating"],
 });
 
 export function ReviewSubmitForm({
@@ -47,58 +45,45 @@ export function ReviewSubmitForm({
   user,
   onSubmitted,
 }: ReviewSubmitFormProps) {
-  const [form, setForm] = useState<FormState>(() => initialState(user));
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const {
+    register,
+    handleSubmit,
+    control,
+    reset,
+    formState: { errors, isSubmitting, isSubmitSuccessful },
+  } = useForm<ReviewValues>({
+    resolver: zodResolver(reviewSchema),
+    defaultValues: buildDefaults(user),
+    mode: "onSubmit",
+  });
 
-  const setRating = (field: keyof FormState, value: number) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
-  };
+  // Keep the form pre-populated when the user identity loads asynchronously.
+  useEffect(() => {
+    reset(buildDefaults(user));
+  }, [user, reset]);
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setErrorMessage(null);
-    setSuccessMessage(null);
-
-    const ratingsValid = ratingFields.every(
-      (field) => (form[field.key] as number) >= 1 && (form[field.key] as number) <= 5
-    );
-
-    if (!ratingsValid) {
-      setErrorMessage("Please provide a rating between 1 and 5 for each category.");
-      return;
-    }
-
-    if (form.reviewText.trim().length < 10) {
-      setErrorMessage("Review text must be at least 10 characters.");
-      return;
-    }
-
-    setIsSubmitting(true);
+  const onSubmit = async (values: ReviewValues) => {
     try {
       const review = await createToolReview(toolId, {
-        reviewerName: form.reviewerName.trim(),
-        reviewerEmail: form.reviewerEmail.trim(),
-        reviewText: form.reviewText.trim(),
-        equipmentRating: form.equipmentRating,
-        customerServiceRating: form.customerServiceRating,
-        technicalSupportRating: form.technicalSupportRating,
-        afterSalesRating: form.afterSalesRating,
-        valueForMoneyRating: form.valueForMoneyRating,
+        reviewerName: values.reviewerName.trim(),
+        reviewerEmail: values.reviewerEmail.trim(),
+        reviewText: values.reviewText.trim(),
+        equipmentRating: values.equipmentRating,
+        customerServiceRating: values.customerServiceRating,
+        technicalSupportRating: values.technicalSupportRating,
+        afterSalesRating: values.afterSalesRating,
+        valueForMoneyRating: values.valueForMoneyRating,
       });
-
-      setSuccessMessage(
-        "Thanks for your review! It will appear after moderation."
-      );
-      setForm(initialState(user));
+      toast.success("Review submitted", {
+        description: "It will appear here once a moderator approves it.",
+      });
+      reset(buildDefaults(user));
       onSubmitted(review);
     } catch (error) {
-      setErrorMessage(
-        error instanceof Error ? error.message : "Failed to submit review."
-      );
-    } finally {
-      setIsSubmitting(false);
+      toast.error("Could not submit review", {
+        description:
+          error instanceof Error ? error.message : "Please try again.",
+      });
     }
   };
 
@@ -109,87 +94,85 @@ export function ReviewSubmitForm({
         <h3 className="text-lg font-bold text-[#111111]">Write a Review</h3>
       </div>
 
-      {successMessage && (
+      {isSubmitSuccessful && (
         <div className="mb-4 flex items-start gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700">
           <Check className="mt-0.5 h-4 w-4 shrink-0" />
-          <span>{successMessage}</span>
+          <span>Thanks for your review! It will appear after moderation.</span>
         </div>
       )}
 
-      {errorMessage && (
-        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-          {errorMessage}
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit} className="space-y-5">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
         <div className="grid sm:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-[#444444] mb-1.5">
-              Your name
-            </label>
-            <input
-              type="text"
-              required
-              value={form.reviewerName}
-              onChange={(event) =>
-                setForm((prev) => ({ ...prev, reviewerName: event.target.value }))
-              }
-              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+          <div className="space-y-1.5">
+            <Label htmlFor="review-name">Your name</Label>
+            <Input
+              id="review-name"
               placeholder="Jane Builder"
+              aria-invalid={errors.reviewerName ? "true" : undefined}
+              {...register("reviewerName")}
             />
+            {errors.reviewerName && (
+              <p className="text-xs text-red-600">{errors.reviewerName.message}</p>
+            )}
           </div>
-          <div>
-            <label className="block text-sm font-medium text-[#444444] mb-1.5">
-              Email
-            </label>
-            <input
+          <div className="space-y-1.5">
+            <Label htmlFor="review-email">Email</Label>
+            <Input
+              id="review-email"
               type="email"
-              required
-              value={form.reviewerEmail}
-              onChange={(event) =>
-                setForm((prev) => ({ ...prev, reviewerEmail: event.target.value }))
-              }
-              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
               placeholder="jane@example.com"
+              aria-invalid={errors.reviewerEmail ? "true" : undefined}
+              {...register("reviewerEmail")}
             />
+            {errors.reviewerEmail && (
+              <p className="text-xs text-red-600">
+                {errors.reviewerEmail.message}
+              </p>
+            )}
           </div>
         </div>
 
         <div className="rounded-xl border border-gray-200 bg-[#FBFBFB] p-4 space-y-3">
           {ratingFields.map((field) => (
-            <StarRatingInput
+            <Controller
               key={field.key}
-              label={field.label}
-              value={form[field.key] as number}
-              onChange={(value) => setRating(field.key, value)}
+              control={control}
+              name={field.key}
+              render={({ field: ctl, fieldState }) => (
+                <div>
+                  <StarRatingInput
+                    label={field.label}
+                    value={(ctl.value as number) ?? 0}
+                    onChange={(value) => ctl.onChange(value)}
+                  />
+                  {fieldState.error && (
+                    <p className="mt-1 text-xs text-red-600">
+                      {fieldState.error.message}
+                    </p>
+                  )}
+                </div>
+              )}
             />
           ))}
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-[#444444] mb-1.5">
-            Your feedback
-          </label>
-          <textarea
-            required
-            value={form.reviewText}
-            onChange={(event) =>
-              setForm((prev) => ({ ...prev, reviewText: event.target.value }))
-            }
+        <div className="space-y-1.5">
+          <Label htmlFor="review-text">Your feedback</Label>
+          <Textarea
+            id="review-text"
             rows={4}
-            className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
-            placeholder="Tell others about your experience using this equipment..."
+            placeholder="Tell others about your experience using this equipment (at least 20 characters)..."
+            aria-invalid={errors.reviewText ? "true" : undefined}
+            {...register("reviewText")}
           />
+          {errors.reviewText && (
+            <p className="text-xs text-red-600">{errors.reviewText.message}</p>
+          )}
         </div>
 
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="rounded-xl bg-accent px-6 py-3 font-semibold text-black transition-colors hover:bg-[#C97F00] disabled:opacity-60"
-        >
+        <Button type="submit" disabled={isSubmitting} size="lg">
           {isSubmitting ? "Submitting..." : "Submit Review"}
-        </button>
+        </Button>
       </form>
     </div>
   );

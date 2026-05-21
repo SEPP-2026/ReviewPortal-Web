@@ -1,103 +1,105 @@
 "use client";
 
-import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
+
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { changePassword } from "@/lib/backend-api";
+import {
+  changePasswordSchema,
+  type ChangePasswordValues,
+} from "@/lib/form-schemas";
 
 export function ChangePasswordForm() {
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const {
+    register,
+    handleSubmit,
+    reset,
+    setError,
+    formState: { errors, isSubmitting },
+  } = useForm<ChangePasswordValues>({
+    resolver: zodResolver(changePasswordSchema),
+    defaultValues: {
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    },
+  });
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setErrorMessage(null);
-    setSuccessMessage(null);
-
-    if (newPassword !== confirmPassword) {
-      setErrorMessage("New passwords do not match.");
-      return;
-    }
-
-    setIsSubmitting(true);
+  const onSubmit = async (values: ChangePasswordValues) => {
     try {
-      const result = await changePassword({ currentPassword, newPassword });
-      setSuccessMessage(result.message || "Password changed.");
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
+      const result = await changePassword({
+        currentPassword: values.currentPassword,
+        newPassword: values.newPassword,
+      });
+      toast.success(result.message || "Password changed");
+      reset();
     } catch (error) {
-      setErrorMessage(
-        error instanceof Error ? error.message : "Failed to change password."
-      );
-    } finally {
-      setIsSubmitting(false);
+      setError("currentPassword", {
+        message:
+          error instanceof Error ? error.message : "Failed to change password.",
+      });
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      {successMessage && (
-        <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700">
-          {successMessage}
-        </div>
-      )}
-      {errorMessage && (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-          {errorMessage}
-        </div>
-      )}
-
-      <div>
-        <label className="block text-sm font-medium text-[#444444]">
-          Current password
-        </label>
-        <input
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      className="space-y-4"
+      noValidate
+    >
+      <div className="space-y-1.5">
+        <Label htmlFor="change-current-password">Current password</Label>
+        <Input
+          id="change-current-password"
           type="password"
-          required
-          value={currentPassword}
-          onChange={(event) => setCurrentPassword(event.target.value)}
-          className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+          autoComplete="current-password"
+          aria-invalid={errors.currentPassword ? "true" : undefined}
+          {...register("currentPassword")}
         />
+        {errors.currentPassword && (
+          <p className="text-xs text-red-600">
+            {errors.currentPassword.message}
+          </p>
+        )}
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-[#444444]">
-          New password
-        </label>
-        <input
+      <div className="space-y-1.5">
+        <Label htmlFor="change-new-password">New password</Label>
+        <Input
+          id="change-new-password"
           type="password"
-          required
-          minLength={8}
-          value={newPassword}
-          onChange={(event) => setNewPassword(event.target.value)}
-          className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+          autoComplete="new-password"
+          aria-invalid={errors.newPassword ? "true" : undefined}
+          {...register("newPassword")}
         />
+        {errors.newPassword && (
+          <p className="text-xs text-red-600">{errors.newPassword.message}</p>
+        )}
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-[#444444]">
-          Confirm new password
-        </label>
-        <input
+      <div className="space-y-1.5">
+        <Label htmlFor="change-confirm-password">Confirm new password</Label>
+        <Input
+          id="change-confirm-password"
           type="password"
-          required
-          minLength={8}
-          value={confirmPassword}
-          onChange={(event) => setConfirmPassword(event.target.value)}
-          className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+          autoComplete="new-password"
+          aria-invalid={errors.confirmPassword ? "true" : undefined}
+          {...register("confirmPassword")}
         />
+        {errors.confirmPassword && (
+          <p className="text-xs text-red-600">
+            {errors.confirmPassword.message}
+          </p>
+        )}
       </div>
 
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className="rounded-lg bg-accent px-6 py-2.5 text-sm font-semibold text-black hover:bg-[#C97F00] disabled:opacity-60"
-      >
+      <Button type="submit" disabled={isSubmitting}>
         {isSubmitting ? "Saving..." : "Change password"}
-      </button>
+      </Button>
     </form>
   );
 }
