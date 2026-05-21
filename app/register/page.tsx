@@ -117,7 +117,8 @@ export default function RegisterPage() {
 
               <Button
                 type="submit"
-                className="w-full h-11 text-base hover:bg-white hover:text-black"
+                size="lg"
+                className="w-full"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? "Creating account..." : "Create account"}
