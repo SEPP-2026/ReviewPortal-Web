@@ -111,6 +111,7 @@ export default function EquipmentDetailPage() {
   const [estimatedCost, setEstimatedCost] = useState<number | null>(null);
   const [costBreakdown, setCostBreakdown] = useState<string | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
+  const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -280,6 +281,8 @@ export default function EquipmentDetailPage() {
   const primaryImage =
     tool.images.sort((a, b) => a.displayOrder - b.displayOrder)[0]?.imageUrl || DEFAULT_IMAGE;
 
+  const sortedImages = [...tool.images].sort((a, b) => a.displayOrder - b.displayOrder);
+
   return (
     <div className="min-h-screen bg-[#F2F2F2] pt-40 pb-20">
       <div className="max-w-7xl mx-auto px-4">
@@ -317,7 +320,7 @@ export default function EquipmentDetailPage() {
           <div>
             <div className="relative bg-white border border-gray-200 rounded-2xl overflow-hidden mb-4">
               <img
-                src={primaryImage}
+                src={selectedImageUrl || primaryImage}
                 alt={tool.name}
                 className="w-full aspect-square object-cover"
               />
@@ -336,6 +339,30 @@ export default function EquipmentDetailPage() {
                 </span>
               </div>
             </div>
+
+            {/* Image gallery thumbnails */}
+            {sortedImages.length > 1 && (
+              <div className="grid grid-cols-4 gap-2">
+                {sortedImages.map((image) => (
+                  <button
+                    key={image.id}
+                    type="button"
+                    onClick={() => setSelectedImageUrl(image.imageUrl)}
+                    className={`relative aspect-square rounded-xl overflow-hidden border-2 transition-all ${
+                      (selectedImageUrl || primaryImage) === image.imageUrl
+                        ? "border-accent ring-2 ring-accent/30"
+                        : "border-gray-200 hover:border-accent/50"
+                    }`}
+                  >
+                    <img
+                      src={image.imageUrl}
+                      alt={`${tool.name} - Image ${image.displayOrder}`}
+                      className="w-full h-full object-cover"
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           <div>

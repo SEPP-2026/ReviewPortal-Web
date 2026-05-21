@@ -9,11 +9,11 @@ import {
   ShieldCheck,
 } from "lucide-react";
 
-const NAV = [
-  { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
-  { href: "/admin/moderation", label: "Moderation", icon: ShieldCheck },
-  { href: "/admin/tools", label: "Tools", icon: Wrench },
-  { href: "/admin/categories", label: "Categories", icon: Layers },
+const ALL_NAV = [
+  { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true, adminOnly: true },
+  { href: "/admin/moderation", label: "Moderation", icon: ShieldCheck, adminOnly: false },
+  { href: "/admin/tools", label: "Tools", icon: Wrench, adminOnly: true },
+  { href: "/admin/categories", label: "Categories", icon: Layers, adminOnly: true },
 ];
 
 interface AdminShellProps {
@@ -32,6 +32,9 @@ export function AdminShell({
   children,
 }: AdminShellProps) {
   const pathname = usePathname();
+  const isAdmin = userRole === "Admin";
+
+  const navItems = ALL_NAV.filter((item) => !item.adminOnly || isAdmin);
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(245,158,11,0.14),_transparent_30%),linear-gradient(180deg,_#F8FAFC_0%,_#F2F2F2_100%)] pt-32 pb-20">
@@ -60,7 +63,7 @@ export function AdminShell({
           </div>
 
           <nav className="mt-6 flex flex-wrap gap-2">
-            {NAV.map((item) => {
+            {navItems.map((item) => {
               const Icon = item.icon;
               const active = item.exact
                 ? pathname === item.href
