@@ -1,0 +1,9 @@
+# Gitleaks ignore file
+# Suppress false positives and non-sensitive matches
+
+# Exclude paths that don't contain real secrets
+# (documentation, examples, tests, etc.)
+!docs/
+!examples/
+!*.example
+!.env.example
