@@ -1,9 +1,5 @@
-# Technical Audit: Web Client Gaps, Codebase Deviations, and MSc Elevation Blueprint
+# Technical Audit: Web Client Gaps, Codebase Deviations, and Elevation Blueprint
 
-**Module:** COMP70066 Software Engineering Principles and Practices  
-**Project:** Shelton Tool-Hire Review Portal System  
-**Document Title:** Technical Audit: Discrepancies between Specifications and Codebase, and Master of Science (MSc) Grade Elevation Blueprint  
-**Authors/Contributors:** Chamara Iresh Wijerathna (Scrum Master & Backend Developer), Sadisha Dilmin Samarasinghe (Frontend Developer), Fathima Safa Firzan (Product Owner, Requirements & Testing)
 
 ---
 
@@ -14,8 +10,7 @@ This audit represents a rigorous code-level analysis of the **ReviewPortal-Web**
 To bridge the gap between "paper specifications" and "working software", this handbook outlines:
 1. **The Actual Gaps:** The exact differences between the user stories (which claim completion) and the real code (which lacks filters, inputs, pagination, and validations).
 2. **What Must Be Changed:** The bugs, character length discrepancies, and security blocks that prevent smooth operation.
-3. **What Must Be Added (MSc Elevation):** Advanced engineering patterns, security headers, automated quality gates, and accessibility assertions required to elevate this application to an **outstanding Master of Science (MSc) grade project**.
-
+3. **What Must Be Added (Elevation):** Advanced engineering patterns, security headers, automated quality gates, and accessibility assertions required to elevate this application
 ---
 
 ## 2. Functional Gaps: Documentation vs. Codebase Reality
@@ -90,9 +85,7 @@ mindmap
 
 ---
 
-## 4. Engineering Elevation: Achieving MSc Distinction
-
-An outstanding **Master of Science (MSc)** software engineering project must demonstrate advanced engineering practices, rigorous security controls, accessibility compliance, and automated quality gates. 
+## 4. Engineering Elevation:
 
 To elevate the Shelton Tool-Hire Review Portal to this standard, the following four engineering upgrades should be added to the Next.js client.
 
@@ -116,14 +109,11 @@ flowchart TD
         I["Offline Service Workers"]
     end
 
-    QualityGate --> MSc["MSc Distinction Grade"]
-    Security --> MSc
-    Resilience --> MSc
 ```
 
 ### 4.1 Enterprise Security & Content Protection
 
-An MSc project must adhere to professional security practices. The following updates should be implemented to protect the client:
+An project must adhere to professional security practices. The following updates should be implemented to protect the client:
 
 #### 1. Enforce Strict Content Security Policy (CSP) Headers
 Configure strict security headers inside the Next.js setup. Replace the default settings in `next.config.ts` with these advanced headers:
@@ -235,7 +225,6 @@ export function useToolDetails(id: number) {
 
 ### 4.3 Advanced Web Accessibility (WCAG 2.1 AA Compliance)
 
-MSc grading guidelines require projects to meet high accessibility standards. The following features should be implemented:
 
 #### 1. Screen Reader Skip-to-Content Link
 Add a keyboard-operable "Skip to Content" link at the top of the root layout ([app/layout.tsx](../../app/layout.tsx)) to allow screen reader and keyboard-only users to bypass navigation menus.
@@ -331,7 +320,7 @@ To bring the codebase to the required standard, implement changes according to t
     - `[ ]` Build Price Range filters into the Equipment Catalogue filter bar.
     - `[ ]` Add Next/Previous page buttons and update pagination states in the catalogue.
     - `[ ]` Replace numeric duration inputs with date-time fields and add date validation in the calculator.
-- `[ ]` Step 3: Implement MSc Quality Enhancements (Distinction Upgrades)
+- `[ ]` Step 3: Implement Quality Enhancements (Distinction Upgrades)
     - `[ ]` Enforce secure HTTP security headers in `next.config.ts`.
     - `[ ]` Add MIME-type and size checks to the admin tool image upload form.
     - `[ ]` Add a keyboard-operable "Skip to Content" link to the root layout.
@@ -342,5 +331,4 @@ To bring the codebase to the required standard, implement changes according to t
     - `[ ]` Execute local Lighthouse tests to verify performance and accessibility scores.
 ```
 
----
-*End of MSc Technical Audit and Elevation Report.*
+
