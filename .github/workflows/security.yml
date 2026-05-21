@@ -113,6 +113,3 @@ jobs:
           # Uncomment after creating the secret if you hit the
           # "organisation license required" error.
           # GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
-        with:
-          config: gitleaks.toml
-          ignore-allowlist: .gitleaksignore
