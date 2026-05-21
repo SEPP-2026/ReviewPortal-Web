@@ -107,6 +107,6 @@ jobs:
           fetch-depth: 0
 
       - name: Run Gitleaks
-        run: |
-          curl -sSfL https://raw.githubusercontent.com/gitleaks/gitleaks/master/install.sh | sh -s
-          ./gitleaks detect --verbose --exit-code 1
+        uses: gitleaks/gitleaks-action@v2
+        with:
+          verbose: true
