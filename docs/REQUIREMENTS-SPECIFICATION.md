@@ -162,10 +162,14 @@ The web client supports the same actors as the backend. The diagram below shows 
 
 ```mermaid
 flowchart LR
-    Visitor["Customer / Visitor"]
-    RegisteredUser["Registered User"]
+    PublicCustomer["Public Customer<br/>(guest or signed-in)"]
+    Guest["Guest Visitor"]
+    RegisteredUser["Registered Customer"]
     Admin["Admin"]
     Moderator["Moderator"]
+
+    Guest -. "specialises" .-> PublicCustomer
+    RegisteredUser -. "specialises" .-> PublicCustomer
 
     subgraph PublicShell["Public Shell (app/(public))"]
         UC1(("Homepage"))
@@ -177,39 +181,56 @@ flowchart LR
         UC7(("Login"))
         UC8(("Submit review"))
         UC9(("Submit comment"))
-        UC10(("My reviews"))
+        UC10(("View own review status"))
+        UC11(("Submit booking request"))
+        UC12(("Manage account"))
     end
 
     subgraph AdminShell["Admin Shell (app/admin)"]
-        UC11(("Admin login"))
-        UC12(("Tools list / edit"))
-        UC13(("Image manager"))
-        UC14(("Category manager"))
+        UC13(("Staff login"))
+        UC14(("Manage bookings"))
         UC15(("Moderation queue"))
-        UC16(("Company response"))
-        UC17(("Dashboard"))
+        UC16(("Approve review"))
+        UC17(("Reject review"))
+        UC18(("Approve / reject comment"))
+        UC19(("Company response"))
+        UC20(("Tools list / edit"))
+        UC21(("Image manager"))
+        UC22(("Category manager"))
+        UC23(("Dashboard"))
     end
 
-    Visitor --> UC1
-    Visitor --> UC2
-    Visitor --> UC3
-    Visitor --> UC4
-    Visitor --> UC5
-    Visitor --> UC6
-    Visitor --> UC7
-    RegisteredUser --> UC8
-    RegisteredUser --> UC9
-    RegisteredUser --> UC10
-    Admin --> UC11
-    Admin --> UC12
+    PublicCustomer --> UC1
+    PublicCustomer --> UC2
+    PublicCustomer --> UC3
+    PublicCustomer --> UC4
+    PublicCustomer --> UC5
+    PublicCustomer --> UC8
+    PublicCustomer --> UC9
+    PublicCustomer --> UC10
+    PublicCustomer --> UC11
+    Guest --> UC6
+    Guest --> UC7
+    RegisteredUser --> UC7
+    RegisteredUser --> UC12
     Admin --> UC13
     Admin --> UC14
     Admin --> UC15
     Admin --> UC16
     Admin --> UC17
-    Moderator --> UC11
+    Admin --> UC18
+    Admin --> UC19
+    Admin --> UC20
+    Admin --> UC21
+    Admin --> UC22
+    Admin --> UC23
+    Moderator --> UC13
+    Moderator --> UC14
     Moderator --> UC15
     Moderator --> UC16
+    Moderator --> UC17
+    Moderator --> UC18
+    Moderator --> UC19
 ```
 
 ---

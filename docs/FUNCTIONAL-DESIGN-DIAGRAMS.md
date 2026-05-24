@@ -10,18 +10,18 @@
 
 ## 1. Use Case Diagram
 
-Shows the actors and the main customer, registered-user, admin, and moderator use cases as exercised through the web client.
+Shows the actors and the main public-customer, registered-customer, admin, and moderator use cases as exercised through the web client.
 
 ```mermaid
 flowchart LR
-    Visitor["Customer / Visitor"]
-    RegisteredUser["Registered User"]
+    PublicCustomer["Public Customer<br/>(guest or signed-in)"]
+    Guest["Guest Visitor"]
+    RegisteredUser["Registered Customer"]
     Admin["Admin"]
     Moderator["Moderator"]
 
-    RegisteredUser -. "registered role" .-> Visitor
-    Admin -. "staff role" .-> RegisteredUser
-    Moderator -. "staff role" .-> RegisteredUser
+    Guest -. "specialises" .-> PublicCustomer
+    RegisteredUser -. "specialises" .-> PublicCustomer
 
     subgraph PublicShell["Public Shell"]
         UC1(("Homepage / featured categories"))
@@ -35,35 +35,41 @@ flowchart LR
         UC9(("Login / logout"))
         UC10(("Submit review"))
         UC11(("Comment on review"))
-        UC12(("My reviews"))
+        UC12(("View own review status"))
+        UC13(("Submit booking request"))
+        UC14(("Manage account"))
     end
 
     subgraph AdminShell["Admin Shell"]
-        UC13(("Sign in (admin)"))
-        UC14(("Create / edit tool"))
-        UC15(("Activate / deactivate tool"))
-        UC16(("Upload / delete images"))
-        UC17(("Manage categories"))
-        UC18(("Moderation queue"))
-        UC19(("Approve / reject review or comment"))
-        UC20(("Post company response"))
-        UC21(("Dashboard statistics"))
+        UC15(("Staff sign in"))
+        UC16(("Manage bookings"))
+        UC17(("Moderation queue"))
+        UC18(("Approve review"))
+        UC19(("Reject review"))
+        UC20(("Approve / reject comment"))
+        UC21(("Post company response"))
+        UC22(("Create / edit tool"))
+        UC23(("Activate / deactivate tool"))
+        UC24(("Upload / delete images"))
+        UC25(("Manage categories"))
+        UC26(("Dashboard statistics"))
     end
 
-    Visitor --> UC1
-    Visitor --> UC2
-    Visitor --> UC3
-    Visitor --> UC4
-    Visitor --> UC5
-    Visitor --> UC6
-    Visitor --> UC7
-    Visitor --> UC8
-    Visitor --> UC9
-    RegisteredUser --> UC10
-    RegisteredUser --> UC11
-    RegisteredUser --> UC12
-    Admin --> UC13
-    Admin --> UC14
+    PublicCustomer --> UC1
+    PublicCustomer --> UC2
+    PublicCustomer --> UC3
+    PublicCustomer --> UC4
+    PublicCustomer --> UC5
+    PublicCustomer --> UC6
+    PublicCustomer --> UC7
+    PublicCustomer --> UC10
+    PublicCustomer --> UC11
+    PublicCustomer --> UC12
+    PublicCustomer --> UC13
+    Guest --> UC8
+    Guest --> UC9
+    RegisteredUser --> UC9
+    RegisteredUser --> UC14
     Admin --> UC15
     Admin --> UC16
     Admin --> UC17
@@ -71,10 +77,18 @@ flowchart LR
     Admin --> UC19
     Admin --> UC20
     Admin --> UC21
-    Moderator --> UC13
+    Admin --> UC22
+    Admin --> UC23
+    Admin --> UC24
+    Admin --> UC25
+    Admin --> UC26
+    Moderator --> UC15
+    Moderator --> UC16
+    Moderator --> UC17
     Moderator --> UC18
     Moderator --> UC19
     Moderator --> UC20
+    Moderator --> UC21
 ```
 
 ---
@@ -293,19 +307,31 @@ flowchart TB
 
 ```mermaid
 sequenceDiagram
-    actor Customer
+    actor Customer as Public Customer
     participant Browser as React Client
     participant Server as Next.js Route Handler
     participant API as ASP.NET Core API
+    participant Reviews as ToolReviewsController
+    participant ReviewService
     participant DB as SQL Server
 
     Customer->>Browser: Fill review form, click Submit
     Browser->>Browser: zod schema validate
     Browser->>Server: POST /api/backend/tools/{id}/reviews
-    Server->>Server: Read rp.auth cookie
-    Server->>API: POST /api/tools/{id}/reviews + Bearer JWT
-    API->>DB: Insert Review (Status = Pending)
-    DB-->>API: OK
+    alt Signed-in customer
+        Server->>Server: Read rp.auth cookie
+        Server->>API: POST /api/tools/{id}/reviews + Bearer JWT
+        API->>Reviews: Route request with userId
+    else Guest visitor
+        Server->>API: POST /api/tools/{id}/reviews with name/email
+        API->>Reviews: Route request with userId = null
+    end
+    Reviews->>ReviewService: CreateReviewAsync(toolId, request, userId?)
+    ReviewService->>ReviewService: Validate identity, text and five ratings
+    ReviewService->>DB: Insert Review(Status = Pending, UserId optional)
+    DB-->>ReviewService: Save successful
+    ReviewService-->>Reviews: ReviewDto
+    Reviews-->>API: 201 Created
     API-->>Server: 201 ReviewDto
     Server-->>Browser: 201 ReviewDto
     Browser-->>Customer: Toast "Awaiting moderation"
@@ -315,7 +341,7 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
-    actor Admin
+    actor Staff as Admin or Moderator
     participant Browser as React Client
     participant LoginRoute as /api/auth/login
     participant Cookie as Set-Cookie rp.auth
@@ -325,7 +351,7 @@ sequenceDiagram
     participant Proxy as /api/backend
     participant API as ASP.NET Core API
 
-    Admin->>Browser: Submit login form
+    Staff->>Browser: Submit login form
     Browser->>LoginRoute: POST email + password
     LoginRoute->>API: POST /api/auth/login
     API-->>LoginRoute: 200 token, user
@@ -341,7 +367,7 @@ sequenceDiagram
     API-->>Proxy: 200 moderation queue
     Proxy-->>Server: 200 queue
     Server-->>Browser: Rendered queue
-    Browser-->>Admin: Show pending items
+    Browser-->>Staff: Show pending items
 ```
 
 ### 5.3 Public Catalogue Rendering
