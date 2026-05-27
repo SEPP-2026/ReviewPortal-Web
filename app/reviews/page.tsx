@@ -14,7 +14,6 @@ import {
 interface ReviewCard {
   id: string;
   author: string;
-  avatar: string;
   role: string;
   date: string;
   rating: number;
@@ -25,6 +24,27 @@ interface ReviewCard {
   helpful: number;
   replies: number;
 }
+
+const AVATAR_PALETTES = [
+  "bg-blue-100 text-blue-700",
+  "bg-emerald-100 text-emerald-700",
+  "bg-violet-100 text-violet-700",
+  "bg-amber-100 text-amber-700",
+  "bg-rose-100 text-rose-700",
+  "bg-cyan-100 text-cyan-700",
+];
+
+const avatarColor = (name: string): string => {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  return AVATAR_PALETTES[Math.abs(hash) % AVATAR_PALETTES.length];
+};
+
+const getInitials = (name: string): string => {
+  const parts = name.trim().split(/\s+/);
+  if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  return name.slice(0, 2).toUpperCase();
+};
 
 const toReviewTitle = (text: string) => {
   const trimmed = text.trim();
@@ -37,9 +57,6 @@ const toReviewTitle = (text: string) => {
 
   return firstSentence;
 };
-
-const getAvatar = (name: string) =>
-  `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(name)}`;
 
 const toRelativeDate = (isoDate: string) => {
   const date = new Date(isoDate);
@@ -100,7 +117,6 @@ export default function ReviewsPage() {
             toolReviews.map((review) => ({
               id: `${tool.id}-${review.id}`,
               author: review.reviewerName,
-              avatar: getAvatar(review.reviewerName),
               role: "Verified Customer",
               date: toRelativeDate(review.createdDate),
               rating: review.overallRating,
@@ -264,11 +280,11 @@ export default function ReviewsPage() {
               >
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-4">
                   <div className="flex items-center gap-4">
-                    <img
-                      src={review.avatar}
-                      alt={review.author}
-                      className="w-14 h-14 rounded-full bg-gray/20"
-                    />
+                    <div
+                      className={`w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold shrink-0 ${avatarColor(review.author)}`}
+                    >
+                      {getInitials(review.author)}
+                    </div>
                     <div>
                       <h4 className="text-[#111111] font-bold">{review.author}</h4>
                       <p className="text-[#666666] text-sm">{review.role}</p>

@@ -1,87 +1,126 @@
 "use client";
 
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
-import { ChevronDown, Search, ArrowRight } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Search, ArrowRight, Shield, Truck, Clock } from "lucide-react";
+import { getFeaturedCategories, toCategorySlug } from "@/lib/api/categories";
+import type { BackendCategory } from "@/types/backend";
+
+const TRUST_ITEMS = [
+  { icon: Shield, label: "Quality assured" },
+  { icon: Truck, label: "Same-day delivery" },
+  { icon: Clock, label: "Flexible hire periods" },
+] as const;
 
 export function Hero() {
+  const router = useRouter();
+  const [categories, setCategories] = useState<BackendCategory[]>([]);
+  const [query, setQuery] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    getFeaturedCategories()
+      .then(setCategories)
+      .catch(() => {});
+  }, []);
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const term = query.trim();
+    router.push(term ? `/equipment?q=${encodeURIComponent(term)}` : "/equipment");
+  };
+
   return (
-    <section className="relative bg-gradient-to-br from-[#FAFAFA] to-[#F2F2F2] pt-[112px] overflow-hidden">
-      <div className="max-w-7xl mx-auto px-4">
-        <div className="grid lg:grid-cols-2 gap-12 items-center min-h-[calc(100vh-112px)] py-12">
+    <section className="relative bg-white pt-[112px] overflow-hidden">
+      {/* Subtle background split */}
+      <div className="absolute right-0 top-0 bottom-0 w-1/2 bg-[#F8F8F8] hidden lg:block" />
 
-          {/* Left Column */}
-          <div className="py-8 lg:py-12">
+      <div className="relative max-w-7xl mx-auto px-4">
+        <div className="grid lg:grid-cols-2 gap-0 items-stretch min-h-[calc(100vh-112px)]">
 
+          {/* Left column */}
+          <div className="flex flex-col justify-center py-16 lg:pr-16">
+            <p className="text-accent text-sm font-semibold uppercase tracking-widest mb-5">
+              Professional Tool Hire
+            </p>
 
-            {/* Heading */}
-            <h1 className="text-5xl md:text-6xl xl:text-7xl font-extrabold text-[#111111] mb-6 leading-[1.05] tracking-tight">
+            <h1 className="text-5xl md:text-6xl xl:text-[4.25rem] font-extrabold text-[#111111] leading-[1.06] tracking-tight mb-6">
               Rent Quality Tools,{" "}
               <span className="text-accent">Get the Job Done</span>
             </h1>
 
-            {/* Subtitle */}
-            <p className="text-[#666666] text-xl mb-10 max-w-lg leading-relaxed">
-              Find the perfect tools for your project. No hassle, no technical jargon—just quality equipment delivered when you need it.
+            <p className="text-[#666666] text-xl leading-relaxed max-w-[480px] mb-10">
+              Professional-grade equipment for every project — construction,
+              landscaping, plumbing and beyond. Flexible hourly, daily or weekly
+              rates.
             </p>
 
-            {/* Find Equipment Widget - Lighter, friendlier design */}
-            <div className="bg-white rounded-3xl p-8 shadow-xl border border-gray-200 max-w-md">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 bg-accent/10 rounded-xl flex items-center justify-center">
-                  <Search className="w-6 h-6 text-accent" />
-                </div>
-                <h3 className="text-[#111111] font-bold text-xl">Find Your Equipment</h3>
-              </div>
-              <div className="space-y-4 mb-6">
-                <div className="relative">
-                  <label className="block text-[#666666] text-sm font-medium mb-2">What do you need?</label>
-                  <select className="w-full bg-[#F8F8F8] text-[#111111] rounded-xl px-5 py-4 appearance-none focus:outline-none focus:ring-2 focus:ring-accent focus:bg-white transition-all text-base font-medium border border-transparent hover:border-accent/30">
-                    <option value="">Select a category...</option>
-                    <option>🏗️ Construction Tools</option>
-                    <option>🌿 Landscaping & Garden</option>
-                    <option>🔧 Plumbing Equipment</option>
-                    <option>⚡ Electrical Tools</option>
-                    <option>🎨 Painting & Decorating</option>
-                    <option>🧹 Cleaning Machines</option>
-                  </select>
-                  <ChevronDown className="absolute right-4 top-[42px] w-5 h-5 text-[#999] pointer-events-none" />
-                </div>
-                <div className="relative">
-                  <label className="block text-[#666666] text-sm font-medium mb-2">Pick up location</label>
-                  <select className="w-full bg-[#F8F8F8] text-[#111111] rounded-xl px-5 py-4 appearance-none focus:outline-none focus:ring-2 focus:ring-accent focus:bg-white transition-all text-base font-medium border border-transparent hover:border-accent/30">
-                    <option value="">Choose nearest branch...</option>
-                    <option>📍 Shelton Main Store</option>
-                    <option>📍 Downtown Branch</option>
-                    <option>📍 Industrial Park Location</option>
-                  </select>
-                  <ChevronDown className="absolute right-4 top-[42px] w-5 h-5 text-[#999] pointer-events-none" />
-                </div>
-              </div>
-              <Link
-                href="/equipment"
-                className="group flex items-center justify-center gap-2 w-full bg-accent hover:bg-[#C97F00] text-black font-bold py-4 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-[1.02]"
+            {/* Search */}
+            <form
+              onSubmit={handleSearch}
+              className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl p-1.5 shadow-sm max-w-md mb-5"
+            >
+              <Search className="w-4 h-4 text-gray-400 ml-2 shrink-0" />
+              <input
+                ref={inputRef}
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search equipment…"
+                className="flex-1 bg-transparent text-[#111111] text-sm placeholder:text-gray-400 focus:outline-none py-2"
+              />
+              <button
+                type="submit"
+                className="bg-accent hover:bg-[#C97F00] text-black text-sm font-semibold px-5 py-2.5 rounded-lg transition-colors duration-200 whitespace-nowrap"
               >
-                Browse Available Equipment
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </Link>
-              <p className="text-center text-[#999] text-sm mt-4">✓ Free delivery over $200 • ✓ Same-day rental available</p>
+                Search
+              </button>
+            </form>
+
+            {/* Dynamic category pills */}
+            {categories.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-10">
+                {categories.slice(0, 5).map((cat) => (
+                  <Link
+                    key={cat.id}
+                    href={`/equipment?category=${toCategorySlug(cat.name)}`}
+                    className="text-xs text-[#555] bg-[#F2F2F2] hover:bg-accent/10 hover:text-accent border border-transparent hover:border-accent/30 px-3 py-1.5 rounded-lg transition-colors duration-200 font-medium"
+                  >
+                    {cat.name}
+                  </Link>
+                ))}
+                <Link
+                  href="/equipment"
+                  className="text-xs text-accent font-semibold flex items-center gap-1 px-3 py-1.5 hover:underline"
+                >
+                  All categories
+                  <ArrowRight className="w-3 h-3" />
+                </Link>
+              </div>
+            )}
+
+            {/* Trust indicators */}
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+              {TRUST_ITEMS.map(({ icon: Icon, label }) => (
+                <span key={label} className="flex items-center gap-2 text-[#666666] text-sm">
+                  <Icon className="w-4 h-4 text-accent" />
+                  {label}
+                </span>
+              ))}
             </div>
           </div>
 
-          {/* Right Column — Image */}
-          <div className="hidden lg:flex items-center justify-center h-full relative">
-            <div className="relative">
-              <div className="absolute -inset-4 bg-accent/5 rounded-full blur-3xl"></div>
-              <img
-                src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=900&q=80"
-                alt="Professional equipment rental"
-                className="relative w-full max-h-[75vh] object-contain drop-shadow-2xl"
-              />
-            </div>
+          {/* Right column */}
+          <div className="hidden lg:flex items-center justify-center bg-[#F8F8F8] py-16 pl-12">
+            <img
+              src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=900&q=80"
+              alt="Professional power tools ready for hire"
+              className="w-full max-h-[70vh] object-contain drop-shadow-xl"
+            />
           </div>
         </div>
       </div>
     </section>
   );
 }
-

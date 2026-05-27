@@ -76,11 +76,13 @@ export function CTASection() {
                   Free delivery on orders over $200 within 20 miles
                 </p>
               </div>
-              <div className="bg-white/5 border border-white/10 rounded-xl p-5 flex flex-col justify-center items-center text-center">
-                <div className="text-4xl font-bold text-accent mb-1">20%</div>
+              <div className="bg-white/5 border border-white/10 rounded-xl p-5">
+                <Truck className="w-10 h-10 text-accent mb-3" />
+                <h3 className="text-white font-bold text-lg mb-2">
+                  Expert Support
+                </h3>
                 <p className="text-white/60 text-sm">
-                  <br />
-                  with code FIRST20
+                  Technical advice and after-hire support from our team
                 </p>
               </div>
             </div>
