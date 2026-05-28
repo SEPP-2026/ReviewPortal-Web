@@ -1,157 +1,173 @@
 "use client";
 
-import { Star, Quote } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Star } from "lucide-react";
+import { getCategories } from "@/lib/api/categories";
+import { getToolsByCategory } from "@/lib/api/categories";
+import { getToolReviews } from "@/lib/api/reviews";
+import type { BackendReview } from "@/types/backend";
 
-interface Testimonial {
+interface DisplayReview {
   id: string;
   name: string;
-  role: string;
-  company: string;
-  image: string;
-  rating: number;
+  toolName: string;
   text: string;
-  category: string;
+  rating: number;
+  date: string;
 }
 
-const TESTIMONIALS: Testimonial[] = [
-  {
-    id: "1",
-    name: "John Mitchell",
-    role: "Project Manager",
-    company: "Mitchell Construction",
-    image: "https://api.dicebear.com/7.x/avataaars/svg?seed=john",
-    rating: 5,
-    text: "Shelton Tool-Hire has been our go-to equipment supplier for over 3 years. Their construction equipment is always well-maintained, and the customer service is exceptional. The online calculator saved us hours of planning time.",
-    category: "Equipment Performance",
-  },
-  {
-    id: "2",
-    name: "Sarah Thompson",
-    role: "Owner",
-    company: "Green Thumb Landscaping",
-    image: "https://api.dicebear.com/7.x/avataaars/svg?seed=sarah",
-    rating: 5,
-    text: "The landscaping tools I rent are always in perfect condition. Their support team really knows their stuff - they helped me pick the right equipment for a complex garden renovation project. Highly recommended!",
-    category: "Support Services",
-  },
-  {
-    id: "3",
-    name: "Mike Rodriguez",
-    role: "Lead Plumber",
-    company: "Rodriguez Plumbing Co.",
-    image: "https://api.dicebear.com/7.x/avataaars/svg?seed=mike",
-    rating: 5,
-    text: "Professional service from start to finish. The booking system is easy to use, prices are competitive, and when I had an issue with equipment on a Sunday, their after-hours support had it sorted within an hour.",
-    category: "After Sales Support",
-  },
-  {
-    id: "4",
-    name: "Emma Wilson",
-    role: "Interior Designer",
-    company: "Wilson Interiors",
-    image: "https://api.dicebear.com/7.x/avataaars/svg?seed=emma",
-    rating: 5,
-    text: "I rent decorating equipment regularly for client projects. The quality is consistent, and I love that I can calculate exact costs before booking. The delivery service is always on time too!",
-    category: "Customer Service",
-  },
+const AVATAR_PALETTES = [
+  "bg-blue-100 text-blue-700",
+  "bg-emerald-100 text-emerald-700",
+  "bg-violet-100 text-violet-700",
+  "bg-amber-100 text-amber-700",
+  "bg-rose-100 text-rose-700",
+  "bg-cyan-100 text-cyan-700",
 ];
 
+function avatarColor(name: string): string {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  return AVATAR_PALETTES[Math.abs(hash) % AVATAR_PALETTES.length];
+}
+
+function initials(name: string): string {
+  const parts = name.trim().split(/\s+/);
+  if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  return name.slice(0, 2).toUpperCase();
+}
+
+function formatDate(iso: string): string {
+  try {
+    return new Date(iso).toLocaleDateString("en-GB", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  } catch {
+    return "";
+  }
+}
+
+function Stars({ rating }: { rating: number }) {
+  return (
+    <div className="flex gap-0.5">
+      {[1, 2, 3, 4, 5].map((n) => (
+        <Star
+          key={n}
+          className={`w-4 h-4 ${n <= rating ? "text-accent fill-accent" : "text-gray-300"}`}
+        />
+      ))}
+    </div>
+  );
+}
+
 export function Testimonials() {
+  const [reviews, setReviews] = useState<DisplayReview[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+
+    const load = async () => {
+      try {
+        const cats = await getCategories();
+        if (!active || cats.length === 0) return;
+
+        const toolPages = await Promise.allSettled(
+          cats.slice(0, 4).map((c) =>
+            getToolsByCategory(c.id, { page: 1, pageSize: 3, sortBy: "rating_desc" })
+          )
+        );
+
+        const toolIds = toolPages
+          .flatMap((r) => (r.status === "fulfilled" ? r.value.items.map((t) => t.id) : []))
+          .slice(0, 8);
+
+        if (!active || toolIds.length === 0) return;
+
+        const reviewPages = await Promise.allSettled(
+          toolIds.map((id) => getToolReviews(id, { page: 1, pageSize: 2 }))
+        );
+
+        const mapped: DisplayReview[] = reviewPages
+          .flatMap((r) =>
+            r.status === "fulfilled"
+              ? r.value.reviews.items
+                  .filter(
+                    (rv: BackendReview) =>
+                      rv.status === "Approved" && rv.reviewText.trim().length > 40
+                  )
+                  .map((rv: BackendReview) => ({
+                    id: String(rv.id),
+                    name: rv.reviewerName,
+                    toolName: rv.toolName,
+                    text: rv.reviewText,
+                    rating: rv.overallRating,
+                    date: formatDate(rv.createdDate),
+                  }))
+              : []
+          )
+          .sort((a, b) => b.rating - a.rating)
+          .slice(0, 4);
+
+        if (active) setReviews(mapped);
+      } catch {
+        // Non-critical — component stays empty
+      } finally {
+        if (active) setIsLoading(false);
+      }
+    };
+
+    load();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  if (isLoading) return null;
+  if (reviews.length === 0) return null;
+
   return (
     <section className="py-24 bg-white">
       <div className="max-w-7xl mx-auto px-4">
-        {/* Section Header */}
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-extrabold text-[#111111] mb-6">
-            Trusted by Thousands
-          </h2>
-          <p className="text-[#666666] text-xl max-w-3xl mx-auto leading-relaxed">
-            Don&apos;t just take our word for it — hear from professionals who trust
-            us for their equipment needs.
+        <div className="mb-14">
+          <p className="text-accent text-sm font-semibold uppercase tracking-widest mb-3">
+            Customer reviews
           </p>
+          <h2 className="text-4xl md:text-5xl font-extrabold text-[#111111] max-w-lg leading-tight">
+            What customers say
+          </h2>
         </div>
 
-        {/* Testimonials Grid */}
-        <div className="grid md:grid-cols-2 gap-8 mb-16">
-          {TESTIMONIALS.map((testimonial) => (
+        <div className="grid md:grid-cols-2 gap-6">
+          {reviews.map((review) => (
             <div
-              key={testimonial.id}
-              className="bg-gradient-to-br from-white to-[#FAFAFA] border-2 border-gray-200 rounded-3xl p-8 hover:border-accent/30 hover:shadow-xl transition-all duration-300"
+              key={review.id}
+              className="bg-[#FAFAFA] border border-gray-200 rounded-2xl p-7 flex flex-col gap-4"
             >
-              {/* Header */}
-              <div className="flex items-start justify-between mb-6">
-                <div className="flex items-center gap-4">
-                  <img
-                    src={testimonial.image}
-                    alt={testimonial.name}
-                    className="w-16 h-16 rounded-full border-2 border-accent/20"
-                  />
-                  <div>
-                    <h4 className="text-[#111111] font-bold text-lg">{testimonial.name}</h4>
-                    <p className="text-[#666666] text-sm">
-                      {testimonial.role} at {testimonial.company}
-                    </p>
-                  </div>
-                </div>
-                <Quote className="w-12 h-12 text-accent/20" />
-              </div>
+              <Stars rating={Math.round(review.rating)} />
 
-              {/* Rating & Category */}
-              <div className="flex items-center gap-4 mb-4">
-                <div className="flex items-center gap-1">
-                  {[...Array(5)].map((_, i) => (
-                    <Star
-                      key={i}
-                      className={`w-4 h-4 ${
-                        i < testimonial.rating
-                          ? "text-accent fill-accent"
-                          : "text-gray"
-                      }`}
-                    />
-                  ))}
-                </div>
-                <span className="text-xs text-accent bg-accent/10 px-3 py-1 rounded-full">
-                  {testimonial.category}
-                </span>
-              </div>
+              <p className="text-[#333333] leading-relaxed text-base line-clamp-4">
+                &ldquo;{review.text}&rdquo;
+              </p>
 
-              {/* Text */}
-              <p className="text-[#666666] leading-relaxed text-base">{testimonial.text}</p>
+              <div className="flex items-center gap-3 mt-auto pt-4 border-t border-gray-100">
+                <div
+                  className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0 ${avatarColor(review.name)}`}
+                >
+                  {initials(review.name)}
+                </div>
+                <div>
+                  <p className="text-[#111111] font-semibold text-sm">{review.name}</p>
+                  <p className="text-[#999999] text-xs">
+                    {review.toolName}
+                    {review.date ? ` · ${review.date}` : ""}
+                  </p>
+                </div>
+              </div>
             </div>
           ))}
-        </div>
-
-        {/* Stats Bar */}
-        <div className="bg-gradient-to-br from-accent/5 to-accent/10 border-2 border-accent/20 rounded-3xl p-10">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            <div className="text-center">
-              <div className="text-5xl font-extrabold text-accent mb-2">4.9</div>
-              <div className="flex items-center justify-center gap-1 mb-2">
-                {[...Array(5)].map((_, i) => (
-                  <Star
-                    key={i}
-                    className="w-4 h-4 text-accent fill-accent"
-                  />
-                ))}
-              </div>
-              <p className="text-gray text-sm">Average Rating</p>
-            </div>
-            <div className="text-center">
-              <div className="text-4xl font-bold text-[#111111] mb-2">15K+</div>
-              <p className="text-[#111111] font-semibold">Total Reviews</p>
-              <p className="text-[#666666] text-sm">From verified customers</p>
-            </div>
-            <div className="text-center">
-              <div className="text-4xl font-bold text-[#111111] mb-2">98%</div>
-              <p className="text-[#111111] font-semibold">Would Recommend</p>
-              <p className="text-[#666666] text-sm">Customer satisfaction</p>
-            </div>
-            <div className="text-center">
-              <div className="text-4xl font-bold text-[#111111] mb-2">5 min</div>
-              <p className="text-[#111111] font-semibold">Avg Response Time</p>
-              <p className="text-[#666666] text-sm">Support team</p>
-            </div>
-          </div>
         </div>
       </div>
     </section>

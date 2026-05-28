@@ -19,8 +19,18 @@ jest.mock("next/link", () => ({
   ),
 }));
 
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({ push: jest.fn() }),
+}));
+
+// Prevent the component from actually hitting the backend during tests
+jest.mock("@/lib/api/categories", () => ({
+  getFeaturedCategories: () => Promise.resolve([]),
+  toCategorySlug: (name: string) => name.toLowerCase().replace(/\s+/g, "-"),
+}));
+
 describe("Hero", () => {
-  it("renders the main heading and browse CTA", () => {
+  it("renders the main heading and search form", () => {
     render(<Hero />);
 
     expect(
@@ -28,7 +38,7 @@ describe("Hero", () => {
     ).toBeInTheDocument();
 
     expect(
-      screen.getByRole("link", { name: /browse available equipment/i })
-    ).toHaveAttribute("href", "/equipment");
+      screen.getByRole("button", { name: /search/i })
+    ).toBeInTheDocument();
   });
 });
