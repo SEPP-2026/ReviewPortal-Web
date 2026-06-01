@@ -1,87 +1,92 @@
 # ReviewPortal Frontend
 
-A modern Next.js 15 application built with React 19, TypeScript, and TailwindCSS 4.
+A modern Next.js 16 application for browsing, reviewing, and renting equipment, built with React 19, TypeScript, and TailwindCSS 4.
+
+It pairs with the **ReviewPortal .NET API** and exposes an equipment catalogue, a review & rating system, a dynamic pricing calculator, bookings, and an admin moderation area.
 
 ## Tech Stack
 
 ### Core
-- **Next.js** 15.5.9 (App Router)
-- **React** 19.0.1
+- **Next.js** 16 (App Router, Turbopack dev server)
+- **React** 19.2
 - **TypeScript** 5
-- **TailwindCSS** 4.1.12
+- **TailwindCSS** 4.1
 
 ### UI Components
-- **Radix UI** - Accessible component primitives
-  - Alert Dialog, Avatar, Checkbox, Collapsible, Dialog
-  - Dropdown Menu, Icons, Label, Popover, Progress
-  - Radio Group, Scroll Area, Select, Separator
-  - Slot, Switch, Tabs, Tooltip
-- **Lucide React** 0.511.0 - Icon library
-- **cmdk** - Command menu component
-- **Sonner** 2.0.7 - Toast notifications
+- **Radix UI** — accessible component primitives (Alert Dialog, Avatar, Checkbox, Collapsible, Dialog, Dropdown Menu, Label, Popover, Progress, Radio Group, Scroll Area, Select, Separator, Slot, Switch, Tabs, Tooltip)
+- **Lucide React** & **Radix Icons** — icon libraries
+- **cmdk** — command menu component
+- **Sonner** — toast notifications
+- **Recharts** — charts & data visualisation
+- **react-quill-new** — rich text editor
 
 ### Forms & Validation
-- **React Hook Form** 7.62.0
-- **Zod** 3.25.76
-- **@hookform/resolvers** - Form validation
-- **input-otp** - OTP input component
-- **react-day-picker** - Date picker
+- **React Hook Form** 7
+- **Zod** 3
+- **@hookform/resolvers**
+- **input-otp** — OTP input
+- **react-day-picker** — date picker
+- **libphonenumber-js** — phone number validation
 
-### State Management & Utilities
-- **Zustand** 5.0.8 - State management
-- **date-fns** 4.1.0 - Date utilities
-- **libphonenumber-js** 1.12.27 - Phone number validation
-- **class-variance-authority** - Variant utilities
-- **clsx** & **tailwind-merge** - Styling utilities
+### State & Utilities
+- **Zustand** 5 — state management
+- **date-fns** — date utilities
+- **class-variance-authority**, **clsx**, **tailwind-merge** — styling utilities
+- **react-hotkeys-hook** — keyboard shortcuts
+- **tunnel-rat** — portal utilities
+- **Sharp** — image optimization
 
-### Additional Features
-- **Sharp** 0.34.3 - Image optimization
-- **Recharts** - Charts & data visualization
-- **react-quill-new** - Rich text editor
-- **react-hotkeys-hook** - Keyboard shortcuts
-- **tunnel-rat** 0.1.2 - Portal utilities
-
-### Development
-- **ESLint** 9
-- **Prettier** 3.6.2
+### Tooling
+- **Jest** + **Testing Library** (jsdom) — unit/component tests
+- **ESLint** 9 + **eslint-config-next**
+- **Prettier** 3
 - **PostCSS**
 
-## 📁 Project Structure
+## Project Structure
 
 ```
-frontend/
-├── app/                    # Next.js app directory
-│   ├── globals.css        # Global styles
-│   ├── layout.tsx         # Root layout
-│   └── page.tsx           # Home page
-├── components/            # React components
-│   └── ui/               # Reusable UI components
-├── hooks/                 # Custom React hooks
-│   └── use-debounce.ts   # Debounce hook
-├── lib/                   # Utility libraries
-│   ├── api-client.ts     # API client for .NET backend
-│   └── utils.ts          # Utility functions (cn, etc.)
-├── store/                 # Zustand stores
-│   └── example-store.ts  # Example store
-├── types/                 # TypeScript type definitions
-│   └── api.ts            # API types
-├── public/                # Static assets
-├── .env.example          # Environment variables template
-├── components.json       # Component configuration
-├── next.config.ts        # Next.js configuration
-├── postcss.config.mjs    # PostCSS configuration
-├── tsconfig.json         # TypeScript configuration
-└── package.json          # Dependencies
-
+Review-Portal-Web/
+├── app/                       # Next.js App Router
+│   ├── api/                   # Route handlers (server-side)
+│   │   ├── auth/              # login / logout / me / register
+│   │   ├── backend/[...path]/ # Authenticated proxy to the .NET API
+│   │   └── bookings/          # Booking endpoints
+│   ├── account/              # User account (reviews, change-password)
+│   ├── admin/                # Admin area (bookings, categories, moderation, tools)
+│   ├── equipment/            # Equipment catalogue & detail pages ([id])
+│   ├── reviews/              # Reviews listing
+│   ├── calculator/           # Pricing calculator
+│   ├── pricing/ services/ contact/   # Marketing/info pages
+│   ├── login/ register/ forgot-password/ reset-password/  # Auth flows
+│   ├── globals.css           # Global styles
+│   ├── layout.tsx            # Root layout
+│   └── page.tsx              # Home page
+├── components/                # React components (account, admin, equipment, feed, layout, sections, ui)
+├── lib/                       # Application logic
+│   ├── api/                   # Domain API layer (auth, categories, tools, reviews, admin)
+│   ├── api-client.ts          # Low-level API client
+│   ├── server-api.ts          # Server-side API helpers
+│   ├── session.ts             # Auth/session helpers
+│   ├── admin-guard.ts         # Admin route protection
+│   ├── form-schemas.ts        # Zod schemas
+│   └── utils.ts               # Utilities (cn, etc.)
+├── hooks/                     # Custom hooks (use-current-user, use-debounce)
+├── store/                     # Zustand stores
+├── types/                     # TypeScript types (api.ts, backend.ts)
+├── docs/                      # Design, requirements, testing & deployment docs
+├── public/                    # Static assets
+├── next.config.ts             # Next.js configuration
+├── tsconfig.json              # TypeScript configuration
+├── jest.config.mjs            # Jest configuration
+└── package.json               # Dependencies & scripts
 ```
 
 ## Getting Started
 
 ### Prerequisites
 - Node.js 18.17 or later
-- npm, yarn, or pnpm
-- .NET backend running (default: `http://localhost:5000/api`)
-- MySQL database
+- npm
+- Access to the ReviewPortal .NET API (deployed, or running locally)
 
 ### Installation
 
@@ -94,12 +99,20 @@ frontend/
    ```bash
    cp .env.example .env.local
    ```
-   
-   Edit `.env.local` with your configuration:
+
+   Configure `.env.local`:
    ```env
-   NEXT_PUBLIC_API_URL=http://localhost:5000/api
-   NEXT_PUBLIC_APP_URL=http://localhost:3000
+   # Client-side API base URL
+   NEXT_PUBLIC_API_URL=https://reviewportal-api-escdb3f2epg8eeha.southeastasia-01.azurewebsites.net/api
+
+   # Server-side API base URL (used by route handlers / proxy)
+   API_URL=https://reviewportal-api-escdb3f2epg8eeha.southeastasia-01.azurewebsites.net/api
+
+   # Name of the httpOnly auth cookie
+   AUTH_COOKIE_NAME=rp_auth
    ```
+
+   To point at a local backend, set both URLs to e.g. `http://localhost:5000/api`.
 
 3. **Run the development server:**
    ```bash
@@ -111,58 +124,41 @@ frontend/
 
 ## Available Scripts
 
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run start` - Start production server
-- `npm run lint` - Run ESLint
-- `npm run format` - Format code with Prettier
+- `npm run dev` — start the dev server (Turbopack)
+- `npm run build` — build for production (runs `test:ci` first via `prebuild`)
+- `npm run start` — start the production server
+- `npm test` — run the Jest test suite
+- `npm run test:watch` — run tests in watch mode
+- `npm run test:ci` — run tests serially (CI)
+- `npm run lint` — run ESLint
+- `npm run typecheck` — type-check with `tsc --noEmit`
+- `npm run format` — format with Prettier
 
-## Styling
+## Authentication
 
-This project uses **TailwindCSS 4** with CSS variables for theming. The design system includes:
+Authentication is handled **server-side** to keep JWTs out of the browser. Auth route handlers set and read an httpOnly cookie (`rp_auth` by default):
 
-- Light and dark mode support
-- Customizable color scheme
-- Consistent spacing and typography
-- Accessible components
+- `POST /api/auth/login` — `{ email, password }`, sets the auth cookie
+- `POST /api/auth/register` — create an account
+- `POST /api/auth/logout` — clears the auth cookie
+- `GET  /api/auth/me` — returns the current user
+- `GET/POST/PATCH/PUT/DELETE /api/backend/[...path]` — authenticated proxy to the .NET API; attaches the cookie token on each request
 
-### Using the `cn()` utility
-```typescript
-import { cn } from "@/lib/utils";
-
-<div className={cn("base-class", condition && "conditional-class")} />
-```
+The current user can be read on the client via the `use-current-user` hook, and admin-only routes are protected by `lib/admin-guard.ts`.
 
 ## API Integration
 
-The project includes a pre-configured API client for communicating with the .NET backend:
+Domain calls live in `lib/api/` and are re-exported from a single barrel:
 
 ```typescript
-import { apiClient } from "@/lib/api-client";
-
-// GET request
-const response = await apiClient.get("/endpoint");
-
-// POST request
-const response = await apiClient.post("/endpoint", { data });
-
-// With authentication
-const response = await apiClient.get("/protected", { 
-  token: "your-jwt-token" 
-});
+import { getCategories, getToolById, getReviews } from "@/lib/api";
 ```
 
-### Server-side authentication (recommended)
-Use the app router API handlers to keep JWTs server-side. These routes set and read an httpOnly cookie:
-
-- `POST /api/auth/login` (body: `{ email, password }`) sets the auth cookie
-- `POST /api/auth/logout` clears the auth cookie
-- `GET /api/auth/me` returns the current user
-- `GET/POST/PATCH/PUT/DELETE /api/backend/*` proxies to the .NET API and attaches the cookie token
+These modules call through the server-side proxy so requests are authenticated automatically. For lower-level needs, `lib/api-client.ts` and `lib/server-api.ts` are available.
 
 ## State Management
 
-Using Zustand for state management:
+Zustand is used for client state:
 
 ```typescript
 import { create } from "zustand";
@@ -178,81 +174,64 @@ export const useStore = create<Store>((set) => ({
 }));
 ```
 
-## Adding UI Components
+## Styling
 
-This project follows the shadcn/ui pattern. To add components:
+The project uses **TailwindCSS 4** with CSS variables for theming and the **shadcn/ui** component pattern (Radix primitives styled with Tailwind, located in `components/ui/`).
 
-1. Create component in `components/ui/`
-2. Use Radix UI primitives
-3. Style with TailwindCSS
-4. Export from component file
-
-Example button component structure:
+### Using the `cn()` utility
 ```typescript
-import * as React from "react";
-import { Slot } from "@radix-ui/react-slot";
-import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
-// Define variants, create component...
+<div className={cn("base-class", condition && "conditional-class")} />
 ```
 
-## Configuration Files
+### Adding UI components
+1. Create the component in `components/ui/`
+2. Build on Radix UI primitives where applicable
+3. Style with TailwindCSS and `class-variance-authority` variants
+4. Export from the component file
 
-- **next.config.ts** - Next.js configuration with image optimization
-- **tsconfig.json** - TypeScript compiler options
-- **postcss.config.mjs** - PostCSS with TailwindCSS 4
-- **components.json** - Component library configuration
-- **.prettierrc** - Code formatting rules
-- **eslint.config.mjs** - Linting rules
+## Testing
+
+Tests use **Jest** with **Testing Library** in a jsdom environment.
+
+```bash
+npm test            # run all tests
+npm run test:watch  # watch mode
+```
+
+The production build runs the suite first (`prebuild` → `test:ci`), so a failing test will block a build.
 
 ## Deployment
 
-### Build for Production
+The app is deployed to **Azure App Service** via the GitHub Actions workflow in `.github/`. See `docs/DEPLOYMENT.md` for details.
+
 ```bash
 npm run build
 npm run start
 ```
 
-### Deploy to Vercel
-```bash
-vercel
-```
+## Documentation
+
+Additional project documentation lives in [`docs/`](docs/), including design, requirements, testing strategy, and deployment guides.
 
 ## Contributing
 
-1. Create a feature branch
+1. Create a feature branch off `development`
 2. Make your changes
-3. Run linting and type checks
+3. Run `npm run lint`, `npm run typecheck`, and `npm test`
 4. Submit a pull request
 
 ## License
 
 This project is part of the ReviewPortal system.
 
-## Backend Integration
-
-This frontend is designed to work with a **.NET backend** and **MySQL database**. Ensure your backend API is running and accessible at the URL specified in your environment variables.
-
-### API Endpoints
-Configure your API base URL in `.env.local`:
-```env
-NEXT_PUBLIC_API_URL=http://localhost:5000/api
-```
-
-### Authentication
-The API client supports JWT token authentication. Pass the token in the request options:
-```typescript
-const response = await apiClient.get("/user/profile", { 
-  token: userToken 
-});
-```
-
 ## Learn More
 
 - [Next.js Documentation](https://nextjs.org/docs)
 - [React Documentation](https://react.dev)
 - [TailwindCSS Documentation](https://tailwindcss.com/docs)
-- [Radix UI Documentation](https://www.radix-ui.com/docs/primitives)
+- [Radix UI Documentation](https://www.radix-ui.com/primitives)
 - [Zustand Documentation](https://docs.pmnd.rs/zustand)
-
+</content>
+</invoke>
