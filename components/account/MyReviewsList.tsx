@@ -21,20 +21,20 @@ const statusBadge = (status: string) => {
   const normalized = status.toLowerCase();
   if (normalized === "approved") {
     return {
-      className: "bg-emerald-100 text-emerald-700",
+      className: "border border-emerald-200 bg-emerald-50 text-emerald-700",
       icon: CheckCircle2,
       label: "Approved",
     };
   }
   if (normalized === "rejected") {
     return {
-      className: "bg-rose-100 text-rose-700",
+      className: "border border-rose-200 bg-rose-50 text-rose-700",
       icon: AlertCircle,
       label: "Rejected",
     };
   }
   return {
-    className: "bg-amber-100 text-amber-700",
+    className: "border border-amber-200 bg-amber-50 text-amber-700",
     icon: Clock3,
     label: "Pending",
   };
@@ -67,7 +67,7 @@ export function MyReviewsList() {
 
   if (isLoading) {
     return (
-      <div className="rounded-3xl border border-white bg-white p-10">
+      <div className="rounded-md border border-slate-200 bg-white p-10">
         <Spinner size="md" text="Loading your reviews..." />
       </div>
     );
@@ -75,7 +75,7 @@ export function MyReviewsList() {
 
   if (errorMessage) {
     return (
-      <div className="rounded-3xl border border-red-200 bg-red-50 p-6 text-red-800">
+      <div className="rounded-md border border-red-200 bg-red-50 p-4 text-red-800">
         <div className="flex items-start gap-3">
           <AlertCircle className="mt-0.5 h-5 w-5" />
           <p className="text-sm">{errorMessage}</p>
@@ -88,40 +88,40 @@ export function MyReviewsList() {
 
   if (reviews.length === 0) {
     return (
-      <div className="rounded-3xl border border-dashed border-gray-300 bg-white p-10 text-center text-sm text-[#666666]">
+      <div className="rounded-md border border-dashed border-slate-300 bg-white p-10 text-center text-sm text-slate-600">
         You have not submitted any reviews yet. Browse{" "}
-        <Link href="/equipment" className="font-semibold text-accent hover:underline">
+        <Link href="/equipment" className="font-medium text-accent hover:underline">
           our equipment
         </Link>{" "}
-        and leave your first review!
+        and leave your first review.
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {reviews.map((review) => {
         const badge = statusBadge(review.status);
         const BadgeIcon = badge.icon;
         return (
           <div
             key={review.id}
-            className="rounded-3xl border border-white bg-white p-6 shadow-sm"
+            className="rounded-md border border-slate-200 bg-white p-5"
           >
-            <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <Link
                   href={`/equipment/${review.toolId}`}
-                  className="text-lg font-semibold text-[#111111] hover:text-accent"
+                  className="text-base font-semibold text-slate-900 hover:text-accent"
                 >
                   {review.toolName}
                 </Link>
-                <p className="mt-0.5 text-xs text-[#666666]">
+                <p className="mt-0.5 text-xs text-slate-500">
                   Submitted {formatDate(review.createdDate)}
                 </p>
               </div>
               <span
-                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${badge.className}`}
+                className={`inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-xs font-medium ${badge.className}`}
               >
                 <BadgeIcon className="h-3.5 w-3.5" />
                 {badge.label}
@@ -135,41 +135,43 @@ export function MyReviewsList() {
                     key={i}
                     className={`h-4 w-4 ${
                       i < Math.round(review.overallRating)
-                        ? "text-accent fill-accent"
-                        : "text-gray-300"
+                        ? "text-amber-400 fill-amber-400"
+                        : "text-slate-300"
                     }`}
                   />
                 ))}
               </div>
-              <span className="text-sm font-semibold text-[#111111]">
+              <span className="text-sm font-semibold text-slate-900">
                 {review.overallRating.toFixed(1)}
               </span>
             </div>
 
-            <p className="mt-3 text-sm text-[#444444]">{review.reviewTextSnippet}</p>
+            <p className="mt-3 text-sm text-slate-700">
+              {review.reviewTextSnippet}
+            </p>
 
             {review.rejectionReason && (
-              <div className="mt-3 rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-800">
+              <div className="mt-3 rounded-md border border-rose-200 bg-rose-50 p-3 text-xs text-rose-800">
                 <p className="font-semibold">Reason for rejection</p>
                 <p className="mt-1">{review.rejectionReason}</p>
               </div>
             )}
 
             {review.hasCompanyResponse && (
-              <div className="mt-3 rounded-xl border-l-4 border-accent bg-accent/5 p-3">
-                <p className="text-xs font-semibold text-accent">
+              <div className="mt-3 rounded-md border-l-2 border-accent bg-slate-50 p-3">
+                <p className="text-xs font-semibold text-slate-900">
                   Company response attached
                 </p>
-                <p className="mt-1 text-sm text-[#444444]">
+                <p className="mt-1 text-sm text-slate-700">
                   View the full review to see the company&apos;s reply.
                 </p>
               </div>
             )}
 
-            <div className="mt-3 flex items-center gap-3 text-xs text-[#666666]">
+            <div className="mt-3 flex items-center gap-3 text-xs">
               <Link
                 href={`/equipment/${review.toolId}`}
-                className="inline-flex items-center gap-1 text-accent hover:underline"
+                className="inline-flex items-center gap-1 font-medium text-accent hover:underline"
               >
                 <MessageCircle className="h-3.5 w-3.5" />
                 View full review
@@ -180,23 +182,23 @@ export function MyReviewsList() {
       })}
 
       {data && (data.hasPreviousPage || data.hasNextPage) && (
-        <div className="flex items-center justify-between rounded-3xl bg-white p-4 shadow-sm">
+        <div className="flex items-center justify-between rounded-md border border-slate-200 bg-white px-4 py-3">
           <button
             type="button"
             onClick={() => setPage((prev) => Math.max(1, prev - 1))}
             disabled={!data.hasPreviousPage}
-            className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-semibold text-[#111111] hover:border-accent disabled:opacity-50"
+            className="rounded-md border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-700 hover:border-slate-400 hover:text-slate-900 disabled:opacity-50"
           >
             Previous
           </button>
-          <span className="text-sm text-[#666666]">
+          <span className="text-sm text-slate-600">
             Page {data.page} of {data.totalPages}
           </span>
           <button
             type="button"
             onClick={() => setPage((prev) => prev + 1)}
             disabled={!data.hasNextPage}
-            className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-semibold text-[#111111] hover:border-accent disabled:opacity-50"
+            className="rounded-md border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-700 hover:border-slate-400 hover:text-slate-900 disabled:opacity-50"
           >
             Next
           </button>

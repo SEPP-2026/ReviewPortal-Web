@@ -12,7 +12,7 @@ export function PostContent({ text, image }: PostContentProps) {
         {text}
       </p>
       {image && (
-        <div className="mt-3 rounded-2xl overflow-hidden border border-light-gray/20">
+        <div className="mt-3 rounded-md overflow-hidden border border-slate-800">
           <img
             src={image}
             alt="Post image"

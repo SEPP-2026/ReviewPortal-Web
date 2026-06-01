@@ -43,65 +43,64 @@ export function Categories() {
   }, []);
 
   return (
-    <section className="py-24 bg-[#F5F5F5]">
+    <section className="py-16 bg-slate-50">
       <div className="max-w-7xl mx-auto px-4">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-extrabold text-[#111111] mb-6">
-            Browse Equipment by Category
+        <div className="mb-8">
+          <p className="text-xs font-medium uppercase tracking-wider text-slate-500">
+            Catalogue
+          </p>
+          <h2 className="mt-1 text-2xl md:text-3xl font-semibold tracking-tight text-slate-900">
+            Browse equipment by category
           </h2>
-          <p className="text-[#666666] text-xl max-w-3xl mx-auto leading-relaxed">
+          <p className="mt-2 text-sm text-slate-600 max-w-2xl">
             From construction machinery to precision tools, find everything you
-            need for your project in our comprehensive catalogue.
+            need for your project.
           </p>
         </div>
 
         {isLoading ? (
           <Spinner size="md" text="Loading categories..." />
         ) : errorMessage ? (
-          <div className="mx-auto max-w-xl rounded-2xl border border-red-200 bg-red-50 p-6 text-center text-red-700">
+          <div className="mx-auto max-w-xl rounded-md border border-red-200 bg-red-50 p-4 text-center text-sm text-red-700">
             {errorMessage}
           </div>
         ) : categories.length === 0 ? (
-          <div className="mx-auto max-w-xl rounded-2xl border border-gray-200 bg-white p-6 text-center text-[#666666]">
+          <div className="mx-auto max-w-xl rounded-md border border-slate-200 bg-white p-6 text-center text-sm text-slate-600">
             No categories available yet.
           </div>
         ) : (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {categories.map((category) => (
               <Link
                 key={category.id}
                 href={`/equipment?category=${toCategorySlug(category.name)}`}
-                className="group relative h-[420px] rounded-3xl overflow-hidden hover:shadow-2xl transition-all duration-500 hover:scale-[1.02]"
+                className="group bg-white border border-slate-200 rounded-md overflow-hidden hover:border-slate-400 transition-colors"
               >
-                <div className="absolute inset-0">
+                <div className="relative h-44 bg-slate-100">
                   <img
                     src={category.imageUrl || FALLBACK_IMAGE}
                     alt={category.name}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    className="w-full h-full object-cover"
                   />
+                  <span className="absolute top-2 right-2 bg-white/95 border border-slate-200 text-slate-700 text-xs font-medium px-2 py-0.5 rounded-md">
+                    {category.toolCount}{" "}
+                    {category.toolCount === 1 ? "item" : "items"}
+                  </span>
                 </div>
 
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20 group-hover:from-black/60 group-hover:via-black/20 group-hover:to-transparent transition-all duration-500"></div>
-
-                <div className="relative h-full flex flex-col justify-end p-8">
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="bg-accent text-black text-sm font-bold px-4 py-2 rounded-full">
-                      {category.toolCount} {category.toolCount === 1 ? "item" : "items"}
-                    </span>
-                  </div>
-
-                  <h3 className="text-3xl font-bold text-white mb-3 group-hover:text-accent transition-colors duration-300">
+                <div className="p-4">
+                  <h3 className="text-base font-semibold text-slate-900 group-hover:text-accent transition-colors">
                     {category.name}
                   </h3>
                   {category.description && (
-                    <p className="text-white/90 text-base mb-6 leading-relaxed line-clamp-2">
+                    <p className="mt-1 text-sm text-slate-600 line-clamp-2">
                       {category.description}
                     </p>
                   )}
 
-                  <div className="flex items-center gap-2 text-accent font-bold text-lg">
-                    View Equipment
-                    <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform duration-300" />
+                  <div className="mt-3 flex items-center gap-1 text-sm font-medium text-accent">
+                    View equipment
+                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
                   </div>
                 </div>
               </Link>

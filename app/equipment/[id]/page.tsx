@@ -253,7 +253,7 @@ export default function EquipmentDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#F2F2F2] pt-40 pb-20">
+      <div className="min-h-screen bg-slate-50 pt-32 pb-16">
         <div className="max-w-7xl mx-auto px-4">
           <Spinner size="md" text="Loading tool details..." />
         </div>
@@ -263,17 +263,17 @@ export default function EquipmentDetailPage() {
 
   if (error || !tool) {
     return (
-      <div className="min-h-screen bg-[#F2F2F2] pt-40 pb-20">
+      <div className="min-h-screen bg-slate-50 pt-32 pb-16">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">
+          <div className="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-700">
             {error || "Tool not found."}
           </div>
           <Link
             href="/equipment"
-            className="inline-flex items-center gap-2 mt-4 text-[#666666] hover:text-accent"
+            className="inline-flex items-center gap-2 mt-4 text-sm text-slate-600 hover:text-accent"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back to Equipment
+            Back to equipment
           </Link>
         </div>
       </div>
@@ -286,63 +286,61 @@ export default function EquipmentDetailPage() {
   const sortedImages = [...tool.images].sort((a, b) => a.displayOrder - b.displayOrder);
 
   return (
-    <div className="min-h-screen bg-[#F2F2F2] pt-40 pb-20">
+    <div className="min-h-screen bg-slate-50 pt-32 pb-16">
       <div className="max-w-7xl mx-auto px-4">
-        <nav className="flex items-center gap-2 text-sm mb-8">
-          <Link href="/" className="text-[#666666] hover:text-accent transition-colors">
+        <nav className="flex items-center gap-1.5 text-xs mb-4 text-slate-500">
+          <Link href="/" className="hover:text-accent transition-colors">
             Home
           </Link>
-          <span className="text-[#666666]">/</span>
-          <Link
-            href="/equipment"
-            className="text-[#666666] hover:text-accent transition-colors"
-          >
+          <span>/</span>
+          <Link href="/equipment" className="hover:text-accent transition-colors">
             Equipment
           </Link>
-          <span className="text-[#666666]">/</span>
+          <span>/</span>
           <Link
             href={`/equipment?category=${toCategorySlug(tool.categoryName)}`}
-            className="text-[#666666] hover:text-accent transition-colors"
+            className="hover:text-accent transition-colors"
           >
             {tool.categoryName}
           </Link>
-          <span className="text-[#666666]">/</span>
-          <span className="text-[#111111]">{tool.name}</span>
+          <span>/</span>
+          <span className="text-slate-900 font-medium">{tool.name}</span>
         </nav>
 
         <Link
           href="/equipment"
-          className="inline-flex items-center gap-2 text-[#666666] hover:text-accent transition-colors mb-8"
+          className="inline-flex items-center gap-1.5 text-sm text-slate-600 hover:text-accent transition-colors mb-6"
         >
           <ArrowLeft className="w-4 h-4" />
-          Back to Equipment
+          Back to equipment
         </Link>
 
-        <div className="grid lg:grid-cols-2 gap-12">
+        <div className="grid lg:grid-cols-2 gap-8">
           <div>
-            <div className="relative bg-white border border-gray-200 rounded-2xl overflow-hidden mb-4">
+            <div className="relative bg-white border border-slate-200 rounded-md overflow-hidden mb-3">
               <img
                 src={selectedImageUrl || primaryImage}
                 alt={tool.name}
                 className="w-full aspect-square object-cover"
               />
-              <div className="absolute top-4 left-4">
-                <span className="bg-accent text-black text-sm font-semibold px-3 py-1 rounded-full">
+              <div className="absolute top-3 left-3">
+                <span className="bg-white/95 border border-slate-200 text-slate-700 text-xs font-medium px-2 py-0.5 rounded-md">
                   {tool.categoryName}
                 </span>
               </div>
-              <div className="absolute top-4 right-4">
+              <div className="absolute top-3 right-3">
                 <span
-                  className={`text-sm font-semibold px-3 py-1 rounded-full ${
-                    tool.isActive ? "bg-green-500 text-white" : "bg-red-500 text-white"
+                  className={`text-xs font-medium px-2 py-0.5 rounded-md border ${
+                    tool.isActive
+                      ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                      : "border-red-200 bg-red-50 text-red-700"
                   }`}
                 >
-                  {tool.isActive ? "Available" : "Currently Unavailable"}
+                  {tool.isActive ? "Available" : "Unavailable"}
                 </span>
               </div>
             </div>
 
-            {/* Image gallery thumbnails */}
             {sortedImages.length > 1 && (
               <div className="grid grid-cols-4 gap-2">
                 {sortedImages.map((image) => (
@@ -350,10 +348,10 @@ export default function EquipmentDetailPage() {
                     key={image.id}
                     type="button"
                     onClick={() => setSelectedImageUrl(image.imageUrl)}
-                    className={`relative aspect-square rounded-xl overflow-hidden border-2 transition-all ${
+                    className={`relative aspect-square rounded-md overflow-hidden border transition-colors ${
                       (selectedImageUrl || primaryImage) === image.imageUrl
-                        ? "border-accent ring-2 ring-accent/30"
-                        : "border-gray-200 hover:border-accent/50"
+                        ? "border-accent ring-1 ring-accent"
+                        : "border-slate-200 hover:border-slate-400"
                     }`}
                   >
                     <img
@@ -368,249 +366,278 @@ export default function EquipmentDetailPage() {
           </div>
 
           <div>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="flex items-center gap-1">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="flex items-center gap-0.5">
                 {[...Array(5)].map((_, i) => (
                   <Star
                     key={i}
-                    className={`w-5 h-5 ${
+                    className={`w-4 h-4 ${
                       i < Math.floor(tool.overallRating ?? 0)
-                        ? "text-accent fill-accent"
-                        : "text-gray"
+                        ? "text-amber-400 fill-amber-400"
+                        : "text-slate-300"
                     }`}
                   />
                 ))}
               </div>
               {tool.hasEnoughReviewsToRate ? (
                 <>
-                  <span className="text-[#111111] font-semibold">
+                  <span className="text-slate-900 font-semibold text-sm">
                     {(tool.overallRating ?? 0).toFixed(1)}
                   </span>
-                  <span className="text-[#666666]">({tool.reviewCount} reviews)</span>
+                  <span className="text-slate-500 text-sm">
+                    ({tool.reviewCount} reviews)
+                  </span>
                 </>
               ) : (
-                <span className="text-[#666666]">{tool.ratingMessage || "No reviews yet"}</span>
+                <span className="text-sm text-slate-500">
+                  {tool.ratingMessage || "No reviews yet"}
+                </span>
               )}
             </div>
 
-            <h1 className="text-3xl md:text-4xl font-bold text-[#111111] mb-4">{tool.name}</h1>
-            <p className="text-[#666666] text-lg mb-8 leading-relaxed">{tool.description}</p>
+            <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-slate-900 mb-2">
+              {tool.name}
+            </h1>
+            <p className="text-slate-600 mb-6 leading-relaxed">{tool.description}</p>
 
-            <div className="grid grid-cols-3 gap-4 mb-8">
+            <div className="grid grid-cols-3 gap-2 mb-6">
               <button
                 onClick={() => setRentalPeriod("hourly")}
-                className={`p-4 rounded-xl text-center transition-all ${
+                className={`p-3 rounded-md text-left transition-colors border ${
                   rentalPeriod === "hourly"
-                    ? "bg-accent text-black ring-2 ring-accent"
-                    : "bg-white border border-gray-200 text-[#111111] hover:border-accent/50"
+                    ? "border-slate-900 bg-slate-50"
+                    : "border-slate-200 bg-white hover:border-slate-400"
                 }`}
               >
-                <div className="flex items-center justify-center gap-1 mb-2">
-                  <Clock className="w-4 h-4" />
-                  <span className="text-sm font-medium">Hourly</span>
+                <div className="flex items-center gap-1.5 mb-1.5 text-xs font-medium text-slate-500">
+                  <Clock className="w-3.5 h-3.5" />
+                  Hourly
                 </div>
-                <span className="text-2xl font-bold">${tool.hourlyRate}</span>
-                <span className="text-sm opacity-70">/hr</span>
+                <span className="text-lg font-semibold text-slate-900">
+                  ${tool.hourlyRate}
+                </span>
+                <span className="text-xs text-slate-500"> /hr</span>
               </button>
               <button
                 onClick={() => setRentalPeriod("daily")}
-                className={`p-4 rounded-xl text-center transition-all ${
+                className={`p-3 rounded-md text-left transition-colors border ${
                   rentalPeriod === "daily"
-                    ? "bg-accent text-black ring-2 ring-accent"
-                    : "bg-white border border-gray-200 text-[#111111] hover:border-accent/50"
+                    ? "border-slate-900 bg-slate-50"
+                    : "border-slate-200 bg-white hover:border-slate-400"
                 }`}
               >
-                <div className="flex items-center justify-center gap-1 mb-2">
-                  <Calendar className="w-4 h-4" />
-                  <span className="text-sm font-medium">Daily</span>
+                <div className="flex items-center gap-1.5 mb-1.5 text-xs font-medium text-slate-500">
+                  <Calendar className="w-3.5 h-3.5" />
+                  Daily
                 </div>
-                <span className="text-2xl font-bold">${tool.dailyRate}</span>
-                <span className="text-sm opacity-70">/day</span>
+                <span className="text-lg font-semibold text-slate-900">
+                  ${tool.dailyRate}
+                </span>
+                <span className="text-xs text-slate-500"> /day</span>
               </button>
               <button
                 onClick={() => setRentalPeriod("weekly")}
-                className={`p-4 rounded-xl text-center transition-all ${
+                className={`p-3 rounded-md text-left transition-colors border ${
                   rentalPeriod === "weekly"
-                    ? "bg-accent text-black ring-2 ring-accent"
-                    : "bg-white border border-gray-200 text-[#111111] hover:border-accent/50"
+                    ? "border-slate-900 bg-slate-50"
+                    : "border-slate-200 bg-white hover:border-slate-400"
                 }`}
               >
-                <div className="flex items-center justify-center gap-1 mb-2">
-                  <Calendar className="w-4 h-4" />
-                  <span className="text-sm font-medium">Weekly</span>
+                <div className="flex items-center gap-1.5 mb-1.5 text-xs font-medium text-slate-500">
+                  <Calendar className="w-3.5 h-3.5" />
+                  Weekly
                 </div>
-                <span className="text-2xl font-bold">${tool.weeklyRate}</span>
-                <span className="text-sm opacity-70">/wk</span>
+                <span className="text-lg font-semibold text-slate-900">
+                  ${tool.weeklyRate}
+                </span>
+                <span className="text-xs text-slate-500"> /wk</span>
               </button>
             </div>
 
-            <div className="bg-white border border-gray-200 rounded-2xl p-6 mb-8">
-              <h3 className="text-[#111111] font-bold text-lg mb-4 flex items-center gap-2">
-                <Calculator className="w-5 h-5 text-accent" />
-                Rental Calculator
-              </h3>
-              <div className="grid sm:grid-cols-2 gap-4 mb-4">
-                <div>
-                  <label className="block text-[#666666] text-sm mb-2">Quantity</label>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                      className="w-10 h-10 bg-[#F2F2F2] border border-gray-200 rounded-lg text-[#111111] hover:border-accent transition-colors"
-                    >
-                      -
-                    </button>
-                    <input
-                      type="number"
-                      value={quantity}
-                      onChange={(e) => setQuantity(Math.max(1, Number(e.target.value) || 1))}
-                      className="w-full bg-white border border-gray-200 rounded-lg px-4 py-2 text-[#111111] text-center focus:outline-none focus:border-accent"
-                    />
-                    <button
-                      onClick={() => setQuantity(quantity + 1)}
-                      className="w-10 h-10 bg-[#F2F2F2] border border-gray-200 rounded-lg text-[#111111] hover:border-accent transition-colors"
-                    >
-                      +
-                    </button>
+            <div className="bg-white border border-slate-200 rounded-md mb-6">
+              <div className="flex items-center gap-2 border-b border-slate-200 px-5 py-3">
+                <Calculator className="w-4 h-4 text-slate-600" />
+                <h3 className="text-sm font-semibold text-slate-900">
+                  Rental calculator
+                </h3>
+              </div>
+              <div className="px-5 py-4">
+                <div className="grid sm:grid-cols-2 gap-3 mb-4">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-500 mb-1.5">
+                      Quantity
+                    </label>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                        className="w-9 h-9 border border-slate-200 rounded-md text-slate-700 hover:border-slate-400 transition-colors"
+                      >
+                        −
+                      </button>
+                      <input
+                        type="number"
+                        value={quantity}
+                        onChange={(e) =>
+                          setQuantity(Math.max(1, Number(e.target.value) || 1))
+                        }
+                        className="w-full bg-white border border-slate-200 rounded-md px-3 py-2 text-sm text-slate-900 text-center focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent"
+                      />
+                      <button
+                        onClick={() => setQuantity(quantity + 1)}
+                        className="w-9 h-9 border border-slate-200 rounded-md text-slate-700 hover:border-slate-400 transition-colors"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-500 mb-1.5">
+                      Duration ({rentalPeriod === "hourly" ? "hours" : rentalPeriod === "daily" ? "days" : "weeks"})
+                    </label>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={() => setDuration(Math.max(1, duration - 1))}
+                        className="w-9 h-9 border border-slate-200 rounded-md text-slate-700 hover:border-slate-400 transition-colors"
+                      >
+                        −
+                      </button>
+                      <input
+                        type="number"
+                        value={duration}
+                        onChange={(e) =>
+                          setDuration(Math.max(1, Number(e.target.value) || 1))
+                        }
+                        className="w-full bg-white border border-slate-200 rounded-md px-3 py-2 text-sm text-slate-900 text-center focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent"
+                      />
+                      <button
+                        onClick={() => setDuration(duration + 1)}
+                        className="w-9 h-9 border border-slate-200 rounded-md text-slate-700 hover:border-slate-400 transition-colors"
+                      >
+                        +
+                      </button>
+                    </div>
                   </div>
                 </div>
-                <div>
-                  <label className="block text-[#666666] text-sm mb-2">
-                    Duration ({rentalPeriod === "hourly" ? "hours" : rentalPeriod === "daily" ? "days" : "weeks"})
-                  </label>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setDuration(Math.max(1, duration - 1))}
-                      className="w-10 h-10 bg-[#F2F2F2] border border-gray-200 rounded-lg text-[#111111] hover:border-accent transition-colors"
-                    >
-                      -
-                    </button>
-                    <input
-                      type="number"
-                      value={duration}
-                      onChange={(e) => setDuration(Math.max(1, Number(e.target.value) || 1))}
-                      className="w-full bg-white border border-gray-200 rounded-lg px-4 py-2 text-[#111111] text-center focus:outline-none focus:border-accent"
-                    />
-                    <button
-                      onClick={() => setDuration(duration + 1)}
-                      className="w-10 h-10 bg-[#F2F2F2] border border-gray-200 rounded-lg text-[#111111] hover:border-accent transition-colors"
-                    >
-                      +
-                    </button>
-                  </div>
+                <div className="flex items-center justify-between pt-4 border-t border-slate-200">
+                  <span className="text-sm text-slate-600">Estimated total</span>
+                  <span className="text-2xl font-semibold tracking-tight text-slate-900">
+                    {estimatedCost === null ? "—" : formatCurrency(estimatedCost)}
+                  </span>
                 </div>
+                {isCalculating && (
+                  <p className="text-xs text-slate-500 mt-2">Calculating…</p>
+                )}
+                {costBreakdown && (
+                  <p className="text-xs text-slate-500 mt-2">{costBreakdown}</p>
+                )}
               </div>
-              <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-                <span className="text-[#666666]">Estimated Total:</span>
-                <span className="text-3xl font-bold text-accent">
-                  {estimatedCost === null ? "--" : formatCurrency(estimatedCost)}
-                </span>
-              </div>
-              {isCalculating && <p className="text-xs text-[#666666] mt-2">Calculating...</p>}
-              {costBreakdown && <p className="text-xs text-[#666666] mt-2">{costBreakdown}</p>}
             </div>
 
-            <div className="flex gap-4 mb-8">
+            <div className="flex gap-2 mb-6">
               <button
                 type="button"
                 disabled={!tool.isActive}
                 onClick={() => setBookingDialogOpen(true)}
-                className={`flex-1 py-4 rounded-xl font-semibold text-lg transition-colors ${
+                className={`flex-1 py-2.5 rounded-md font-medium text-sm transition-colors ${
                   tool.isActive
                     ? "bg-accent hover:bg-[#C97F00] text-black"
-                    : "bg-gray-200 text-[#999] cursor-not-allowed"
+                    : "bg-slate-100 text-slate-400 cursor-not-allowed"
                 }`}
               >
-                {tool.isActive ? "Book Now" : "Not Available"}
+                {tool.isActive ? "Book now" : "Not available"}
               </button>
-              <button className="px-6 py-4 bg-white border border-gray-200 rounded-xl text-[#111111] hover:border-accent transition-colors">
-                <Phone className="w-5 h-5" />
+              <button className="px-4 py-2.5 bg-white border border-slate-200 rounded-md text-slate-700 hover:border-slate-400 transition-colors">
+                <Phone className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="grid sm:grid-cols-3 gap-4">
-              <div className="flex items-center gap-3 bg-white border border-gray-200 rounded-xl p-4">
-                <Truck className="w-6 h-6 text-accent" />
+            <div className="grid sm:grid-cols-3 gap-2">
+              <div className="flex items-center gap-2.5 bg-white border border-slate-200 rounded-md p-3">
+                <Truck className="w-4 h-4 text-slate-600 shrink-0" />
                 <div>
-                  <p className="text-[#111111] font-medium">Free Delivery</p>
-                  <p className="text-[#666666] text-sm">Orders over $200</p>
+                  <p className="text-slate-900 font-medium text-sm">Free delivery</p>
+                  <p className="text-slate-500 text-xs">Orders over $200</p>
                 </div>
               </div>
-              <div className="flex items-center gap-3 bg-white border border-gray-200 rounded-xl p-4">
-                <Shield className="w-6 h-6 text-accent" />
+              <div className="flex items-center gap-2.5 bg-white border border-slate-200 rounded-md p-3">
+                <Shield className="w-4 h-4 text-slate-600 shrink-0" />
                 <div>
-                  <p className="text-[#111111] font-medium">Fully Insured</p>
-                  <p className="text-[#666666] text-sm">Equipment coverage</p>
+                  <p className="text-slate-900 font-medium text-sm">Fully insured</p>
+                  <p className="text-slate-500 text-xs">Equipment coverage</p>
                 </div>
               </div>
-              <div className="flex items-center gap-3 bg-white border border-gray-200 rounded-xl p-4">
-                <Clock className="w-6 h-6 text-accent" />
+              <div className="flex items-center gap-2.5 bg-white border border-slate-200 rounded-md p-3">
+                <Clock className="w-4 h-4 text-slate-600 shrink-0" />
                 <div>
-                  <p className="text-[#111111] font-medium">24/7 Support</p>
-                  <p className="text-[#666666] text-sm">Always available</p>
+                  <p className="text-slate-900 font-medium text-sm">24/7 support</p>
+                  <p className="text-slate-500 text-xs">Always available</p>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="mt-16">
-          <h2 className="text-2xl font-bold text-[#111111] mb-6">Specifications</h2>
-          <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
-            <div className="grid md:grid-cols-2">
-              {specifications.map((spec, index) => (
+        <div className="mt-12">
+          <h2 className="text-lg font-semibold text-slate-900 mb-3">
+            Specifications
+          </h2>
+          <div className="bg-white border border-slate-200 rounded-md overflow-hidden">
+            <div className="grid md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-slate-100">
+              {specifications.map((spec) => (
                 <div
                   key={spec.key}
-                  className={`flex justify-between p-4 ${
-                    index % 2 === 0 ? "bg-white" : "bg-[#F2F2F2]"
-                  } border-b border-gray-200 last:border-b-0`}
+                  className="flex justify-between px-4 py-3 border-b border-slate-100 last:border-b-0 md:border-b md:nth-last-[2]:border-b-0"
                 >
-                  <span className="text-[#666666]">{spec.key}</span>
-                  <span className="text-[#111111] font-medium">{spec.value}</span>
+                  <span className="text-sm text-slate-600">{spec.key}</span>
+                  <span className="text-sm text-slate-900 font-medium">
+                    {spec.value}
+                  </span>
                 </div>
               ))}
             </div>
           </div>
         </div>
 
-        <div className="mt-12">
-          <h2 className="text-2xl font-bold text-[#111111] mb-6">Features</h2>
-          <div className="grid sm:grid-cols-2 gap-4">
+        <div className="mt-10">
+          <h2 className="text-lg font-semibold text-slate-900 mb-3">Features</h2>
+          <div className="grid sm:grid-cols-2 gap-2">
             {features.map((feature) => (
               <div
                 key={feature}
-                className="flex items-center gap-3 bg-white border border-gray-200 rounded-xl p-4"
+                className="flex items-center gap-2.5 bg-white border border-slate-200 rounded-md p-3"
               >
-                <div className="w-8 h-8 bg-accent/20 rounded-full flex items-center justify-center">
-                  <Check className="w-4 h-4 text-accent" />
-                </div>
-                <span className="text-[#111111]">{feature}</span>
+                <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span className="text-sm text-slate-700">{feature}</span>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="mt-12">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-[#111111]">Customer Reviews</h2>
+        <div className="mt-10">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-slate-900">
+              Customer reviews
+            </h2>
             {reviewsMeta && reviewsMeta.totalApproved > 0 && (
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-0.5">
                   {[...Array(5)].map((_, i) => (
                     <Star
                       key={i}
-                      className={`w-5 h-5 ${
+                      className={`w-4 h-4 ${
                         i < Math.floor(reviewsMeta.avgRating ?? 0)
-                          ? "text-accent fill-accent"
-                          : "text-gray-300"
+                          ? "text-amber-400 fill-amber-400"
+                          : "text-slate-300"
                       }`}
                     />
                   ))}
                 </div>
-                <span className="font-bold text-[#111111]">
+                <span className="font-semibold text-sm text-slate-900">
                   {(reviewsMeta.avgRating ?? 0).toFixed(1)}
                 </span>
-                <span className="text-[#666666] text-sm">
-                  ({reviewsMeta.totalApproved} {reviewsMeta.totalApproved === 1 ? "review" : "reviews"})
+                <span className="text-slate-500 text-xs">
+                  ({reviewsMeta.totalApproved}{" "}
+                  {reviewsMeta.totalApproved === 1 ? "review" : "reviews"})
                 </span>
               </div>
             )}
@@ -625,7 +652,7 @@ export default function EquipmentDetailPage() {
           />
 
           {reviewSuccess && (
-            <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-700">
+            <div className="mb-4 rounded-md border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700">
               Your review has been submitted and is awaiting moderation. It will
               appear here once approved.
             </div>
@@ -633,7 +660,7 @@ export default function EquipmentDetailPage() {
 
           {reviews.length > 0 ? (
             <>
-              <div className="space-y-5">
+              <div className="space-y-3">
                 {reviews.map((review) => (
                   <ReviewItem
                     key={review.id}
@@ -645,19 +672,23 @@ export default function EquipmentDetailPage() {
               </div>
 
               {reviewsMeta?.hasNextPage && (
-                <div className="mt-6 text-center">
+                <div className="mt-5 text-center">
                   <button
                     onClick={loadMoreReviews}
                     disabled={isLoadingMoreReviews}
-                    className="px-8 py-3 bg-white border border-gray-200 rounded-xl text-[#111111] hover:border-accent hover:text-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-5 py-2 bg-white border border-slate-200 rounded-md text-sm font-medium text-slate-700 hover:border-slate-400 hover:text-slate-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {isLoadingMoreReviews ? <Spinner size="sm" /> : "Load More Reviews"}
+                    {isLoadingMoreReviews ? (
+                      <Spinner size="sm" />
+                    ) : (
+                      "Load more reviews"
+                    )}
                   </button>
                 </div>
               )}
             </>
           ) : (
-            <p className="text-[#666666]">
+            <p className="text-sm text-slate-600">
               {reviewsMeta?.emptyMessage ?? "No approved reviews yet for this tool."}
             </p>
           )}
@@ -675,27 +706,32 @@ export default function EquipmentDetailPage() {
         />
 
         {relatedTools.length > 0 && (
-          <div className="mt-16">
-            <h2 className="text-2xl font-bold text-[#111111] mb-6">Related Equipment</h2>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="mt-12">
+            <h2 className="text-lg font-semibold text-slate-900 mb-3">
+              Related equipment
+            </h2>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
               {relatedTools.map((item) => (
                 <Link
                   key={item.id}
                   href={`/equipment/${item.id}`}
-                  className="group bg-white border border-gray-200 rounded-2xl overflow-hidden hover:border-accent/50 hover:shadow-lg transition-all duration-300"
+                  className="group bg-white border border-slate-200 rounded-md overflow-hidden hover:border-slate-400 transition-colors"
                 >
-                  <div className="relative h-40 overflow-hidden">
+                  <div className="relative h-36 overflow-hidden bg-slate-100">
                     <img
                       src={item.thumbnailUrl || DEFAULT_IMAGE}
                       alt={item.name}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                      className="w-full h-full object-cover"
                     />
                   </div>
-                  <div className="p-4">
-                    <h3 className="text-[#111111] font-bold mb-2 line-clamp-1 group-hover:text-accent transition-colors">
+                  <div className="p-3">
+                    <h3 className="text-sm font-semibold text-slate-900 mb-0.5 line-clamp-1 group-hover:text-accent transition-colors">
                       {item.name}
                     </h3>
-                    <p className="text-accent font-bold">${item.dailyRate}/day</p>
+                    <p className="text-sm text-slate-700">
+                      <span className="font-semibold">${item.dailyRate}</span>
+                      <span className="text-slate-500"> /day</span>
+                    </p>
                   </div>
                 </Link>
               ))}

@@ -68,7 +68,7 @@ export function FeedPage() {
     <div className="min-h-screen bg-black">
       <div className="max-w-[600px] mx-auto px-4 py-6">
         {/* Header */}
-        <header className="sticky top-0 z-10 bg-black/80 backdrop-blur-md border-b border-light-gray/10 -mx-4 px-4 py-4 mb-4">
+        <header className="sticky top-0 z-10 bg-black border-b border-slate-800 -mx-4 px-4 py-4 mb-4">
           <h1 className="text-xl font-bold text-white">Tool Reviews</h1>
           <p className="text-gray text-sm mt-1">Shelton Tool-Hire Community</p>
         </header>

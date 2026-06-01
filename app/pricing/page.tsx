@@ -72,92 +72,66 @@ export const metadata = {
 
 export default function PricingPage() {
   return (
-    <div className="min-h-screen bg-[#F2F2F2] pt-40 pb-20">
-      <div className="max-w-7xl mx-auto px-4">
-        {/* Header */}
-        <div className="text-center mb-16">
-          <span className="inline-block text-accent font-semibold text-sm uppercase tracking-wider mb-4">
-            Simple Pricing
-          </span>
-          <h1 className="text-4xl md:text-5xl font-bold text-[#111111] mb-4">
-            Flexible Rental Plans
+    <div className="min-h-screen bg-slate-50 pt-28 pb-16">
+      <div className="max-w-6xl mx-auto px-4">
+        <div className="text-center mb-10">
+          <p className="text-xs font-medium uppercase tracking-wider text-slate-500">
+            Simple pricing
+          </p>
+          <h1 className="mt-1 text-2xl md:text-3xl font-semibold tracking-tight text-slate-900">
+            Flexible rental plans
           </h1>
-          <p className="text-[#666666] text-lg max-w-2xl mx-auto">
+          <p className="mt-2 text-sm text-slate-600 max-w-xl mx-auto">
             Choose the rental period that suits your project. The longer you
             rent, the more you save.
           </p>
         </div>
 
-        {/* Pricing Cards */}
-        <div className="grid md:grid-cols-3 gap-6 mb-16">
+        <div className="grid md:grid-cols-3 gap-4 mb-10">
           {PRICING_PLANS.map((plan) => (
             <div
               key={plan.name}
-              className={`relative rounded-2xl p-6 ${
+              className={`relative rounded-md p-6 ${
                 plan.highlight
-                  ? "bg-accent text-black ring-4 ring-accent/30"
-                  : "bg-white border border-gray-200 text-[#111111]"
+                  ? "bg-white border-2 border-slate-900"
+                  : "bg-white border border-slate-200"
               }`}
             >
               {plan.badge && (
-                <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#111111] text-white text-xs font-bold px-4 py-1 rounded-full">
+                <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] font-semibold uppercase tracking-wider px-3 py-0.5 rounded-md">
                   {plan.badge}
                 </span>
               )}
 
-              <div className="text-center mb-6">
-                <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
-                <p className={plan.highlight ? "text-black/70" : "text-[#666666]"}>
+              <div className="mb-5">
+                <h3 className="text-lg font-semibold text-slate-900">
+                  {plan.name}
+                </h3>
+                <p className="text-sm text-slate-600 mt-0.5">
                   {plan.description}
                 </p>
               </div>
 
-              {/* Features */}
-              <ul className="space-y-3 mb-6">
+              <ul className="space-y-2 mb-5">
                 {plan.features.map((feature) => (
-                  <li key={feature} className="flex items-center gap-2">
-                    <Check
-                      className={`w-5 h-5 ${
-                        plan.highlight ? "text-black" : "text-accent"
-                      }`}
-                    />
-                    <span
-                      className={plan.highlight ? "text-black/80" : "text-[#666666]"}
-                    >
-                      {feature}
-                    </span>
+                  <li key={feature} className="flex items-start gap-2 text-sm">
+                    <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                    <span className="text-slate-700">{feature}</span>
                   </li>
                 ))}
               </ul>
 
-              {/* Example Prices */}
-              <div
-                className={`rounded-xl p-4 mb-6 ${
-                  plan.highlight ? "bg-black/10" : "bg-[#F2F2F2]"
-                }`}
-              >
-                <p
-                  className={`text-sm font-medium mb-3 ${
-                    plan.highlight ? "text-black/70" : "text-[#666666]"
-                  }`}
-                >
-                  Example Prices:
+              <div className="rounded-md border border-slate-200 bg-slate-50 p-3 mb-5">
+                <p className="text-xs font-medium uppercase tracking-wider text-slate-500 mb-2">
+                  Example prices
                 </p>
                 {plan.examples.map((example) => (
                   <div
                     key={example.name}
-                    className="flex justify-between items-center py-1"
+                    className="flex justify-between items-center py-0.5 text-sm"
                   >
-                    <span
-                      className={plan.highlight ? "text-black/80" : "text-[#666666]"}
-                    >
-                      {example.name}
-                    </span>
-                    <span
-                      className={`font-bold ${
-                        plan.highlight ? "text-black" : "text-accent"
-                      }`}
-                    >
+                    <span className="text-slate-600">{example.name}</span>
+                    <span className="font-semibold text-slate-900">
                       {example.price}
                     </span>
                   </div>
@@ -166,50 +140,50 @@ export default function PricingPage() {
 
               <Link
                 href="/equipment"
-                className={`block w-full text-center py-3 rounded-lg font-semibold transition-colors ${
+                className={`block w-full text-center py-2 rounded-md font-medium text-sm transition-colors ${
                   plan.highlight
-                    ? "bg-black text-white hover:bg-black/90"
-                    : "bg-accent/10 text-accent hover:bg-accent hover:text-black"
+                    ? "bg-slate-900 text-white hover:bg-slate-800"
+                    : "border border-slate-200 text-slate-700 hover:border-slate-400 hover:text-slate-900"
                 }`}
               >
-                Browse Equipment
+                Browse equipment
               </Link>
             </div>
           ))}
         </div>
 
-        {/* Calculator CTA */}
-        <div className="bg-white border border-gray-200 rounded-2xl p-8 mb-16 text-center">
-          <Calculator className="w-12 h-12 text-accent mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-[#111111] mb-4">
-            Need an Exact Quote?
+        <div className="bg-white border border-slate-200 rounded-md p-6 mb-10 text-center">
+          <div className="mx-auto inline-flex h-10 w-10 items-center justify-center rounded-md bg-slate-100 text-slate-700 mb-3">
+            <Calculator className="w-5 h-5" />
+          </div>
+          <h2 className="text-lg font-semibold text-slate-900 mb-1.5">
+            Need an exact quote?
           </h2>
-          <p className="text-[#666666] mb-6 max-w-lg mx-auto">
+          <p className="text-sm text-slate-600 mb-4 max-w-lg mx-auto">
             Use our rental calculator to get accurate pricing for your specific
             equipment and rental duration.
           </p>
           <Link
             href="/equipment"
-            className="inline-flex items-center gap-2 bg-accent hover:bg-[#C97F00] text-black font-semibold px-8 py-4 rounded-lg transition-colors"
+            className="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-medium px-4 py-2 rounded-md transition-colors text-sm"
           >
-            Calculate Rental Cost
-            <ArrowRight className="w-5 h-5" />
+            Calculate rental cost
+            <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
 
-        {/* Included Features */}
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-[#111111] mb-8">
-            All Rentals Include
+        <div>
+          <h2 className="text-lg font-semibold text-slate-900 mb-4 text-center">
+            All rentals include
           </h2>
-          <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-2">
             {INCLUDED_FEATURES.map((feature) => (
               <div
                 key={feature}
-                className="flex items-center justify-center gap-3 bg-white border border-gray-200 rounded-xl p-4"
+                className="flex items-center gap-2.5 bg-white border border-slate-200 rounded-md p-3"
               >
-                <Check className="w-5 h-5 text-accent" />
-                <span className="text-[#111111]">{feature}</span>
+                <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span className="text-sm text-slate-700">{feature}</span>
               </div>
             ))}
           </div>

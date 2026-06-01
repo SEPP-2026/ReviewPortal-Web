@@ -41,64 +41,48 @@ const FOOTER_LINKS = {
 
 export function Footer() {
   return (
-    <footer className="bg-dark border-t border-light-gray/10">
+    <footer className="bg-slate-900">
       {/* Main Footer */}
       <div className="max-w-7xl mx-auto px-4 py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
           {/* Company Info */}
           <div>
-            <Link href="/" className="flex items-center gap-3 mb-6">
-              <div className="w-12 h-12 bg-accent rounded-lg flex items-center justify-center">
-                <span className="text-black font-bold text-xl">ST</span>
+            <Link href="/" className="flex items-center gap-2.5 mb-4">
+              <div className="w-9 h-9 bg-accent rounded-md flex items-center justify-center">
+                <span className="text-black font-semibold text-sm">ST</span>
               </div>
               <div>
-                <span className="text-white font-bold text-xl">Shelton</span>
-                <span className="text-accent font-bold text-xl"> Tool-Hire</span>
+                <span className="text-white font-semibold text-base">Shelton</span>
+                <span className="text-accent font-semibold text-base"> Tool-Hire</span>
               </div>
             </Link>
-            <p className="text-gray mb-6 leading-relaxed">
+            <p className="text-sm text-slate-400 mb-5 leading-relaxed">
               Your trusted partner for professional tool and equipment rentals.
               Quality machinery for every project, big or small.
             </p>
-            <div className="flex gap-4">
-              <a
-                href="#"
-                className="w-10 h-10 bg-black rounded-lg flex items-center justify-center text-gray hover:text-primary hover:bg-black/50 transition-colors duration-200"
-              >
-                <Facebook className="w-5 h-5" />
-              </a>
-              <a
-                href="#"
-                className="w-10 h-10 bg-black rounded-lg flex items-center justify-center text-gray hover:text-primary hover:bg-black/50 transition-colors duration-200"
-              >
-                <Twitter className="w-5 h-5" />
-              </a>
-              <a
-                href="#"
-                className="w-10 h-10 bg-black rounded-lg flex items-center justify-center text-gray hover:text-primary hover:bg-black/50 transition-colors duration-200"
-              >
-                <Instagram className="w-5 h-5" />
-              </a>
-              <a
-                href="#"
-                className="w-10 h-10 bg-black rounded-lg flex items-center justify-center text-gray hover:text-primary hover:bg-black/50 transition-colors duration-200"
-              >
-                <Linkedin className="w-5 h-5" />
-              </a>
+            <div className="flex gap-2">
+              {[Facebook, Twitter, Instagram, Linkedin].map((Icon, idx) => (
+                <a
+                  key={idx}
+                  href="#"
+                  className="w-8 h-8 bg-white/5 border border-white/10 rounded-md flex items-center justify-center text-slate-400 hover:text-white hover:border-white/30 transition-colors"
+                >
+                  <Icon className="w-4 h-4" />
+                </a>
+              ))}
             </div>
           </div>
 
           {/* Equipment Links */}
           <div>
-            <h4 className="text-white font-bold text-lg mb-6">Our Equipment</h4>
-            <ul className="space-y-3">
+            <h4 className="text-white font-semibold text-sm mb-4">Our equipment</h4>
+            <ul className="space-y-2">
               {FOOTER_LINKS.equipment.map((link) => (
                 <li key={link.name}>
                   <Link
                     href={link.href}
-                    className="text-gray hover:text-primary transition-colors duration-200 flex items-center gap-2 group"
+                    className="text-sm text-slate-400 hover:text-white transition-colors"
                   >
-                    <ArrowRight className="w-4 h-4 opacity-0 -ml-6 group-hover:opacity-100 group-hover:ml-0 transition-all duration-200" />
                     {link.name}
                   </Link>
                 </li>
@@ -108,15 +92,14 @@ export function Footer() {
 
           {/* Company Links */}
           <div>
-            <h4 className="text-white font-bold text-lg mb-6">Company</h4>
-            <ul className="space-y-3">
+            <h4 className="text-white font-semibold text-sm mb-4">Company</h4>
+            <ul className="space-y-2">
               {FOOTER_LINKS.company.map((link) => (
                 <li key={link.name}>
                   <Link
                     href={link.href}
-                    className="text-gray hover:text-primary transition-colors duration-200 flex items-center gap-2 group"
+                    className="text-sm text-slate-400 hover:text-white transition-colors"
                   >
-                    <ArrowRight className="w-4 h-4 opacity-0 -ml-6 group-hover:opacity-100 group-hover:ml-0 transition-all duration-200" />
                     {link.name}
                   </Link>
                 </li>
@@ -126,38 +109,38 @@ export function Footer() {
 
           {/* Contact Info */}
           <div>
-            <h4 className="text-white font-bold text-lg mb-6">Contact Us</h4>
-            <ul className="space-y-4">
-              <li className="flex items-start gap-3">
-                <MapPin className="w-5 h-5 text-accent mt-1 shrink-0" />
-                <span className="text-gray">
+            <h4 className="text-white font-semibold text-sm mb-4">Contact us</h4>
+            <ul className="space-y-3 text-sm">
+              <li className="flex items-start gap-2.5">
+                <MapPin className="w-4 h-4 text-slate-400 mt-0.5 shrink-0" />
+                <span className="text-slate-400">
                   123 Industrial Park Road
                   <br />
                   Shelton, CT 06484
                 </span>
               </li>
-              <li className="flex items-center gap-3">
-                <Phone className="w-5 h-5 text-accent shrink-0" />
+              <li className="flex items-center gap-2.5">
+                <Phone className="w-4 h-4 text-slate-400 shrink-0" />
                 <a
                   href="tel:+1234567890"
-                  className="text-gray hover:text-primary transition-colors duration-200"
+                  className="text-slate-400 hover:text-white transition-colors"
                 >
                   +1 (234) 567-890
                 </a>
               </li>
-              <li className="flex items-center gap-3">
-                <Mail className="w-5 h-5 text-accent shrink-0" />
+              <li className="flex items-center gap-2.5">
+                <Mail className="w-4 h-4 text-slate-400 shrink-0" />
                 <a
                   href="mailto:info@sheltontoolhire.com"
-                  className="text-gray hover:text-primary transition-colors duration-200"
+                  className="text-slate-400 hover:text-white transition-colors break-all"
                 >
                   info@sheltontoolhire.com
                 </a>
               </li>
-              <li className="flex items-start gap-3">
-                <Clock className="w-5 h-5 text-accent mt-1 shrink-0" />
-                <span className="text-gray">
-                  Mon - Sat: 7:00 AM - 6:00 PM
+              <li className="flex items-start gap-2.5">
+                <Clock className="w-4 h-4 text-slate-400 mt-0.5 shrink-0" />
+                <span className="text-slate-400">
+                  Mon – Sat: 7:00 AM – 6:00 PM
                   <br />
                   Sunday: Closed
                 </span>
@@ -168,18 +151,18 @@ export function Footer() {
       </div>
 
       {/* Bottom Bar */}
-      <div className="border-t border-light-gray/10">
-        <div className="max-w-7xl mx-auto px-4 py-6">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-gray text-sm">
+      <div className="border-t border-white/10">
+        <div className="max-w-7xl mx-auto px-4 py-5">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-3">
+            <p className="text-xs text-slate-500">
               © 2026 Shelton Tool-Hire. All rights reserved.
             </p>
-            <div className="flex gap-6 text-sm">
+            <div className="flex gap-5 text-xs">
               {FOOTER_LINKS.support.slice(0, 3).map((link) => (
                 <Link
                   key={link.name}
                   href={link.href}
-                  className="text-gray hover:text-primary transition-colors duration-200"
+                  className="text-slate-400 hover:text-white transition-colors"
                 >
                   {link.name}
                 </Link>

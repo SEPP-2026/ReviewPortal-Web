@@ -88,21 +88,21 @@ export function ReviewSubmitForm({
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl p-6 mb-8">
+    <div className="bg-white border border-slate-200 rounded-md p-5 mb-4">
       <div className="flex items-center gap-2 mb-4">
-        <PenSquare className="w-5 h-5 text-accent" />
-        <h3 className="text-lg font-bold text-[#111111]">Write a Review</h3>
+        <PenSquare className="w-4 h-4 text-slate-600" />
+        <h3 className="text-base font-semibold text-slate-900">Write a review</h3>
       </div>
 
       {isSubmitSuccessful && (
-        <div className="mb-4 flex items-start gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700">
+        <div className="mb-4 flex items-start gap-2 rounded-md border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700">
           <Check className="mt-0.5 h-4 w-4 shrink-0" />
-          <span>Thanks for your review! It will appear after moderation.</span>
+          <span>Thanks for your review. It will appear after moderation.</span>
         </div>
       )}
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
-        <div className="grid sm:grid-cols-2 gap-4">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
+        <div className="grid sm:grid-cols-2 gap-3">
           <div className="space-y-1.5">
             <Label htmlFor="review-name">Your name</Label>
             <Input
@@ -132,7 +132,7 @@ export function ReviewSubmitForm({
           </div>
         </div>
 
-        <div className="rounded-xl border border-gray-200 bg-[#FBFBFB] p-4 space-y-3">
+        <div className="rounded-md border border-slate-200 bg-slate-50 p-4 space-y-3">
           {ratingFields.map((field) => (
             <Controller
               key={field.key}
@@ -170,8 +170,8 @@ export function ReviewSubmitForm({
           )}
         </div>
 
-        <Button type="submit" disabled={isSubmitting} size="lg">
-          {isSubmitting ? "Submitting..." : "Submit Review"}
+        <Button type="submit" variant="default" disabled={isSubmitting}>
+          {isSubmitting ? "Submitting..." : "Submit review"}
         </Button>
       </form>
     </div>

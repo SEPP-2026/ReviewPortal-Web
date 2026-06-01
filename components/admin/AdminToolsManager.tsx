@@ -77,8 +77,19 @@ export function AdminToolsManager() {
 
   const [formMode, setFormMode] = useState<FormMode>({ kind: "closed" });
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageError, setImageError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!imageFile) {
+      setImagePreview(null);
+      return;
+    }
+    const url = URL.createObjectURL(imageFile);
+    setImagePreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [imageFile]);
 
   const [imagePanelTool, setImagePanelTool] = useState<BackendTool | null>(null);
   const [imagePanelError, setImagePanelError] = useState<string | null>(null);
@@ -299,9 +310,9 @@ export function AdminToolsManager() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-[0_20px_60px_rgba(15,23,42,0.05)]">
-        <div className="flex flex-wrap items-center gap-3">
+    <div className="space-y-4">
+      <div className="rounded-md border border-slate-200 bg-white p-4">
+        <div className="flex flex-wrap items-center gap-2.5">
           <div className="relative flex-1 min-w-[220px]">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <Input
@@ -309,7 +320,7 @@ export function AdminToolsManager() {
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Search by name..."
-              className="pl-9"
+              className="pl-9 rounded-md"
             />
           </div>
           <select
@@ -319,7 +330,7 @@ export function AdminToolsManager() {
                 event.target.value === "" ? "" : Number(event.target.value),
               )
             }
-            className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-accent"
+            className="h-10 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-accent"
           >
             <option value="">All categories</option>
             {categories.map((category) => (
@@ -333,13 +344,19 @@ export function AdminToolsManager() {
             onChange={(event) =>
               setStatusFilter(event.target.value as "" | "active" | "inactive")
             }
-            className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-accent"
+            className="h-10 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-accent"
           >
             <option value="">All statuses</option>
             <option value="active">Active</option>
             <option value="inactive">Inactive</option>
           </select>
-          <Button type="button" variant="default" size="sm" onClick={openCreate}>
+          <Button
+            type="button"
+            variant="default"
+            size="sm"
+            onClick={openCreate}
+            className="rounded-md"
+          >
             <Plus className="h-4 w-4" />
             New tool
           </Button>
@@ -347,7 +364,7 @@ export function AdminToolsManager() {
       </div>
 
       {errorMessage && (
-        <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+        <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
           <div className="flex items-start gap-2">
             <AlertCircle className="mt-0.5 h-4 w-4" />
             {errorMessage}
@@ -355,7 +372,7 @@ export function AdminToolsManager() {
         </div>
       )}
 
-      <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_20px_60px_rgba(15,23,42,0.05)]">
+      <div className="overflow-hidden rounded-md border border-slate-200 bg-white">
         {isLoading ? (
           <div className="p-10">
             <Spinner size="md" text="Loading tools..." />
@@ -387,10 +404,10 @@ export function AdminToolsManager() {
                           <img
                             src={tool.thumbnailUrl}
                             alt={tool.name}
-                            className="h-10 w-10 rounded-lg object-cover"
+                            className="h-9 w-9 rounded-md object-cover"
                           />
                         ) : (
-                          <div className="h-10 w-10 rounded-lg bg-slate-100" />
+                          <div className="h-9 w-9 rounded-md bg-slate-100" />
                         )}
                         <div>
                           <p className="font-semibold text-slate-900">{tool.name}</p>
@@ -417,22 +434,22 @@ export function AdminToolsManager() {
                     </td>
                     <td className="px-4 py-3">
                       <span
-                        className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${
+                        className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${
                           tool.isActive
-                            ? "bg-emerald-100 text-emerald-700"
-                            : "bg-slate-100 text-slate-600"
+                            ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                            : "bg-slate-50 text-slate-600 border border-slate-200"
                         }`}
                       >
                         {tool.isActive ? "Active" : "Inactive"}
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <div className="flex items-center justify-end gap-2">
+                      <div className="flex items-center justify-end gap-1.5">
                         <button
                           type="button"
                           onClick={() => openImagePanel(tool.id)}
                           disabled={busyId === tool.id}
-                          className="rounded-lg border border-slate-200 p-2 text-slate-600 hover:border-accent hover:text-accent disabled:opacity-50"
+                          className="rounded-md border border-slate-200 p-1.5 text-slate-600 hover:border-slate-400 hover:text-slate-900 disabled:opacity-50"
                           title="Manage images"
                         >
                           <ImagePlus className="h-4 w-4" />
@@ -441,7 +458,7 @@ export function AdminToolsManager() {
                           type="button"
                           onClick={() => openEdit(tool.id)}
                           disabled={busyId === tool.id}
-                          className="rounded-lg border border-slate-200 p-2 text-slate-600 hover:border-accent hover:text-accent disabled:opacity-50"
+                          className="rounded-md border border-slate-200 p-1.5 text-slate-600 hover:border-slate-400 hover:text-slate-900 disabled:opacity-50"
                           title="Edit"
                         >
                           <Pencil className="h-4 w-4" />
@@ -450,7 +467,7 @@ export function AdminToolsManager() {
                           type="button"
                           onClick={() => handleToggleStatus(tool)}
                           disabled={busyId === tool.id}
-                          className={`rounded-lg border p-2 disabled:opacity-50 ${
+                          className={`rounded-md border p-1.5 disabled:opacity-50 ${
                             tool.isActive
                               ? "border-amber-200 text-amber-700 hover:border-amber-400"
                               : "border-emerald-200 text-emerald-700 hover:border-emerald-400"
@@ -470,10 +487,10 @@ export function AdminToolsManager() {
       </div>
 
       {formMode.kind !== "closed" && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/50 p-4 overflow-y-auto">
-          <div className="mt-12 w-full max-w-3xl rounded-3xl bg-white p-6 shadow-2xl">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-slate-950">
+        <div className="fixed inset-0 z-50 flex items-start justify-center bg-slate-900/60 p-4 overflow-y-auto">
+          <div className="mt-12 w-full max-w-3xl rounded-md border border-slate-200 bg-white shadow-lg">
+            <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
+              <h2 className="text-base font-semibold text-slate-900">
                 {formMode.kind === "create"
                   ? "Create tool"
                   : `Edit: ${formMode.tool.name}`}
@@ -481,7 +498,7 @@ export function AdminToolsManager() {
               <button
                 type="button"
                 onClick={closeForm}
-                className="rounded-full p-1 text-slate-500 hover:bg-slate-100"
+                className="rounded-md p-1 text-slate-500 hover:bg-slate-100 hover:text-slate-900"
                 aria-label="Close"
               >
                 <X className="h-5 w-5" />
@@ -490,7 +507,7 @@ export function AdminToolsManager() {
 
             <form
               onSubmit={handleSubmit(onSubmit)}
-              className="mt-6 space-y-4"
+              className="space-y-4 px-6 py-5"
               noValidate
             >
               <div className="grid gap-4 sm:grid-cols-2">
@@ -500,7 +517,7 @@ export function AdminToolsManager() {
                     id="tool-category"
                     aria-invalid={errors.categoryId ? "true" : undefined}
                     {...register("categoryId", { valueAsNumber: true })}
-                    className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-accent"
+                    className="h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-accent"
                   >
                     <option value={0}>Select category</option>
                     {categories.map((category) => (
@@ -646,16 +663,72 @@ export function AdminToolsManager() {
               {formMode.kind === "create" && (
                 <div className="space-y-1.5">
                   <Label htmlFor="tool-image">Cover image</Label>
-                  <input
-                    id="tool-image"
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp"
-                    onChange={handleImageChange}
-                    className="w-full text-sm text-slate-900"
-                  />
+                  {imagePreview ? (
+                    <div className="flex items-start gap-4 rounded-md border border-slate-200 bg-slate-50 p-3">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={imagePreview}
+                        alt="Cover preview"
+                        className="h-24 w-24 rounded-md object-cover"
+                      />
+                      <div className="flex-1 space-y-2">
+                        <div>
+                          <p className="text-sm font-medium text-slate-900 break-all">
+                            {imageFile?.name}
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            {imageFile
+                              ? `${(imageFile.size / 1024).toFixed(0)} KB`
+                              : ""}
+                          </p>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          <label className="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 text-xs font-medium text-slate-700 hover:border-slate-400 hover:text-slate-900">
+                            <ImagePlus className="h-3.5 w-3.5" />
+                            Replace
+                            <input
+                              id="tool-image"
+                              type="file"
+                              accept="image/jpeg,image/png,image/webp"
+                              onChange={handleImageChange}
+                              className="hidden"
+                            />
+                          </label>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setImageFile(null);
+                              setImageError(null);
+                            }}
+                            className="inline-flex h-8 items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 text-xs font-medium text-red-600 hover:border-red-300"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                            Remove
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <label
+                      htmlFor="tool-image"
+                      className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-md border-2 border-dashed border-slate-300 bg-slate-50 p-5 text-center text-sm font-medium text-slate-700 hover:border-slate-400 hover:text-slate-900"
+                    >
+                      <ImagePlus className="h-5 w-5" />
+                      <span>Click to upload a cover image</span>
+                      <span className="text-xs font-normal text-slate-500">
+                        JPG, PNG, or WebP · Maximum 5 MB
+                      </span>
+                      <input
+                        id="tool-image"
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        onChange={handleImageChange}
+                        className="hidden"
+                      />
+                    </label>
+                  )}
                   <p className="text-xs text-slate-500">
-                    JPG, PNG, or WebP. Maximum 5 MB. Use the image panel after
-                    creation to add more photos.
+                    Use the image panel after creation to add more photos.
                   </p>
                   {imageError && (
                     <p className="text-xs text-red-600">{imageError}</p>
@@ -663,16 +736,24 @@ export function AdminToolsManager() {
                 </div>
               )}
 
-              <div className="flex items-center justify-end gap-3 pt-2">
+              <div className="-mx-6 mt-2 flex items-center justify-end gap-2 border-t border-slate-200 px-6 pt-4">
                 <Button
                   type="button"
                   variant="outline"
+                  size="sm"
                   onClick={closeForm}
                   disabled={isSubmitting}
+                  className="rounded-md"
                 >
                   Cancel
                 </Button>
-                <Button type="submit" variant="default" disabled={isSubmitting}>
+                <Button
+                  type="submit"
+                  variant="default"
+                  size="sm"
+                  disabled={isSubmitting}
+                  className="rounded-md"
+                >
                   {isSubmitting
                     ? "Saving..."
                     : formMode.kind === "create"
@@ -686,76 +767,78 @@ export function AdminToolsManager() {
       )}
 
       {imagePanelTool && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/50 p-4 overflow-y-auto">
-          <div className="mt-12 w-full max-w-3xl rounded-3xl bg-white p-6 shadow-2xl">
-            <div className="flex items-center justify-between">
+        <div className="fixed inset-0 z-50 flex items-start justify-center bg-slate-900/60 p-4 overflow-y-auto">
+          <div className="mt-12 w-full max-w-3xl rounded-md border border-slate-200 bg-white shadow-lg">
+            <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
               <div>
-                <h2 className="text-xl font-semibold text-slate-950">Manage images</h2>
-                <p className="text-sm text-slate-600">{imagePanelTool.name}</p>
+                <h2 className="text-base font-semibold text-slate-900">Manage images</h2>
+                <p className="text-xs text-slate-500">{imagePanelTool.name}</p>
               </div>
               <button
                 type="button"
                 onClick={() => setImagePanelTool(null)}
-                className="rounded-full p-1 text-slate-500 hover:bg-slate-100"
+                className="rounded-md p-1 text-slate-500 hover:bg-slate-100 hover:text-slate-900"
                 aria-label="Close"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            {imagePanelError && (
-              <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-                {imagePanelError}
-              </div>
-            )}
-
-            <label className="mt-6 flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-300 p-6 text-sm font-medium text-slate-700 hover:border-accent hover:text-accent">
-              <ImagePlus className="h-4 w-4" />
-              Upload new image (JPG / PNG / WebP, max 5 MB)
-              <input
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                className="hidden"
-                onChange={handleUploadImage}
-              />
-            </label>
-
-            <div className="mt-6 grid gap-3 sm:grid-cols-3">
-              {imagePanelTool.images.length === 0 ? (
-                <p className="col-span-full text-sm text-slate-600">
-                  No images yet.
-                </p>
-              ) : (
-                imagePanelTool.images
-                  .slice()
-                  .sort((a, b) => a.displayOrder - b.displayOrder)
-                  .map((image) => (
-                    <div
-                      key={image.id}
-                      className="group relative overflow-hidden rounded-2xl border border-slate-200"
-                    >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={image.imageUrl}
-                        alt=""
-                        className="aspect-square w-full object-cover"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteImage(image.id)}
-                        disabled={imagePanelTool.images.length <= 1}
-                        className="absolute right-2 top-2 rounded-full bg-white p-1.5 text-red-600 opacity-0 shadow-md transition-opacity group-hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-40"
-                        title={
-                          imagePanelTool.images.length <= 1
-                            ? "A tool must keep at least one image"
-                            : "Delete image"
-                        }
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  ))
+            <div className="px-6 py-5">
+              {imagePanelError && (
+                <div className="mb-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                  {imagePanelError}
+                </div>
               )}
+
+              <label className="flex cursor-pointer items-center justify-center gap-2 rounded-md border-2 border-dashed border-slate-300 bg-slate-50 p-5 text-sm font-medium text-slate-700 hover:border-slate-400 hover:text-slate-900">
+                <ImagePlus className="h-4 w-4" />
+                Upload new image (JPG / PNG / WebP, max 5 MB)
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  className="hidden"
+                  onChange={handleUploadImage}
+                />
+              </label>
+
+              <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                {imagePanelTool.images.length === 0 ? (
+                  <p className="col-span-full text-sm text-slate-600">
+                    No images yet.
+                  </p>
+                ) : (
+                  imagePanelTool.images
+                    .slice()
+                    .sort((a, b) => a.displayOrder - b.displayOrder)
+                    .map((image) => (
+                      <div
+                        key={image.id}
+                        className="group relative overflow-hidden rounded-md border border-slate-200"
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={image.imageUrl}
+                          alt=""
+                          className="aspect-square w-full object-cover"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteImage(image.id)}
+                          disabled={imagePanelTool.images.length <= 1}
+                          className="absolute right-2 top-2 rounded-md bg-white p-1.5 text-red-600 opacity-0 shadow transition-opacity group-hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-40"
+                          title={
+                            imagePanelTool.images.length <= 1
+                              ? "A tool must keep at least one image"
+                              : "Delete image"
+                          }
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ))
+                )}
+              </div>
             </div>
           </div>
         </div>

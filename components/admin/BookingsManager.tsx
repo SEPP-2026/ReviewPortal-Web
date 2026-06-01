@@ -159,7 +159,7 @@ export function BookingsManager() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <SummaryCard
           icon={Clock}
@@ -187,9 +187,9 @@ export function BookingsManager() {
         />
       </div>
 
-      <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-[0_20px_60px_rgba(15,23,42,0.05)]">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-2">
+      <div className="rounded-md border border-slate-200 bg-white p-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex flex-wrap items-center gap-1">
             {STATUS_FILTERS.map((filter) => {
               const active = statusFilter === filter.value;
               return (
@@ -197,10 +197,10 @@ export function BookingsManager() {
                   key={filter.label}
                   type="button"
                   onClick={() => setStatusFilter(filter.value)}
-                  className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
+                  className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
                     active
-                      ? "bg-slate-950 text-white"
-                      : "bg-white text-slate-700 border border-slate-200 hover:border-slate-300"
+                      ? "bg-slate-900 text-white"
+                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                   }`}
                 >
                   {filter.label}
@@ -214,6 +214,7 @@ export function BookingsManager() {
             size="sm"
             onClick={load}
             disabled={isLoading}
+            className="rounded-md"
           >
             <RotateCcw className="h-4 w-4" />
             Refresh
@@ -222,7 +223,7 @@ export function BookingsManager() {
       </div>
 
       {errorMessage && (
-        <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+        <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
           <div className="flex items-start gap-2">
             <AlertCircle className="mt-0.5 h-4 w-4" />
             {errorMessage}
@@ -231,11 +232,11 @@ export function BookingsManager() {
       )}
 
       {isLoading ? (
-        <div className="rounded-3xl border border-slate-200 bg-white p-10">
+        <div className="rounded-md border border-slate-200 bg-white p-10">
           <Spinner size="md" text="Loading bookings..." />
         </div>
       ) : bookings.length === 0 ? (
-        <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-12 text-center">
+        <div className="rounded-md border border-dashed border-slate-300 bg-white p-12 text-center">
           <p className="text-base font-semibold text-slate-900">
             No bookings yet.
           </p>
@@ -248,7 +249,7 @@ export function BookingsManager() {
           {bookings.map((booking) => (
             <article
               key={booking.id}
-              className="rounded-3xl border border-slate-200 bg-white p-5 shadow-[0_10px_30px_rgba(15,23,42,0.04)]"
+              className="rounded-md border border-slate-200 bg-white p-5"
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
@@ -314,14 +315,14 @@ export function BookingsManager() {
               </div>
 
               {booking.notes && (
-                <div className="mt-3 flex items-start gap-2 rounded-2xl bg-slate-50 p-3 text-sm text-slate-700">
+                <div className="mt-3 flex items-start gap-2 rounded-md border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
                   <StickyNote className="mt-0.5 h-4 w-4 text-slate-500" />
                   <p className="whitespace-pre-line">{booking.notes}</p>
                 </div>
               )}
 
               {booking.adminNote && (
-                <div className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+                <div className="mt-3 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
                   <strong className="font-semibold">Staff note:</strong>{" "}
                   {booking.adminNote}
                 </div>
@@ -335,6 +336,7 @@ export function BookingsManager() {
                     size="sm"
                     disabled={busy?.id === booking.id}
                     onClick={() => handleStatusChange(booking, "Confirmed")}
+                    className="rounded-md"
                   >
                     Confirm
                   </Button>
@@ -346,6 +348,7 @@ export function BookingsManager() {
                     size="sm"
                     disabled={busy?.id === booking.id}
                     onClick={() => handleStatusChange(booking, "Completed")}
+                    className="rounded-md"
                   >
                     Mark completed
                   </Button>
@@ -357,6 +360,7 @@ export function BookingsManager() {
                     size="sm"
                     disabled={busy?.id === booking.id}
                     onClick={() => handleStatusChange(booking, "Declined")}
+                    className="rounded-md"
                   >
                     Decline
                   </Button>
@@ -368,6 +372,7 @@ export function BookingsManager() {
                     size="sm"
                     disabled={busy?.id === booking.id}
                     onClick={() => handleStatusChange(booking, "Pending")}
+                    className="rounded-md"
                   >
                     Reopen
                   </Button>
@@ -381,11 +386,11 @@ export function BookingsManager() {
   );
 }
 
-const toneClasses = {
-  amber: "bg-amber-50 border-amber-200 text-amber-900",
-  emerald: "bg-emerald-50 border-emerald-200 text-emerald-900",
-  rose: "bg-rose-50 border-rose-200 text-rose-900",
-  slate: "bg-slate-50 border-slate-200 text-slate-900",
+const toneIconClasses = {
+  amber: "bg-amber-100 text-amber-700",
+  emerald: "bg-emerald-100 text-emerald-700",
+  rose: "bg-rose-100 text-rose-700",
+  slate: "bg-slate-100 text-slate-700",
 } as const;
 
 function SummaryCard({
@@ -397,15 +402,21 @@ function SummaryCard({
   icon: React.ComponentType<{ className?: string }>;
   label: string;
   value: number;
-  tone: keyof typeof toneClasses;
+  tone: keyof typeof toneIconClasses;
 }) {
   return (
-    <div className={`rounded-3xl border p-5 ${toneClasses[tone]}`}>
-      <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider opacity-80">
-        <Icon className="h-4 w-4" />
-        {label}
+    <div className="rounded-md border border-slate-200 bg-white p-5">
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-medium uppercase tracking-wider text-slate-500">
+          {label}
+        </p>
+        <div className={`rounded-md p-1.5 ${toneIconClasses[tone]}`}>
+          <Icon className="h-4 w-4" />
+        </div>
       </div>
-      <p className="mt-3 text-3xl font-semibold">{value}</p>
+      <p className="mt-3 text-3xl font-semibold tracking-tight text-slate-900">
+        {value}
+      </p>
     </div>
   );
 }

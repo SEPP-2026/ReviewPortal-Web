@@ -59,20 +59,20 @@ export function Hero() {
             {/* Search */}
             <form
               onSubmit={handleSearch}
-              className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl p-1.5 shadow-sm max-w-md mb-5"
+              className="flex items-center gap-2 bg-white border border-slate-200 rounded-md p-1 max-w-md mb-5"
             >
-              <Search className="w-4 h-4 text-gray-400 ml-2 shrink-0" />
+              <Search className="w-4 h-4 text-slate-400 ml-2 shrink-0" />
               <input
                 ref={inputRef}
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search equipment…"
-                className="flex-1 bg-transparent text-[#111111] text-sm placeholder:text-gray-400 focus:outline-none py-2"
+                className="flex-1 bg-transparent text-slate-900 text-sm placeholder:text-slate-400 focus:outline-none py-2"
               />
               <button
                 type="submit"
-                className="bg-accent hover:bg-[#C97F00] text-black text-sm font-semibold px-5 py-2.5 rounded-lg transition-colors duration-200 whitespace-nowrap"
+                className="bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium px-4 py-2 rounded-md transition-colors whitespace-nowrap"
               >
                 Search
               </button>
@@ -80,19 +80,19 @@ export function Hero() {
 
             {/* Dynamic category pills */}
             {categories.length > 0 && (
-              <div className="flex flex-wrap gap-2 mb-10">
+              <div className="flex flex-wrap gap-1.5 mb-10">
                 {categories.slice(0, 5).map((cat) => (
                   <Link
                     key={cat.id}
                     href={`/equipment?category=${toCategorySlug(cat.name)}`}
-                    className="text-xs text-[#555] bg-[#F2F2F2] hover:bg-accent/10 hover:text-accent border border-transparent hover:border-accent/30 px-3 py-1.5 rounded-lg transition-colors duration-200 font-medium"
+                    className="text-xs text-slate-700 border border-slate-200 hover:border-slate-400 hover:text-slate-900 px-2.5 py-1 rounded-md transition-colors font-medium"
                   >
                     {cat.name}
                   </Link>
                 ))}
                 <Link
                   href="/equipment"
-                  className="text-xs text-accent font-semibold flex items-center gap-1 px-3 py-1.5 hover:underline"
+                  className="text-xs text-accent font-medium flex items-center gap-1 px-2.5 py-1 hover:underline"
                 >
                   All categories
                   <ArrowRight className="w-3 h-3" />

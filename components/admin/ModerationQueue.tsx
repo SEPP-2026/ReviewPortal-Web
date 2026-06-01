@@ -207,7 +207,7 @@ export function ModerationQueue() {
 
   if (isLoading) {
     return (
-      <div className="rounded-3xl border border-white/60 bg-white p-8 shadow-[0_20px_60px_rgba(15,23,42,0.08)]">
+      <div className="rounded-md border border-slate-200 bg-white p-8">
         <Spinner size="md" text="Loading moderation queue..." />
       </div>
     );
@@ -215,11 +215,11 @@ export function ModerationQueue() {
 
   if (errorMessage) {
     return (
-      <div className="rounded-3xl border border-red-200 bg-red-50 p-8 text-red-800">
+      <div className="rounded-md border border-red-200 bg-red-50 p-6 text-red-800">
         <div className="flex items-start gap-3">
           <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
           <div>
-            <h2 className="text-lg font-semibold">Unable to load reviews</h2>
+            <h2 className="text-base font-semibold">Unable to load reviews</h2>
             <p className="mt-1 text-sm text-red-700">{errorMessage}</p>
           </div>
         </div>
@@ -231,52 +231,63 @@ export function ModerationQueue() {
     activeId?.kind === kind && activeId.id === id;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Stats */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_20px_60px_rgba(15,23,42,0.05)]">
-          <p className="text-sm uppercase tracking-[0.24em] text-slate-500">Pending items</p>
-          <p className="mt-3 text-4xl font-semibold text-slate-950">
+      <div className="grid gap-3 md:grid-cols-3">
+        <div className="rounded-md border border-slate-200 bg-white p-5">
+          <p className="text-xs font-medium uppercase tracking-wider text-slate-500">
+            Pending items
+          </p>
+          <p className="mt-2 text-3xl font-semibold tracking-tight text-slate-900">
             {queue?.totalCount ?? 0}
           </p>
-          <p className="mt-2 text-sm text-slate-600">
+          <p className="mt-1 text-xs text-slate-600">
             {reviewItems.length} review{reviewItems.length !== 1 ? "s" : ""},{" "}
             {commentItems.length} comment{commentItems.length !== 1 ? "s" : ""}
           </p>
         </div>
 
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_20px_60px_rgba(15,23,42,0.05)]">
-          <p className="text-sm uppercase tracking-[0.24em] text-slate-500">Average score</p>
-          <div className="mt-3 flex items-end gap-3">
-            <p className="text-4xl font-semibold text-slate-950">
+        <div className="rounded-md border border-slate-200 bg-white p-5">
+          <p className="text-xs font-medium uppercase tracking-wider text-slate-500">
+            Average score
+          </p>
+          <div className="mt-2 flex items-end gap-2">
+            <p className="text-3xl font-semibold tracking-tight text-slate-900">
               {summary.averageRating.toFixed(1)}
             </p>
-            <div className="mb-1 flex items-center gap-1 text-amber-500">
-              <Star className="h-4 w-4 fill-current" />
-              <span className="text-sm font-medium text-slate-500">pending only</span>
-            </div>
+            <Star className="mb-1.5 h-4 w-4 fill-amber-400 text-amber-400" />
           </div>
-          <p className="mt-2 text-sm text-slate-600">Useful for checking review quality at a glance.</p>
+          <p className="mt-1 text-xs text-slate-600">
+            Across pending submissions only.
+          </p>
         </div>
 
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_20px_60px_rgba(15,23,42,0.05)]">
-          <p className="text-sm uppercase tracking-[0.24em] text-slate-500">Oldest review</p>
-          <p className="mt-3 text-2xl font-semibold text-slate-950">{summary.oldestLabel}</p>
-          <p className="mt-2 text-sm text-slate-600">Oldest pending submission in the queue.</p>
+        <div className="rounded-md border border-slate-200 bg-white p-5">
+          <p className="text-xs font-medium uppercase tracking-wider text-slate-500">
+            Oldest review
+          </p>
+          <p className="mt-2 text-lg font-semibold text-slate-900">
+            {summary.oldestLabel}
+          </p>
+          <p className="mt-1 text-xs text-slate-600">
+            Oldest pending submission in the queue.
+          </p>
         </div>
       </div>
 
       {actionError && (
-        <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+        <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
           {actionError}
         </div>
       )}
 
       {items.length === 0 ? (
-        <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-10 text-center shadow-[0_20px_60px_rgba(15,23,42,0.05)]">
-          <ShieldCheck className="mx-auto h-12 w-12 text-emerald-500" />
-          <h2 className="mt-4 text-2xl font-semibold text-slate-950">No pending reviews</h2>
-          <p className="mt-2 text-slate-600">
+        <div className="rounded-md border border-dashed border-slate-300 bg-white p-10 text-center">
+          <ShieldCheck className="mx-auto h-10 w-10 text-emerald-500" />
+          <h2 className="mt-3 text-lg font-semibold text-slate-900">
+            No pending reviews
+          </h2>
+          <p className="mt-1 text-sm text-slate-600">
             Everything in the review workflow is currently published or waiting elsewhere in moderation.
           </p>
         </div>
@@ -286,26 +297,28 @@ export function ModerationQueue() {
           {reviewItems.map((item) => (
             <article
               key={`review-${item.itemId}`}
-              className="rounded-3xl border border-amber-200 bg-white p-6 shadow-[0_20px_60px_rgba(15,23,42,0.05)]"
+              className="rounded-md border border-slate-200 bg-white p-5"
             >
-              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                <div className="space-y-4">
-                  <div className="flex flex-wrap items-center gap-3">
-                    <span className="inline-flex items-center gap-2 rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-amber-900">
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                <div className="space-y-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="inline-flex items-center gap-1.5 rounded-md border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-800">
                       <ShieldCheck className="h-3.5 w-3.5" />
                       Pending review
                     </span>
                   </div>
 
                   <div>
-                    <h2 className="text-2xl font-semibold text-slate-950">{item.toolName}</h2>
-                    <div className="mt-2 flex flex-wrap items-center gap-4 text-sm text-slate-600">
-                      <span className="inline-flex items-center gap-2">
-                        <UserRound className="h-4 w-4 text-slate-400" />
+                    <h2 className="text-lg font-semibold text-slate-900">
+                      {item.toolName}
+                    </h2>
+                    <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-600">
+                      <span className="inline-flex items-center gap-1.5">
+                        <UserRound className="h-3.5 w-3.5 text-slate-400" />
                         {item.authorName}
                       </span>
-                      <span className="inline-flex items-center gap-2">
-                        <Clock3 className="h-4 w-4 text-slate-400" />
+                      <span className="inline-flex items-center gap-1.5">
+                        <Clock3 className="h-3.5 w-3.5 text-slate-400" />
                         Submitted {formatSubmittedDate(item.submittedDate)}
                       </span>
                     </div>
@@ -313,34 +326,41 @@ export function ModerationQueue() {
                 </div>
 
                 {item.overallRating != null && (
-                  <div className="rounded-2xl bg-slate-50 px-4 py-3 text-right">
-                    <p className="text-xs uppercase tracking-[0.24em] text-slate-500">Overall rating</p>
-                    <div className="mt-1 flex items-center justify-end gap-2">
-                      <span className="text-3xl font-semibold text-slate-950">
+                  <div className="rounded-md border border-slate-200 bg-slate-50 px-4 py-2.5 text-right">
+                    <p className="text-[11px] font-medium uppercase tracking-wider text-slate-500">
+                      Overall rating
+                    </p>
+                    <div className="mt-1 flex items-center justify-end gap-1.5">
+                      <span className="text-2xl font-semibold text-slate-900">
                         {formatRating(item.overallRating)}
                       </span>
-                      <Star className="h-5 w-5 fill-amber-400 text-amber-400" />
+                      <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
                     </div>
                   </div>
                 )}
               </div>
 
-              <p className="mt-6 whitespace-pre-wrap rounded-2xl bg-slate-50 p-4 text-slate-700">
+              <p className="mt-4 whitespace-pre-wrap rounded-md border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
                 {item.text}
               </p>
 
               {item.equipmentRating != null && (
-                <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+                <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
                   {ratingFields.map((field) => {
                     const value = item[field.key];
                     return (
-                      <div key={field.key} className="rounded-2xl border border-slate-200 px-4 py-3">
-                        <p className="text-xs uppercase tracking-[0.2em] text-slate-500">{field.label}</p>
-                        <div className="mt-2 flex items-center gap-2 text-slate-950">
-                          <span className="text-xl font-semibold">
+                      <div
+                        key={field.key}
+                        className="rounded-md border border-slate-200 px-3 py-2"
+                      >
+                        <p className="text-[11px] font-medium uppercase tracking-wider text-slate-500">
+                          {field.label}
+                        </p>
+                        <div className="mt-1 flex items-center gap-1.5 text-slate-900">
+                          <span className="text-base font-semibold">
                             {value != null ? value.toFixed(1) : "—"}
                           </span>
-                          <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+                          <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
                         </div>
                       </div>
                     );
@@ -348,21 +368,21 @@ export function ModerationQueue() {
                 </div>
               )}
 
-              <div className="mt-6 flex flex-wrap items-center gap-3">
+              <div className="mt-4 flex flex-wrap items-center justify-end gap-2 border-t border-slate-100 pt-4">
                 <button
                   type="button"
                   onClick={() => handleApproveReview(item.itemId)}
                   disabled={isBusyOn("review", item.itemId)}
-                  className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
+                  className="inline-flex h-9 items-center gap-2 rounded-md bg-emerald-600 px-3 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-60"
                 >
                   <Check className="h-4 w-4" />
-                  {isBusyOn("review", item.itemId) ? "Approving..." : "Approve review"}
+                  {isBusyOn("review", item.itemId) ? "Approving..." : "Approve"}
                 </button>
                 <button
                   type="button"
                   onClick={() => openReject("review", item.itemId)}
                   disabled={isBusyOn("review", item.itemId)}
-                  className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-60"
+                  className="inline-flex h-9 items-center gap-2 rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-red-600 hover:border-red-300 hover:bg-red-50 disabled:opacity-60"
                 >
                   <X className="h-4 w-4" />
                   Reject
@@ -374,19 +394,19 @@ export function ModerationQueue() {
           {/* Pending Comments */}
           {commentItems.length > 0 && (
             <>
-              <div className="pt-4">
-                <h3 className="flex items-center gap-2 text-lg font-semibold text-slate-950">
-                  <MessageCircle className="h-5 w-5 text-slate-600" />
+              <div className="pt-2">
+                <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+                  <MessageCircle className="h-4 w-4 text-slate-600" />
                   Pending comments ({commentItems.length})
                 </h3>
               </div>
               {commentItems.map((item) => (
                 <article
                   key={`comment-${item.itemId}`}
-                  className="rounded-3xl border border-blue-200 bg-white p-6 shadow-[0_20px_60px_rgba(15,23,42,0.05)]"
+                  className="rounded-md border border-slate-200 bg-white p-5"
                 >
-                  <div className="flex flex-wrap items-center gap-3 mb-4">
-                    <span className="inline-flex items-center gap-2 rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-blue-900">
+                  <div className="flex flex-wrap items-center gap-2 mb-3">
+                    <span className="inline-flex items-center gap-1.5 rounded-md border border-blue-200 bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-800">
                       <MessageCircle className="h-3.5 w-3.5" />
                       Pending comment
                     </span>
@@ -395,38 +415,38 @@ export function ModerationQueue() {
                     </span>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-4 text-sm text-slate-600 mb-4">
-                    <span className="inline-flex items-center gap-2">
-                      <UserRound className="h-4 w-4 text-slate-400" />
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-600 mb-3">
+                    <span className="inline-flex items-center gap-1.5">
+                      <UserRound className="h-3.5 w-3.5 text-slate-400" />
                       {item.authorName}
                     </span>
-                    <span className="inline-flex items-center gap-2">
-                      <Clock3 className="h-4 w-4 text-slate-400" />
+                    <span className="inline-flex items-center gap-1.5">
+                      <Clock3 className="h-3.5 w-3.5 text-slate-400" />
                       Submitted {formatSubmittedDate(item.submittedDate)}
                     </span>
                   </div>
 
-                  <p className="whitespace-pre-wrap rounded-2xl bg-slate-50 p-4 text-slate-700">
+                  <p className="whitespace-pre-wrap rounded-md border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
                     {item.text}
                   </p>
 
-                  <div className="mt-4 flex flex-wrap items-center gap-3">
+                  <div className="mt-3 flex flex-wrap items-center justify-end gap-2 border-t border-slate-100 pt-3">
                     <button
                       type="button"
                       onClick={() => handleApproveComment(item.itemId)}
                       disabled={isBusyOn("comment", item.itemId)}
-                      className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
+                      className="inline-flex h-8 items-center gap-1.5 rounded-md bg-emerald-600 px-3 text-xs font-medium text-white hover:bg-emerald-700 disabled:opacity-60"
                     >
-                      <Check className="h-3 w-3" />
+                      <Check className="h-3.5 w-3.5" />
                       {isBusyOn("comment", item.itemId) ? "Approving..." : "Approve"}
                     </button>
                     <button
                       type="button"
                       onClick={() => openReject("comment", item.itemId)}
                       disabled={isBusyOn("comment", item.itemId)}
-                      className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-60"
+                      className="inline-flex h-8 items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 text-xs font-medium text-red-600 hover:border-red-300 hover:bg-red-50 disabled:opacity-60"
                     >
-                      <X className="h-3 w-3" />
+                      <X className="h-3.5 w-3.5" />
                       Reject
                     </button>
                   </div>
@@ -439,22 +459,23 @@ export function ModerationQueue() {
 
       {/* Rejection modal */}
       {rejectingTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4">
           <form
             onSubmit={rejectionForm.handleSubmit(handleConfirmReject)}
-            className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl"
+            className="w-full max-w-lg rounded-md border border-slate-200 bg-white shadow-lg"
             noValidate
           >
-            <h3 className="text-xl font-semibold text-slate-950">
-              Reject {rejectingTarget.kind === "review" ? "review" : "comment"}
-            </h3>
-            <p className="mt-2 text-sm text-slate-600">
-              Provide a brief reason. This is stored on the submission for the
-              audit trail and is shared with the customer in their My Reviews
-              page.
-            </p>
+            <div className="border-b border-slate-200 px-6 py-4">
+              <h3 className="text-base font-semibold text-slate-900">
+                Reject {rejectingTarget.kind === "review" ? "review" : "comment"}
+              </h3>
+              <p className="mt-1 text-xs text-slate-600">
+                This reason is stored for the audit trail and shared with the
+                customer on their My Reviews page.
+              </p>
+            </div>
 
-            <div className="mt-4 space-y-1.5">
+            <div className="space-y-1.5 px-6 py-5">
               <Label htmlFor="rejection-reason" className="sr-only">
                 Rejection reason
               </Label>
@@ -474,24 +495,28 @@ export function ModerationQueue() {
               )}
             </div>
 
-            <div className="mt-5 flex items-center justify-end gap-3">
+            <div className="flex items-center justify-end gap-2 border-t border-slate-200 px-6 py-4">
               <Button
                 type="button"
                 variant="outline"
+                size="sm"
                 onClick={closeReject}
                 disabled={rejectionForm.formState.isSubmitting}
+                className="rounded-md"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
                 variant="destructive"
+                size="sm"
                 disabled={
                   rejectionForm.formState.isSubmitting ||
                   (rejectingTarget
                     ? isBusyOn(rejectingTarget.kind, rejectingTarget.id)
                     : false)
                 }
+                className="rounded-md"
               >
                 Confirm reject
               </Button>

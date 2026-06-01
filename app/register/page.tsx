@@ -66,103 +66,90 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0F0F10] text-white pt-32 pb-20">
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-24 -left-24 h-72 w-72 rounded-full bg-accent/20 blur-3xl" />
-        <div className="absolute bottom-0 right-0 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
-      </div>
-
-      <div className="relative max-w-5xl mx-auto px-6">
-        <div className="grid gap-12 md:grid-cols-[1.05fr_0.95fr] items-center">
-          <div>
-            <p className="text-sm uppercase tracking-[0.3em] text-accent/80">
-              Create account
-            </p>
-            <h1 className="text-4xl md:text-5xl font-semibold leading-tight mt-4">
-              Join ReviewPortal to book rentals faster.
-            </h1>
-            <p className="text-white/70 mt-4 max-w-md">
-              Keep a history of tool hires, manage reviews, and get priority
-              support on every rental.
-            </p>
-          </div>
-
-          <div className="bg-white text-black rounded-2xl shadow-xl p-8 border border-white/10">
-            <h2 className="text-2xl font-semibold">Create your account</h2>
-            <p className="text-sm text-gray-600 mt-2">
-              It only takes a minute. Passwords need 8+ characters with an
-              uppercase letter and a digit.
-            </p>
-
-            <form
-              onSubmit={handleSubmit(onSubmit)}
-              className="mt-6 space-y-5"
-              noValidate
-            >
-              <div className="space-y-1.5">
-                <Label htmlFor="register-name">Full name</Label>
-                <Input
-                  id="register-name"
-                  autoComplete="name"
-                  placeholder="Jordan Smith"
-                  aria-invalid={errors.name ? "true" : undefined}
-                  {...register("name")}
-                />
-                {errors.name && (
-                  <p className="text-xs text-red-600">{errors.name.message}</p>
-                )}
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="register-email">Email</Label>
-                <Input
-                  id="register-email"
-                  type="email"
-                  autoComplete="email"
-                  placeholder="you@example.com"
-                  aria-invalid={errors.email ? "true" : undefined}
-                  {...register("email")}
-                />
-                {errors.email && (
-                  <p className="text-xs text-red-600">{errors.email.message}</p>
-                )}
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="register-password">Password</Label>
-                <Input
-                  id="register-password"
-                  type="password"
-                  autoComplete="new-password"
-                  placeholder="Create a strong password"
-                  aria-invalid={errors.password ? "true" : undefined}
-                  {...register("password")}
-                />
-                {errors.password && (
-                  <p className="text-xs text-red-600">
-                    {errors.password.message}
-                  </p>
-                )}
-              </div>
-
-              <Button
-                type="submit"
-                size="lg"
-                className="w-full"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? "Creating account..." : "Create account"}
-              </Button>
-            </form>
-
-            <p className="text-sm text-gray-600 mt-6">
-              Already have an account?{" "}
-              <Link className="text-accent font-semibold" href="/login">
-                Sign in
-              </Link>
-            </p>
-          </div>
+    <div className="min-h-screen bg-slate-50 pt-28 pb-16">
+      <div className="mx-auto max-w-md px-4">
+        <div className="text-center mb-6">
+          <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
+            Create your account
+          </h1>
+          <p className="mt-1.5 text-sm text-slate-600">
+            Join ReviewPortal to book rentals and leave verified reviews.
+          </p>
         </div>
+
+        <div className="rounded-md border border-slate-200 bg-white p-6">
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="space-y-4"
+            noValidate
+          >
+            <div className="space-y-1.5">
+              <Label htmlFor="register-name">Full name</Label>
+              <Input
+                id="register-name"
+                autoComplete="name"
+                placeholder="Jordan Smith"
+                aria-invalid={errors.name ? "true" : undefined}
+                {...register("name")}
+              />
+              {errors.name && (
+                <p className="text-xs text-red-600">{errors.name.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="register-email">Email</Label>
+              <Input
+                id="register-email"
+                type="email"
+                autoComplete="email"
+                placeholder="you@example.com"
+                aria-invalid={errors.email ? "true" : undefined}
+                {...register("email")}
+              />
+              {errors.email && (
+                <p className="text-xs text-red-600">{errors.email.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="register-password">Password</Label>
+              <Input
+                id="register-password"
+                type="password"
+                autoComplete="new-password"
+                placeholder="Create a strong password"
+                aria-invalid={errors.password ? "true" : undefined}
+                {...register("password")}
+              />
+              {errors.password ? (
+                <p className="text-xs text-red-600">
+                  {errors.password.message}
+                </p>
+              ) : (
+                <p className="text-xs text-slate-500">
+                  At least 8 characters with an uppercase letter and a digit.
+                </p>
+              )}
+            </div>
+
+            <Button
+              type="submit"
+              variant="default"
+              className="w-full"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Creating account..." : "Create account"}
+            </Button>
+          </form>
+        </div>
+
+        <p className="mt-4 text-center text-sm text-slate-600">
+          Already have an account?{" "}
+          <Link className="font-medium text-accent hover:underline" href="/login">
+            Sign in
+          </Link>
+        </p>
       </div>
     </div>
   );

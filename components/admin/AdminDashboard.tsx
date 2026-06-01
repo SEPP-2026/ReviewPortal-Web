@@ -9,6 +9,7 @@ import {
   CalendarClock,
   Star,
   MessagesSquare,
+  ArrowRight,
 } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 import {
@@ -27,26 +28,26 @@ const StatCard = ({
   value: number | string;
   tint?: "default" | "amber" | "emerald" | "rose";
 }) => {
-  const tintClasses = {
-    default: "bg-white border-slate-200 text-slate-950",
-    amber: "bg-amber-50 border-amber-200 text-amber-900",
-    emerald: "bg-emerald-50 border-emerald-200 text-emerald-900",
-    rose: "bg-rose-50 border-rose-200 text-rose-900",
+  const iconClasses = {
+    default: "bg-slate-100 text-slate-700",
+    amber: "bg-amber-100 text-amber-700",
+    emerald: "bg-emerald-100 text-emerald-700",
+    rose: "bg-rose-100 text-rose-700",
   }[tint];
 
   return (
-    <div
-      className={`rounded-3xl border p-6 shadow-[0_20px_60px_rgba(15,23,42,0.05)] ${tintClasses}`}
-    >
-      <div className="flex items-center gap-3">
-        <div className="rounded-2xl bg-white/70 p-2.5">
-          <Icon className="h-5 w-5" />
-        </div>
-        <p className="text-sm font-medium uppercase tracking-[0.18em] opacity-80">
+    <div className="rounded-md border border-slate-200 bg-white p-5">
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-medium uppercase tracking-wider text-slate-500">
           {label}
         </p>
+        <div className={`rounded-md p-1.5 ${iconClasses}`}>
+          <Icon className="h-4 w-4" />
+        </div>
       </div>
-      <p className="mt-4 text-4xl font-semibold">{value}</p>
+      <p className="mt-3 text-3xl font-semibold tracking-tight text-slate-900">
+        {value}
+      </p>
     </div>
   );
 };
@@ -80,7 +81,7 @@ export function AdminDashboard() {
 
   if (isLoading) {
     return (
-      <div className="rounded-3xl border border-slate-200 bg-white p-10">
+      <div className="rounded-md border border-slate-200 bg-white p-10">
         <Spinner size="md" text="Loading dashboard..." />
       </div>
     );
@@ -88,7 +89,7 @@ export function AdminDashboard() {
 
   if (errorMessage) {
     return (
-      <div className="rounded-3xl border border-red-200 bg-red-50 p-6 text-red-800">
+      <div className="rounded-md border border-red-200 bg-red-50 p-4 text-red-800">
         <div className="flex items-start gap-3">
           <AlertCircle className="mt-0.5 h-5 w-5" />
           <p className="text-sm">{errorMessage}</p>
@@ -100,7 +101,7 @@ export function AdminDashboard() {
   if (!stats) return null;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
           icon={CheckCircle2}
@@ -127,33 +128,33 @@ export function AdminDashboard() {
         />
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_20px_60px_rgba(15,23,42,0.05)]">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Star className="h-5 w-5 text-amber-500" />
-              <h2 className="text-lg font-semibold text-slate-950">Top rated tools</h2>
-            </div>
+      <div className="grid gap-4 lg:grid-cols-2">
+        <section className="rounded-md border border-slate-200 bg-white">
+          <div className="flex items-center gap-2 border-b border-slate-200 px-5 py-3">
+            <Star className="h-4 w-4 text-amber-500" />
+            <h2 className="text-sm font-semibold text-slate-900">
+              Top rated tools
+            </h2>
           </div>
           {stats.topRatedTools.length === 0 ? (
-            <p className="mt-6 text-sm text-slate-600">
+            <p className="px-5 py-6 text-sm text-slate-600">
               Not enough rated tools yet.
             </p>
           ) : (
-            <ul className="mt-6 space-y-3">
+            <ul className="divide-y divide-slate-100">
               {stats.topRatedTools.map((tool) => (
                 <li
                   key={tool.toolId}
-                  className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3"
+                  className="flex items-center justify-between px-5 py-3"
                 >
                   <Link
                     href={`/equipment/${tool.toolId}`}
-                    className="text-sm font-semibold text-slate-900 hover:text-accent"
+                    className="text-sm font-medium text-slate-800 hover:text-accent"
                   >
                     {tool.toolName}
                   </Link>
-                  <div className="flex items-center gap-2 text-sm text-slate-700">
-                    <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+                  <div className="flex items-center gap-1.5 text-sm text-slate-700">
+                    <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
                     <span className="font-semibold">
                       {tool.overallRating?.toFixed(1) ?? "—"}
                     </span>
@@ -167,23 +168,27 @@ export function AdminDashboard() {
           )}
         </section>
 
-        <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_20px_60px_rgba(15,23,42,0.05)]">
-          <div className="flex items-center gap-2">
-            <MessagesSquare className="h-5 w-5 text-slate-700" />
-            <h2 className="text-lg font-semibold text-slate-950">Most reviewed tools</h2>
+        <section className="rounded-md border border-slate-200 bg-white">
+          <div className="flex items-center gap-2 border-b border-slate-200 px-5 py-3">
+            <MessagesSquare className="h-4 w-4 text-slate-600" />
+            <h2 className="text-sm font-semibold text-slate-900">
+              Most reviewed tools
+            </h2>
           </div>
           {stats.mostReviewedTools.length === 0 ? (
-            <p className="mt-6 text-sm text-slate-600">No reviewed tools yet.</p>
+            <p className="px-5 py-6 text-sm text-slate-600">
+              No reviewed tools yet.
+            </p>
           ) : (
-            <ul className="mt-6 space-y-3">
+            <ul className="divide-y divide-slate-100">
               {stats.mostReviewedTools.map((tool) => (
                 <li
                   key={tool.toolId}
-                  className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3"
+                  className="flex items-center justify-between px-5 py-3"
                 >
                   <Link
                     href={`/equipment/${tool.toolId}`}
-                    className="text-sm font-semibold text-slate-900 hover:text-accent"
+                    className="text-sm font-medium text-slate-800 hover:text-accent"
                   >
                     {tool.toolName}
                   </Link>
@@ -198,30 +203,44 @@ export function AdminDashboard() {
         </section>
       </div>
 
-      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_20px_60px_rgba(15,23,42,0.05)]">
-        <h2 className="text-lg font-semibold text-slate-950">Quick actions</h2>
-        <div className="mt-4 grid gap-3 sm:grid-cols-3">
-          <Link
-            href="/admin/moderation"
-            className="rounded-2xl border border-slate-200 bg-slate-50 p-4 transition-colors hover:bg-amber-50 hover:border-amber-200"
-          >
-            <p className="text-sm font-semibold text-slate-900">Moderation queue</p>
-            <p className="mt-1 text-xs text-slate-600">Approve or reject pending content.</p>
-          </Link>
-          <Link
-            href="/admin/tools"
-            className="rounded-2xl border border-slate-200 bg-slate-50 p-4 transition-colors hover:bg-slate-100"
-          >
-            <p className="text-sm font-semibold text-slate-900">Manage tools</p>
-            <p className="mt-1 text-xs text-slate-600">Add, edit, deactivate equipment.</p>
-          </Link>
-          <Link
-            href="/admin/categories"
-            className="rounded-2xl border border-slate-200 bg-slate-50 p-4 transition-colors hover:bg-slate-100"
-          >
-            <p className="text-sm font-semibold text-slate-900">Manage categories</p>
-            <p className="mt-1 text-xs text-slate-600">Keep the catalogue tidy.</p>
-          </Link>
+      <section className="rounded-md border border-slate-200 bg-white">
+        <div className="border-b border-slate-200 px-5 py-3">
+          <h2 className="text-sm font-semibold text-slate-900">Quick actions</h2>
+        </div>
+        <div className="grid gap-px bg-slate-200 sm:grid-cols-3">
+          {[
+            {
+              href: "/admin/moderation",
+              title: "Moderation queue",
+              desc: "Approve or reject pending content.",
+            },
+            {
+              href: "/admin/tools",
+              title: "Manage tools",
+              desc: "Add, edit, deactivate equipment.",
+            },
+            {
+              href: "/admin/categories",
+              title: "Manage categories",
+              desc: "Keep the catalogue tidy.",
+            },
+          ].map((action) => (
+            <Link
+              key={action.href}
+              href={action.href}
+              className="group bg-white p-5 transition-colors hover:bg-slate-50"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold text-slate-900">
+                    {action.title}
+                  </p>
+                  <p className="mt-1 text-xs text-slate-600">{action.desc}</p>
+                </div>
+                <ArrowRight className="h-4 w-4 text-slate-400 transition-transform group-hover:translate-x-0.5 group-hover:text-slate-700" />
+              </div>
+            </Link>
+          ))}
         </div>
       </section>
     </div>
