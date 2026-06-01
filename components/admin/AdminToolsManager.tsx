@@ -87,7 +87,10 @@ export function AdminToolsManager() {
       return;
     }
     const url = URL.createObjectURL(imageFile);
-    setImagePreview(url);
+    // URL.createObjectURL always produces a browser-controlled blob: URL.
+    // Guard the scheme so only a safe blob URL can ever reach the <img src>
+    // sink, even though the value originates from a file-input selection.
+    setImagePreview(url.startsWith("blob:") ? url : null);
     return () => URL.revokeObjectURL(url);
   }, [imageFile]);
 
