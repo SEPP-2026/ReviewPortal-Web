@@ -141,11 +141,11 @@ export function ReviewItem({ review, currentUser, isStaff }: ReviewItemProps) {
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl p-6">
+    <div className="bg-white border border-slate-200 rounded-md p-5">
       <div className="flex items-start justify-between mb-3">
         <div>
-          <p className="font-semibold text-[#111111]">{review.reviewerName}</p>
-          <p className="text-xs text-[#666666] mt-0.5">
+          <p className="text-sm font-semibold text-slate-900">{review.reviewerName}</p>
+          <p className="text-xs text-slate-500 mt-0.5">
             {formatDate(review.createdDate)}
           </p>
         </div>
@@ -154,62 +154,68 @@ export function ReviewItem({ review, currentUser, isStaff }: ReviewItemProps) {
             {[...Array(5)].map((_, index) => (
               <Star
                 key={index}
-                className={`w-4 h-4 ${
+                className={`w-3.5 h-3.5 ${
                   index < Math.round(review.overallRating)
-                    ? "text-accent fill-accent"
-                    : "text-gray-300"
+                    ? "text-amber-400 fill-amber-400"
+                    : "text-slate-300"
                 }`}
               />
             ))}
           </div>
-          <span className="text-sm font-semibold text-[#111111]">
+          <span className="text-sm font-semibold text-slate-900">
             {review.overallRating.toFixed(1)}
           </span>
         </div>
       </div>
 
-      <p className="text-[#444444] leading-relaxed mb-4">{review.reviewText}</p>
+      <p className="text-sm text-slate-700 leading-relaxed mb-4">
+        {review.reviewText}
+      </p>
 
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-4 p-3 bg-[#F8F8F8] rounded-xl">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-3 p-3 border border-slate-200 bg-slate-50 rounded-md">
         {(
           [
             { label: "Equipment", value: review.equipmentRating },
             { label: "Service", value: review.customerServiceRating },
-            { label: "Tech Support", value: review.technicalSupportRating },
-            { label: "After Sales", value: review.afterSalesRating },
+            { label: "Tech support", value: review.technicalSupportRating },
+            { label: "After sales", value: review.afterSalesRating },
             { label: "Value", value: review.valueForMoneyRating },
           ] as { label: string; value: number }[]
         ).map(({ label, value }) => (
           <div key={label} className="text-center">
-            <p className="text-xs text-[#666666] mb-1">{label}</p>
+            <p className="text-[11px] font-medium uppercase tracking-wider text-slate-500 mb-1">
+              {label}
+            </p>
             <div className="flex items-center justify-center gap-0.5">
               {[...Array(5)].map((_, i) => (
                 <Star
                   key={i}
                   className={`w-3 h-3 ${
-                    i < value ? "text-accent fill-accent" : "text-gray-300"
+                    i < value ? "text-amber-400 fill-amber-400" : "text-slate-300"
                   }`}
                 />
               ))}
             </div>
-            <p className="text-xs font-medium text-[#111111] mt-0.5">{value}/5</p>
+            <p className="text-xs font-medium text-slate-900 mt-0.5">
+              {value}/5
+            </p>
           </div>
         ))}
       </div>
 
       {companyResponse && (
-        <div className="border-l-4 border-accent bg-accent/5 rounded-r-xl p-4 mt-4">
-          <p className="text-xs font-semibold text-accent mb-1">
+        <div className="border-l-2 border-accent bg-slate-50 rounded-r-md p-3 mt-3">
+          <p className="text-xs font-semibold text-slate-900 mb-1">
             Response from {companyResponse.staffName}
           </p>
-          <p className="text-sm text-[#444444] leading-relaxed">
+          <p className="text-sm text-slate-700 leading-relaxed">
             {companyResponse.responseText}
           </p>
-          <p className="text-xs text-[#666666] mt-2">
+          <p className="text-xs text-slate-500 mt-2">
             {formatDate(companyResponse.createdDate)}
           </p>
           {isStaff && (
-            <div className="mt-3 flex gap-2">
+            <div className="mt-3 flex gap-3">
               <button
                 type="button"
                 onClick={() => {
@@ -218,7 +224,7 @@ export function ReviewItem({ review, currentUser, isStaff }: ReviewItemProps) {
                   });
                   setShowResponseForm(true);
                 }}
-                className="text-xs font-semibold text-accent hover:underline"
+                className="text-xs font-medium text-accent hover:underline"
               >
                 Edit response
               </button>
@@ -226,7 +232,7 @@ export function ReviewItem({ review, currentUser, isStaff }: ReviewItemProps) {
                 type="button"
                 onClick={handleDeleteResponse}
                 disabled={isDeletingResponse}
-                className="inline-flex items-center gap-1 text-xs font-semibold text-red-600 hover:underline disabled:opacity-60"
+                className="inline-flex items-center gap-1 text-xs font-medium text-red-600 hover:underline disabled:opacity-60"
               >
                 <Trash2 className="h-3 w-3" />
                 Delete
@@ -239,10 +245,10 @@ export function ReviewItem({ review, currentUser, isStaff }: ReviewItemProps) {
       {isStaff && (!companyResponse || showResponseForm) && (
         <form
           onSubmit={responseForm.handleSubmit(handleSaveResponse)}
-          className="mt-4 rounded-xl border border-accent/30 bg-accent/5 p-4 space-y-3"
+          className="mt-3 rounded-md border border-slate-200 bg-slate-50 p-3 space-y-2.5"
           noValidate
         >
-          <p className="text-xs font-semibold uppercase tracking-wide text-accent">
+          <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
             {companyResponse ? "Edit response" : "Add a company response"}
           </p>
           <div className="space-y-1.5">
@@ -295,11 +301,11 @@ export function ReviewItem({ review, currentUser, isStaff }: ReviewItemProps) {
         </form>
       )}
 
-      <div className="mt-4 border-t border-gray-100 pt-3">
+      <div className="mt-4 border-t border-slate-100 pt-3">
         <button
           type="button"
           onClick={() => setShowComments((prev) => !prev)}
-          className="inline-flex items-center gap-2 text-sm font-medium text-[#666666] hover:text-accent"
+          className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-accent"
         >
           <MessageCircle className="h-4 w-4" />
           {comments.length} comment{comments.length !== 1 ? "s" : ""}
@@ -311,24 +317,24 @@ export function ReviewItem({ review, currentUser, isStaff }: ReviewItemProps) {
         </button>
 
         {showComments && (
-          <div className="mt-3 space-y-3">
+          <div className="mt-3 space-y-2.5">
             {comments.length === 0 ? (
-              <p className="text-sm text-[#666666]">No approved comments yet.</p>
+              <p className="text-sm text-slate-600">No approved comments yet.</p>
             ) : (
               comments.map((comment) => (
                 <div
                   key={comment.id}
-                  className="rounded-xl border border-gray-100 bg-[#FBFBFB] p-3"
+                  className="rounded-md border border-slate-200 bg-slate-50 p-3"
                 >
                   <div className="flex items-center justify-between">
-                    <p className="text-sm font-semibold text-[#111111]">
+                    <p className="text-sm font-semibold text-slate-900">
                       {comment.commenterName}
                     </p>
-                    <p className="text-xs text-[#666666]">
+                    <p className="text-xs text-slate-500">
                       {formatDate(comment.createdDate)}
                     </p>
                   </div>
-                  <p className="mt-1 text-sm text-[#444444]">
+                  <p className="mt-1 text-sm text-slate-700">
                     {comment.commentText}
                   </p>
                   {comment.status.toLowerCase() !== "approved" && (

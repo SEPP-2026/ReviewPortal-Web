@@ -55,7 +55,11 @@ function Stars({ rating }: { rating: number }) {
       {[1, 2, 3, 4, 5].map((n) => (
         <Star
           key={n}
-          className={`w-4 h-4 ${n <= rating ? "text-accent fill-accent" : "text-gray-300"}`}
+          className={`w-3.5 h-3.5 ${
+            n <= rating
+              ? "text-amber-400 fill-amber-400"
+              : "text-slate-300"
+          }`}
         />
       ))}
     </div>
@@ -129,38 +133,40 @@ export function Testimonials() {
   if (reviews.length === 0) return null;
 
   return (
-    <section className="py-24 bg-white">
+    <section className="py-16 bg-slate-50">
       <div className="max-w-7xl mx-auto px-4">
-        <div className="mb-14">
-          <p className="text-accent text-sm font-semibold uppercase tracking-widest mb-3">
+        <div className="mb-8">
+          <p className="text-xs font-medium uppercase tracking-wider text-slate-500">
             Customer reviews
           </p>
-          <h2 className="text-4xl md:text-5xl font-extrabold text-[#111111] max-w-lg leading-tight">
+          <h2 className="mt-1 text-2xl md:text-3xl font-semibold tracking-tight text-slate-900">
             What customers say
           </h2>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid md:grid-cols-2 gap-3">
           {reviews.map((review) => (
             <div
               key={review.id}
-              className="bg-[#FAFAFA] border border-gray-200 rounded-2xl p-7 flex flex-col gap-4"
+              className="bg-white border border-slate-200 rounded-md p-5 flex flex-col gap-3"
             >
               <Stars rating={Math.round(review.rating)} />
 
-              <p className="text-[#333333] leading-relaxed text-base line-clamp-4">
+              <p className="text-sm text-slate-700 leading-relaxed line-clamp-4">
                 &ldquo;{review.text}&rdquo;
               </p>
 
-              <div className="flex items-center gap-3 mt-auto pt-4 border-t border-gray-100">
+              <div className="flex items-center gap-3 mt-auto pt-3 border-t border-slate-100">
                 <div
-                  className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0 ${avatarColor(review.name)}`}
+                  className={`w-9 h-9 rounded-md flex items-center justify-center text-xs font-semibold shrink-0 ${avatarColor(review.name)}`}
                 >
                   {initials(review.name)}
                 </div>
                 <div>
-                  <p className="text-[#111111] font-semibold text-sm">{review.name}</p>
-                  <p className="text-[#999999] text-xs">
+                  <p className="text-slate-900 font-semibold text-sm">
+                    {review.name}
+                  </p>
+                  <p className="text-slate-500 text-xs">
                     {review.toolName}
                     {review.date ? ` · ${review.date}` : ""}
                   </p>

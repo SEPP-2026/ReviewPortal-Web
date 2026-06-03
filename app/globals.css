@@ -23,31 +23,34 @@ body {
   font-family: system-ui, -apple-system, sans-serif;
 }
 
-/* Ensure form controls inherit a readable colour even if a wrapper overrides it. */
-input,
-textarea,
-select {
-  color: #111111;
-}
+@layer base {
+  /* Ensure form controls inherit a readable colour even if a wrapper overrides it. */
+  input,
+  textarea,
+  select {
+    color: #111111;
+  }
 
-input::placeholder,
-textarea::placeholder {
-  color: #94a3b8;
-}
+  input::placeholder,
+  textarea::placeholder {
+    color: #94a3b8;
+  }
 
-/* Buttons feel interactive by default and never inherit body text colour silently. */
-button,
-[role="button"] {
-  cursor: pointer;
-  color: inherit;
-}
+  /* Buttons feel interactive by default. Do not force `color: inherit` here —
+     it has higher cascade priority than Tailwind utilities and breaks
+     `text-white` / `text-black` on themed buttons. */
+  button,
+  [role="button"] {
+    cursor: pointer;
+  }
 
-button:disabled,
-[role="button"][aria-disabled="true"] {
-  cursor: not-allowed;
-}
+  button:disabled,
+  [role="button"][aria-disabled="true"] {
+    cursor: not-allowed;
+  }
 
-button:focus-visible,
-[role="button"]:focus-visible {
-  outline: none;
+  button:focus-visible,
+  [role="button"]:focus-visible {
+    outline: none;
+  }
 }

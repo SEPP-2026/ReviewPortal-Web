@@ -132,7 +132,7 @@ export function Navbar() {
               <>
                 <span className="text-white">Hi, {userName}</span>
                 {isStaff && (
-                  <span className="rounded-full border border-accent/30 bg-accent/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-accent">
+                  <span className="rounded-md border border-accent/40 bg-accent/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-accent">
                     Staff
                   </span>
                 )}
@@ -179,13 +179,13 @@ export function Navbar() {
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between h-20">
             {/* Logo */}
-            <Link href="/" className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-accent rounded-lg flex items-center justify-center">
-                <span className="text-black font-bold text-xl">ST</span>
+            <Link href="/" className="flex items-center gap-2.5">
+              <div className="w-9 h-9 bg-slate-900 rounded-md flex items-center justify-center">
+                <span className="text-white font-semibold text-sm">ST</span>
               </div>
               <div className="hidden sm:block">
-                <span className="text-black font-bold text-xl">Shelton</span>
-                <span className="text-accent font-bold text-xl"> Tool-Hire</span>
+                <span className="text-slate-900 font-semibold text-base">Shelton</span>
+                <span className="text-accent font-semibold text-base"> Tool-Hire</span>
               </div>
             </Link>
 
@@ -207,12 +207,12 @@ export function Navbar() {
                   </Link>
                   {link.submenu && activeDropdown === link.name && (
                     <div className="absolute top-full left-0 pt-2">
-                      <div className="bg-white border border-gray-200 rounded-lg py-2 min-w-[200px] shadow-xl">
+                      <div className="bg-white border border-slate-200 rounded-md py-1 min-w-[200px] shadow-md">
                         {link.submenu.map((sub) => (
                           <Link
                             key={sub.name}
                             href={sub.href}
-                            className="block px-4 py-2 text-[#666666] hover:text-accent hover:bg-gray-50 transition-colors duration-200"
+                            className="block px-3 py-1.5 text-sm text-slate-700 hover:text-slate-900 hover:bg-slate-50 transition-colors"
                           >
                             {sub.name}
                           </Link>
@@ -225,12 +225,12 @@ export function Navbar() {
             </div>
 
             {/* CTA Button */}
-            <div className="hidden lg:flex items-center gap-4">
+            <div className="hidden lg:flex items-center gap-3">
               <Link
                 href="/equipment"
-                className="bg-accent hover:bg-accent-dark text-black font-semibold px-6 py-3 rounded-lg transition-colors duration-200"
+                className="bg-accent hover:bg-accent-dark text-black font-medium px-4 py-2 rounded-md transition-colors text-sm"
               >
-                Rent Equipment
+                Rent equipment
               </Link>
             </div>
 
@@ -323,10 +323,10 @@ export function Navbar() {
                 )}
                 <Link
                   href="/equipment"
-                  className="block w-full bg-accent hover:bg-accent-dark text-black font-semibold px-6 py-3 rounded-lg text-center transition-colors duration-200"
+                  className="block w-full bg-accent hover:bg-accent-dark text-black font-medium px-4 py-2 rounded-md text-center transition-colors text-sm"
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  Rent Equipment
+                  Rent equipment
                 </Link>
               </div>
             </div>

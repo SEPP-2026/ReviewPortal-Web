@@ -178,70 +178,73 @@ export default function ReviewsPage() {
   }, [reviews]);
 
   return (
-    <div className="min-h-screen bg-[#F2F2F2] pt-40 pb-20">
-      <div className="max-w-7xl mx-auto px-4">
-        <div className="text-center mb-12">
-          <span className="inline-block text-accent font-semibold text-sm uppercase tracking-wider mb-4">
-            Customer Feedback
-          </span>
-          <h1 className="text-4xl md:text-5xl font-bold text-[#111111] mb-4">
-            Reviews & Ratings
+    <div className="min-h-screen bg-slate-50 pt-28 pb-16">
+      <div className="max-w-6xl mx-auto px-4">
+        <div className="mb-6">
+          <p className="text-xs font-medium uppercase tracking-wider text-slate-500">
+            Customer feedback
+          </p>
+          <h1 className="mt-1 text-2xl md:text-3xl font-semibold tracking-tight text-slate-900">
+            Reviews & ratings
           </h1>
-          <p className="text-[#666666] text-lg max-w-2xl mx-auto">
+          <p className="mt-1.5 text-sm text-slate-600 max-w-xl">
             Real feedback collected from approved tool reviews.
           </p>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-2xl p-8 mb-12">
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            <div className="text-center">
-              <div className="text-5xl font-bold text-accent mb-2">
-                {averageRating.toFixed(1)}
+        <div className="bg-white border border-slate-200 rounded-md p-6 mb-6">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-3xl font-semibold tracking-tight text-slate-900">
+                  {averageRating.toFixed(1)}
+                </span>
+                <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
               </div>
-              <div className="flex justify-center gap-1 mb-2">
-                {[...Array(5)].map((_, i) => (
-                  <Star
-                    key={i}
-                    className={`w-5 h-5 ${
-                      i < Math.floor(averageRating)
-                        ? "text-accent fill-accent"
-                        : "text-gray"
-                    }`}
-                  />
-                ))}
-              </div>
-              <p className="text-gray">Average Rating</p>
+              <p className="mt-1 text-xs font-medium uppercase tracking-wider text-slate-500">
+                Average rating
+              </p>
             </div>
-            <div className="text-center">
-              <div className="text-5xl font-bold text-[#111111] mb-2">{reviews.length}</div>
-              <p className="text-[#111111] font-semibold">Total Reviews</p>
-              <p className="text-[#666666] text-sm">Approved submissions</p>
+            <div>
+              <span className="text-3xl font-semibold tracking-tight text-slate-900">
+                {reviews.length}
+              </span>
+              <p className="mt-1 text-xs font-medium uppercase tracking-wider text-slate-500">
+                Total reviews
+              </p>
+              <p className="text-xs text-slate-500">Approved submissions</p>
             </div>
-            <div className="text-center">
-              <div className="text-5xl font-bold text-[#111111] mb-2">
+            <div>
+              <span className="text-3xl font-semibold tracking-tight text-slate-900">
                 {reviews.length > 0 ? "100%" : "0%"}
-              </div>
-              <p className="text-[#111111] font-semibold">Verified Content</p>
-              <p className="text-[#666666] text-sm">Moderated by our team</p>
+              </span>
+              <p className="mt-1 text-xs font-medium uppercase tracking-wider text-slate-500">
+                Verified content
+              </p>
+              <p className="text-xs text-slate-500">Moderated by our team</p>
             </div>
-            <div className="text-center">
-              <div className="text-5xl font-bold text-[#111111] mb-2">Live</div>
-              <p className="text-[#111111] font-semibold">API Connected</p>
-              <p className="text-[#666666] text-sm">Data synced from backend</p>
+            <div>
+              <span className="text-3xl font-semibold tracking-tight text-slate-900">
+                Live
+              </span>
+              <p className="mt-1 text-xs font-medium uppercase tracking-wider text-slate-500">
+                API connected
+              </p>
+              <p className="text-xs text-slate-500">Data synced from backend</p>
             </div>
           </div>
         </div>
 
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-          <div className="flex flex-wrap gap-2">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 mb-4">
+          <div className="flex flex-wrap gap-1">
             {categories.map((category) => (
               <button
                 key={category}
                 onClick={() => setSelectedCategory(category)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
                   selectedCategory === category
-                    ? "bg-accent text-black"
-                    : "bg-white text-[#666666] hover:text-[#111111] border border-gray-200"
+                    ? "bg-slate-900 text-white"
+                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                 }`}
               >
                 {category}
@@ -249,93 +252,102 @@ export default function ReviewsPage() {
             ))}
           </div>
           <div className="flex items-center gap-2">
-            <Filter className="w-5 h-5 text-[#666666]" />
+            <Filter className="w-4 h-4 text-slate-500" />
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as "recent" | "helpful")}
-              className="bg-white border border-gray-200 rounded-lg px-4 py-2 text-[#111111] text-sm focus:outline-none focus:border-accent"
+              className="bg-white border border-slate-200 rounded-md px-3 py-1.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent"
             >
-              <option value="recent">Most Recent</option>
-              <option value="helpful">Most Helpful</option>
+              <option value="recent">Most recent</option>
+              <option value="helpful">Most helpful</option>
             </select>
           </div>
         </div>
 
         {error && (
-          <div className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">
+          <div className="mb-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
             {error}
           </div>
         )}
 
         {isLoading ? (
-          <div className="py-20">
+          <div className="py-16">
             <Spinner size="md" text="Loading reviews..." />
           </div>
         ) : (
-          <div className="space-y-6">
+          <div className="space-y-3">
             {filteredReviews.map((review) => (
               <div
                 key={review.id}
-                className="bg-white border border-gray-200 rounded-2xl p-6 hover:border-accent/30 hover:shadow-lg transition-all"
+                className="bg-white border border-slate-200 rounded-md p-5"
               >
-                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-4">
-                  <div className="flex items-center gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-3">
+                  <div className="flex items-center gap-3">
                     <div
-                      className={`w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold shrink-0 ${avatarColor(review.author)}`}
+                      className={`w-10 h-10 rounded-md flex items-center justify-center text-xs font-semibold shrink-0 ${avatarColor(review.author)}`}
                     >
                       {getInitials(review.author)}
                     </div>
                     <div>
-                      <h4 className="text-[#111111] font-bold">{review.author}</h4>
-                      <p className="text-[#666666] text-sm">{review.role}</p>
-                      <p className="text-[#666666] text-xs">{review.date}</p>
+                      <h4 className="text-sm font-semibold text-slate-900">
+                        {review.author}
+                      </h4>
+                      <p className="text-xs text-slate-500">
+                        {review.role} · {review.date}
+                      </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-0.5">
                       {[...Array(5)].map((_, i) => (
                         <Star
                           key={i}
-                          className={`w-4 h-4 ${
+                          className={`w-3.5 h-3.5 ${
                             i < Math.round(review.rating)
-                              ? "text-accent fill-accent"
-                              : "text-gray"
+                              ? "text-amber-400 fill-amber-400"
+                              : "text-slate-300"
                           }`}
                         />
                       ))}
                     </div>
-                    <span className="text-xs text-accent bg-accent/10 px-3 py-1 rounded-full">
+                    <span className="text-xs text-slate-700 border border-slate-200 px-2 py-0.5 rounded-md">
                       {review.category}
                     </span>
                   </div>
                 </div>
 
                 {review.equipment && (
-                  <div className="mb-3">
-                    <span className="text-xs text-[#666666] bg-[#F2F2F2] px-3 py-1 rounded-lg">
+                  <div className="mb-2">
+                    <span className="text-xs text-slate-600 bg-slate-50 border border-slate-200 px-2 py-0.5 rounded-md">
                       Equipment: {review.equipment}
                     </span>
                   </div>
                 )}
 
-                <h3 className="text-lg font-bold text-[#111111] mb-2">{review.title}</h3>
-                <p className="text-[#666666] leading-relaxed mb-4">{review.text}</p>
+                <h3 className="text-base font-semibold text-slate-900 mb-1">
+                  {review.title}
+                </h3>
+                <p className="text-sm text-slate-700 leading-relaxed mb-3">
+                  {review.text}
+                </p>
 
-                <div className="flex items-center gap-6 pt-4 border-t border-gray-200">
-                  <button className="flex items-center gap-2 text-[#666666] hover:text-accent transition-colors">
-                    <ThumbsUp className="w-4 h-4" />
-                    <span className="text-sm">Helpful ({review.helpful})</span>
+                <div className="flex items-center gap-5 pt-3 border-t border-slate-100">
+                  <button className="flex items-center gap-1.5 text-slate-500 hover:text-accent transition-colors">
+                    <ThumbsUp className="w-3.5 h-3.5" />
+                    <span className="text-xs">Helpful ({review.helpful})</span>
                   </button>
-                  <button className="flex items-center gap-2 text-[#666666] hover:text-accent transition-colors">
-                    <MessageCircle className="w-4 h-4" />
-                    <span className="text-sm">Replies ({review.replies})</span>
+                  <button className="flex items-center gap-1.5 text-slate-500 hover:text-accent transition-colors">
+                    <MessageCircle className="w-3.5 h-3.5" />
+                    <span className="text-xs">Replies ({review.replies})</span>
                   </button>
                 </div>
               </div>
             ))}
 
             {!error && filteredReviews.length === 0 && (
-              <div className="text-center py-16 text-[#666666]">No reviews found for this filter.</div>
+              <div className="text-center py-12 text-sm text-slate-500 rounded-md border border-dashed border-slate-300 bg-white">
+                No reviews found for this filter.
+              </div>
             )}
           </div>
         )}

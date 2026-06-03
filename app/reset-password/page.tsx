@@ -65,17 +65,21 @@ function ResetPasswordContent() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0F0F10] text-white pt-32 pb-20">
-      <div className="mx-auto max-w-md px-6">
-        <div className="rounded-2xl bg-white p-8 text-black shadow-xl">
-          <h1 className="text-2xl font-semibold">Reset password</h1>
-          <p className="mt-2 text-sm text-gray-600">
+    <div className="min-h-screen bg-slate-50 pt-28 pb-16">
+      <div className="mx-auto max-w-md px-4">
+        <div className="text-center mb-6">
+          <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
+            Reset password
+          </h1>
+          <p className="mt-1.5 text-sm text-slate-600">
             Enter your reset token and choose a new password.
           </p>
+        </div>
 
+        <div className="rounded-md border border-slate-200 bg-white p-6">
           <form
             onSubmit={handleSubmit(onSubmit)}
-            className="mt-6 space-y-4"
+            className="space-y-4"
             noValidate
           >
             <div className="space-y-1.5">
@@ -139,23 +143,23 @@ function ResetPasswordContent() {
 
             <Button
               type="submit"
-              size="lg"
+              variant="default"
               className="w-full"
               disabled={isSubmitting}
             >
               {isSubmitting ? "Resetting..." : "Reset password"}
             </Button>
           </form>
-
-          <p className="mt-6 text-center text-sm text-gray-600">
-            <Link
-              href="/login"
-              className="font-semibold text-accent hover:underline"
-            >
-              Back to sign in
-            </Link>
-          </p>
         </div>
+
+        <p className="mt-4 text-center text-sm text-slate-600">
+          <Link
+            href="/login"
+            className="font-medium text-accent hover:underline"
+          >
+            Back to sign in
+          </Link>
+        </p>
       </div>
     </div>
   );

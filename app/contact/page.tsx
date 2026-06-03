@@ -20,109 +20,108 @@ export default function ContactPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F2F2F2] pt-40 pb-20">
-      <div className="max-w-7xl mx-auto px-4">
-        {/* Header */}
-        <div className="text-center mb-16">
-          <span className="inline-block text-accent font-semibold text-sm uppercase tracking-wider mb-4">
-            Get In Touch
-          </span>
-          <h1 className="text-4xl md:text-5xl font-bold text-[#111111] mb-4">
-            Contact Us
+    <div className="min-h-screen bg-slate-50 pt-28 pb-16">
+      <div className="max-w-6xl mx-auto px-4">
+        <div className="mb-8">
+          <p className="text-xs font-medium uppercase tracking-wider text-slate-500">
+            Get in touch
+          </p>
+          <h1 className="mt-1 text-2xl md:text-3xl font-semibold tracking-tight text-slate-900">
+            Contact us
           </h1>
-          <p className="text-[#666666] text-lg max-w-2xl mx-auto">
-            Have questions about our equipment or services? We&apos;re here to help.
-            Reach out and we&apos;ll respond as soon as possible.
+          <p className="mt-1.5 text-sm text-slate-600 max-w-2xl">
+            Have questions about our equipment or services? Reach out and we&apos;ll
+            respond as soon as possible.
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-12">
-          {/* Contact Info */}
-          <div className="lg:col-span-1">
-            <div className="bg-white border border-gray-200 rounded-2xl p-6 mb-6">
-              <h3 className="text-xl font-bold text-[#111111] mb-6">
-                Contact Information
-              </h3>
-              <div className="space-y-6">
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-accent/20 rounded-lg flex items-center justify-center shrink-0">
-                    <MapPin className="w-6 h-6 text-accent" />
+        <div className="grid lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-1 space-y-4">
+            <div className="bg-white border border-slate-200 rounded-md">
+              <div className="border-b border-slate-200 px-5 py-3">
+                <h3 className="text-sm font-semibold text-slate-900">
+                  Contact information
+                </h3>
+              </div>
+              <div className="divide-y divide-slate-100">
+                {[
+                  {
+                    icon: MapPin,
+                    label: "Address",
+                    body: (
+                      <>
+                        123 Industrial Park Road
+                        <br />
+                        Shelton, CT 06484
+                      </>
+                    ),
+                  },
+                  {
+                    icon: Phone,
+                    label: "Phone",
+                    body: (
+                      <a
+                        href="tel:+1234567890"
+                        className="text-slate-700 hover:text-accent transition-colors"
+                      >
+                        +1 (234) 567-890
+                      </a>
+                    ),
+                  },
+                  {
+                    icon: Mail,
+                    label: "Email",
+                    body: (
+                      <a
+                        href="mailto:info@sheltontoolhire.com"
+                        className="text-slate-700 hover:text-accent transition-colors break-all"
+                      >
+                        info@sheltontoolhire.com
+                      </a>
+                    ),
+                  },
+                  {
+                    icon: Clock,
+                    label: "Business hours",
+                    body: (
+                      <>
+                        Mon – Sat: 7:00 AM – 6:00 PM
+                        <br />
+                        Sunday: Closed
+                      </>
+                    ),
+                  },
+                ].map(({ icon: Icon, label, body }) => (
+                  <div key={label} className="flex items-start gap-3 px-5 py-3">
+                    <div className="h-8 w-8 shrink-0 rounded-md bg-slate-100 text-slate-700 flex items-center justify-center">
+                      <Icon className="h-4 w-4" />
+                    </div>
+                    <div className="text-sm">
+                      <p className="font-medium text-slate-900">{label}</p>
+                      <div className="text-slate-600 mt-0.5">{body}</div>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-[#111111] font-semibold mb-1">Address</p>
-                    <p className="text-[#666666]">
-                      123 Industrial Park Road
-                      <br />
-                      Shelton, CT 06484
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-accent/20 rounded-lg flex items-center justify-center shrink-0">
-                    <Phone className="w-6 h-6 text-accent" />
-                  </div>
-                  <div>
-                    <p className="text-[#111111] font-semibold mb-1">Phone</p>
-                    <a
-                      href="tel:+1234567890"
-                      className="text-[#666666] hover:text-accent transition-colors"
-                    >
-                      +1 (234) 567-890
-                    </a>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-accent/20 rounded-lg flex items-center justify-center shrink-0">
-                    <Mail className="w-6 h-6 text-accent" />
-                  </div>
-                  <div>
-                    <p className="text-[#111111] font-semibold mb-1">Email</p>
-                    <a
-                      href="mailto:info@sheltontoolhire.com"
-                      className="text-[#666666] hover:text-accent transition-colors"
-                    >
-                      info@sheltontoolhire.com
-                    </a>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-accent/20 rounded-lg flex items-center justify-center shrink-0">
-                    <Clock className="w-6 h-6 text-accent" />
-                  </div>
-                  <div>
-                    <p className="text-[#111111] font-semibold mb-1">
-                      Business Hours
-                    </p>
-                    <p className="text-[#666666]">
-                      Mon - Sat: 7:00 AM - 6:00 PM
-                      <br />
-                      Sunday: Closed
-                    </p>
-                  </div>
-                </div>
+                ))}
               </div>
             </div>
 
-            {/* Map Placeholder */}
-            <div className="bg-white border border-gray-200 rounded-2xl h-64 flex items-center justify-center">
-              <p className="text-[#666666]">Map Integration</p>
+            <div className="bg-white border border-slate-200 rounded-md h-48 flex items-center justify-center text-sm text-slate-500">
+              Map integration
             </div>
           </div>
 
-          {/* Contact Form */}
           <div className="lg:col-span-2">
-            <div className="bg-white border border-gray-200 rounded-2xl p-8">
-              <h3 className="text-xl font-bold text-[#111111] mb-6">
-                Send us a Message
-              </h3>
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid sm:grid-cols-2 gap-6">
+            <div className="bg-white border border-slate-200 rounded-md">
+              <div className="border-b border-slate-200 px-6 py-3">
+                <h3 className="text-sm font-semibold text-slate-900">
+                  Send us a message
+                </h3>
+              </div>
+              <form onSubmit={handleSubmit} className="space-y-4 px-6 py-5">
+                <div className="grid sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[#111111] font-medium mb-2">
-                      Your Name *
+                    <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                      Your name *
                     </label>
                     <input
                       type="text"
@@ -131,13 +130,13 @@ export default function ContactPage() {
                       onChange={(e) =>
                         setFormData({ ...formData, name: e.target.value })
                       }
-                      className="w-full bg-white border border-gray-200 rounded-lg px-4 py-3 text-[#111111] placeholder:text-[#999] focus:outline-none focus:border-accent transition-colors"
+                      className="w-full bg-white border border-slate-200 rounded-md px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition-colors"
                       placeholder="John Smith"
                     />
                   </div>
                   <div>
-                    <label className="block text-[#111111] font-medium mb-2">
-                      Email Address *
+                    <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                      Email address *
                     </label>
                     <input
                       type="email"
@@ -146,16 +145,16 @@ export default function ContactPage() {
                       onChange={(e) =>
                         setFormData({ ...formData, email: e.target.value })
                       }
-                      className="w-full bg-white border border-gray-200 rounded-lg px-4 py-3 text-[#111111] placeholder:text-[#999] focus:outline-none focus:border-accent transition-colors"
+                      className="w-full bg-white border border-slate-200 rounded-md px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition-colors"
                       placeholder="john@example.com"
                     />
                   </div>
                 </div>
 
-                <div className="grid sm:grid-cols-2 gap-6">
+                <div className="grid sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[#111111] font-medium mb-2">
-                      Phone Number
+                    <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                      Phone number
                     </label>
                     <input
                       type="tel"
@@ -163,12 +162,12 @@ export default function ContactPage() {
                       onChange={(e) =>
                         setFormData({ ...formData, phone: e.target.value })
                       }
-                      className="w-full bg-white border border-gray-200 rounded-lg px-4 py-3 text-[#111111] placeholder:text-[#999] focus:outline-none focus:border-accent transition-colors"
+                      className="w-full bg-white border border-slate-200 rounded-md px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition-colors"
                       placeholder="+1 (234) 567-890"
                     />
                   </div>
                   <div>
-                    <label className="block text-[#111111] font-medium mb-2">
+                    <label className="block text-sm font-medium text-slate-700 mb-1.5">
                       Subject *
                     </label>
                     <select
@@ -177,20 +176,20 @@ export default function ContactPage() {
                       onChange={(e) =>
                         setFormData({ ...formData, subject: e.target.value })
                       }
-                      className="w-full bg-white border border-gray-200 rounded-lg px-4 py-3 text-[#111111] focus:outline-none focus:border-accent transition-colors"
+                      className="w-full bg-white border border-slate-200 rounded-md px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition-colors"
                     >
                       <option value="">Select a subject</option>
-                      <option value="rental">Equipment Rental</option>
-                      <option value="quote">Request a Quote</option>
-                      <option value="support">Technical Support</option>
-                      <option value="corporate">Corporate Account</option>
+                      <option value="rental">Equipment rental</option>
+                      <option value="quote">Request a quote</option>
+                      <option value="support">Technical support</option>
+                      <option value="corporate">Corporate account</option>
                       <option value="other">Other</option>
                     </select>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-[#111111] font-medium mb-2">
+                  <label className="block text-sm font-medium text-slate-700 mb-1.5">
                     Message *
                   </label>
                   <textarea
@@ -200,17 +199,17 @@ export default function ContactPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, message: e.target.value })
                     }
-                    className="w-full bg-white border border-gray-200 rounded-lg px-4 py-3 text-[#111111] placeholder:text-[#999] focus:outline-none focus:border-accent transition-colors resize-none"
+                    className="w-full bg-white border border-slate-200 rounded-md px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition-colors resize-none"
                     placeholder="Tell us about your project or question..."
                   />
                 </div>
 
                 <button
                   type="submit"
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-accent hover:bg-[#C97F00] text-black font-semibold px-8 py-4 rounded-lg transition-colors"
+                  className="inline-flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-medium px-4 py-2 rounded-md transition-colors text-sm"
                 >
-                  <Send className="w-5 h-5" />
-                  Send Message
+                  <Send className="w-4 h-4" />
+                  Send message
                 </button>
               </form>
             </div>

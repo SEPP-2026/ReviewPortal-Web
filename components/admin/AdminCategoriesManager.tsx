@@ -136,20 +136,26 @@ export function AdminCategoriesManager() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-slate-200 bg-white px-4 py-3">
         <p className="text-sm text-slate-600">
           {categories.length} categor{categories.length === 1 ? "y" : "ies"}{" "}
           configured
         </p>
-        <Button type="button" variant="default" size="sm" onClick={openCreate}>
+        <Button
+          type="button"
+          variant="default"
+          size="sm"
+          onClick={openCreate}
+          className="rounded-md"
+        >
           <Plus className="h-4 w-4" />
           New category
         </Button>
       </div>
 
       {errorMessage && (
-        <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+        <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
           <div className="flex items-start gap-2">
             <AlertCircle className="mt-0.5 h-4 w-4" />
             {errorMessage}
@@ -158,21 +164,21 @@ export function AdminCategoriesManager() {
       )}
 
       {isLoading ? (
-        <div className="rounded-3xl border border-slate-200 bg-white p-10">
+        <div className="rounded-md border border-slate-200 bg-white p-10">
           <Spinner size="md" text="Loading categories..." />
         </div>
       ) : categories.length === 0 ? (
-        <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-10 text-center text-sm text-slate-600">
+        <div className="rounded-md border border-dashed border-slate-300 bg-white p-10 text-center text-sm text-slate-600">
           No categories yet. Create your first one to get started.
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {categories.map((category) => (
             <div
               key={category.id}
-              className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_20px_60px_rgba(15,23,42,0.05)]"
+              className="overflow-hidden rounded-md border border-slate-200 bg-white"
             >
-              <div className="relative h-32 bg-slate-100">
+              <div className="relative h-28 bg-slate-100">
                 {category.imageUrl && (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
@@ -181,12 +187,12 @@ export function AdminCategoriesManager() {
                     className="h-full w-full object-cover"
                   />
                 )}
-                <span className="absolute right-3 top-3 inline-flex items-center rounded-full bg-white/90 px-2.5 py-1 text-xs font-semibold text-slate-700 shadow">
+                <span className="absolute right-2 top-2 inline-flex items-center rounded-md border border-slate-200 bg-white/95 px-2 py-0.5 text-xs font-medium text-slate-700">
                   {category.toolCount} tools
                 </span>
               </div>
-              <div className="p-5">
-                <h3 className="text-lg font-semibold text-slate-950">
+              <div className="p-4">
+                <h3 className="text-base font-semibold text-slate-900">
                   {category.name}
                 </h3>
                 {category.description && (
@@ -195,12 +201,13 @@ export function AdminCategoriesManager() {
                   </p>
                 )}
 
-                <div className="mt-4 flex items-center gap-2">
+                <div className="mt-3 flex items-center gap-2">
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
                     onClick={() => openEdit(category)}
+                    className="rounded-md"
                   >
                     <Pencil className="h-3.5 w-3.5" />
                     Edit
@@ -216,6 +223,7 @@ export function AdminCategoriesManager() {
                         ? "Cannot delete a category that still contains tools."
                         : "Delete category"
                     }
+                    className="rounded-md"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                     Delete
@@ -228,10 +236,10 @@ export function AdminCategoriesManager() {
       )}
 
       {formMode.kind !== "closed" && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/50 p-4 overflow-y-auto">
-          <div className="mt-12 w-full max-w-xl rounded-3xl bg-white p-6 shadow-2xl">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-slate-950">
+        <div className="fixed inset-0 z-50 flex items-start justify-center bg-slate-900/60 p-4 overflow-y-auto">
+          <div className="mt-12 w-full max-w-xl rounded-md border border-slate-200 bg-white shadow-lg">
+            <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
+              <h2 className="text-base font-semibold text-slate-900">
                 {formMode.kind === "create"
                   ? "Create category"
                   : `Edit: ${formMode.category.name}`}
@@ -239,7 +247,7 @@ export function AdminCategoriesManager() {
               <button
                 type="button"
                 onClick={closeForm}
-                className="rounded-full p-1 text-slate-500 hover:bg-slate-100"
+                className="rounded-md p-1 text-slate-500 hover:bg-slate-100 hover:text-slate-900"
                 aria-label="Close"
               >
                 <X className="h-5 w-5" />
@@ -248,7 +256,7 @@ export function AdminCategoriesManager() {
 
             <form
               onSubmit={handleSubmit(onSubmit)}
-              className="mt-6 space-y-4"
+              className="space-y-4 px-6 py-5"
               noValidate
             >
               <div className="space-y-1.5">
@@ -296,16 +304,24 @@ export function AdminCategoriesManager() {
                 )}
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-2">
+              <div className="-mx-6 mt-2 flex items-center justify-end gap-2 border-t border-slate-200 px-6 pt-4">
                 <Button
                   type="button"
                   variant="outline"
+                  size="sm"
                   onClick={closeForm}
                   disabled={isSubmitting}
+                  className="rounded-md"
                 >
                   Cancel
                 </Button>
-                <Button type="submit" variant="default" disabled={isSubmitting}>
+                <Button
+                  type="submit"
+                  variant="default"
+                  size="sm"
+                  disabled={isSubmitting}
+                  className="rounded-md"
+                >
                   {isSubmitting
                     ? "Saving..."
                     : formMode.kind === "create"

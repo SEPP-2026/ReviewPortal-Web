@@ -272,31 +272,31 @@ export function EquipmentCatalogue() {
   );
 
   return (
-    <section className="min-h-screen bg-[#F2F2F2] pt-40 pb-20">
+    <section className="min-h-screen bg-slate-50 pt-32 pb-16">
       <div className="max-w-7xl mx-auto px-4">
-        <div className="mb-10">
-          <h1 className="text-3xl md:text-4xl font-bold text-[#111111] mb-4">
+        <div className="mb-6">
+          <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-slate-900 mb-1.5">
             Equipment Catalogue
           </h1>
-          <p className="text-[#666666] text-lg">
+          <p className="text-sm text-slate-600">
             Browse our selection of professional tools and equipment for rent.
           </p>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-2xl p-4 mb-8">
-          <div className="flex flex-col lg:flex-row gap-4">
+        <div className="bg-white border border-slate-200 rounded-md p-4 mb-4">
+          <div className="flex flex-col lg:flex-row gap-3">
             <div className="relative flex items-center">
               <button
                 type="button"
                 onClick={() => setSearchExpanded((current) => !current)}
                 aria-label="Toggle search"
-                className="flex h-14 w-14 items-center justify-center rounded-xl border border-gray-200 bg-white text-[#666666] transition-colors hover:border-accent hover:text-accent"
+                className="flex h-10 w-10 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-600 transition-colors hover:border-slate-400 hover:text-slate-900"
               >
-                <Search className="h-5 w-5" />
+                <Search className="h-4 w-4" />
               </button>
               <div
-                className={`overflow-hidden transition-all duration-300 ease-out ${
-                  searchExpanded ? "ml-3 w-80 max-w-full opacity-100" : "w-0 opacity-0"
+                className={`overflow-hidden transition-all duration-200 ease-out ${
+                  searchExpanded ? "ml-2 w-72 max-w-full opacity-100" : "w-0 opacity-0"
                 }`}
               >
                 <input
@@ -306,20 +306,20 @@ export function EquipmentCatalogue() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onFocus={() => setSearchExpanded(true)}
-                  className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-[#111111] placeholder:text-[#999] focus:outline-none focus:border-accent transition-colors"
+                  className="w-full bg-white border border-slate-200 rounded-md px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition-colors"
                 />
               </div>
             </div>
 
-            <div className="hidden lg:flex items-center gap-2 overflow-x-auto">
+            <div className="hidden lg:flex items-center gap-1 overflow-x-auto">
               {filterOptions.map((category) => (
                 <button
                   key={category.slug}
                   onClick={() => setSelectedCategory(category.slug)}
-                  className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
+                  className={`px-3 py-1.5 rounded-md text-sm font-medium whitespace-nowrap transition-colors ${
                     selectedCategory === category.slug
-                      ? "bg-accent text-black"
-                      : "bg-[#F2F2F2] text-[#666666] hover:text-[#111111] border border-gray-200"
+                      ? "bg-slate-900 text-white"
+                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                   }`}
                 >
                   {category.name}
@@ -329,9 +329,9 @@ export function EquipmentCatalogue() {
 
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className="lg:hidden flex items-center justify-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-3 text-[#111111]"
+              className="lg:hidden flex items-center justify-center gap-2 bg-white border border-slate-200 rounded-md px-3 py-2 text-sm text-slate-700"
             >
-              <Filter className="w-5 h-5" />
+              <Filter className="w-4 h-4" />
               Filters
               <ChevronDown
                 className={`w-4 h-4 transition-transform ${
@@ -342,18 +342,20 @@ export function EquipmentCatalogue() {
           </div>
 
           {showFilters && (
-            <div className="lg:hidden mt-4 pt-4 border-t border-gray-200 space-y-4">
+            <div className="lg:hidden mt-4 pt-4 border-t border-slate-200 space-y-3">
               <div>
-                <label className="block text-sm text-[#666666] mb-2">Category</label>
-                <div className="flex flex-wrap gap-2">
+                <label className="block text-xs font-medium text-slate-500 mb-2">
+                  Category
+                </label>
+                <div className="flex flex-wrap gap-1">
                   {filterOptions.map((category) => (
                     <button
                       key={category.slug}
                       onClick={() => setSelectedCategory(category.slug)}
-                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                      className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
                         selectedCategory === category.slug
-                          ? "bg-accent text-black"
-                          : "bg-[#F2F2F2] text-[#666666] border border-gray-200"
+                          ? "bg-slate-900 text-white"
+                          : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-slate-200"
                       }`}
                     >
                       {category.name}
@@ -365,27 +367,27 @@ export function EquipmentCatalogue() {
           )}
         </div>
 
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-          <p className="text-[#666666]">
-            Showing <span className="text-[#111111] font-semibold">{items.length}</span> results
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
+          <p className="text-sm text-slate-600">
+            Showing <span className="text-slate-900 font-semibold">{items.length}</span> results
           </p>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
                 checked={availableOnly}
                 onChange={(e) => setAvailableOnly(e.target.checked)}
-                className="w-4 h-4 rounded border-gray-300 bg-white text-accent focus:ring-accent"
+                className="w-4 h-4 rounded border-slate-300 bg-white text-accent focus:ring-accent"
               />
-              <span className="text-[#666666] text-sm">Available only</span>
+              <span className="text-sm text-slate-600">Available only</span>
             </label>
 
             <div className="relative">
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as SortOption)}
-                className="appearance-none bg-white border border-gray-200 rounded-lg pl-4 pr-10 py-2 text-[#111111] text-sm focus:outline-none focus:border-accent cursor-pointer"
+                className="appearance-none bg-white border border-slate-200 rounded-md pl-3 pr-9 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent cursor-pointer"
               >
                 <option value="featured">Featured</option>
                 <option value="price-low">Price: Low to High</option>
@@ -393,26 +395,26 @@ export function EquipmentCatalogue() {
                 <option value="rating">Top Rated</option>
                 <option value="name">Name A-Z</option>
               </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#999] pointer-events-none" />
+              <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
             </div>
 
-            <div className="hidden sm:flex items-center bg-white border border-gray-200 rounded-lg p-1">
+            <div className="hidden sm:flex items-center bg-white border border-slate-200 rounded-md p-0.5">
               <button
                 onClick={() => setViewMode("grid")}
-                className={`p-2 rounded-md transition-colors ${
+                className={`p-1.5 rounded transition-colors ${
                   viewMode === "grid"
-                    ? "bg-accent text-black"
-                    : "text-[#666666] hover:text-[#111111]"
+                    ? "bg-slate-900 text-white"
+                    : "text-slate-600 hover:text-slate-900"
                 }`}
               >
                 <Grid3X3 className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setViewMode("list")}
-                className={`p-2 rounded-md transition-colors ${
+                className={`p-1.5 rounded transition-colors ${
                   viewMode === "list"
-                    ? "bg-accent text-black"
-                    : "text-[#666666] hover:text-[#111111]"
+                    ? "bg-slate-900 text-white"
+                    : "text-slate-600 hover:text-slate-900"
                 }`}
               >
                 <List className="w-4 h-4" />
@@ -422,7 +424,7 @@ export function EquipmentCatalogue() {
         </div>
 
         {error && (
-          <div className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">
+          <div className="mb-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
             {error}
           </div>
         )}
@@ -435,39 +437,39 @@ export function EquipmentCatalogue() {
           <div
             className={
               viewMode === "grid"
-                ? "grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
-                : "flex flex-col gap-4"
+                ? "grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
+                : "flex flex-col gap-3"
             }
           >
             {items.map((item) => (
               <Link
                 key={item.id}
                 href={`/equipment/${item.id}`}
-                className={`group bg-white border border-gray-200 rounded-2xl overflow-hidden hover:border-accent/50 hover:shadow-lg transition-all duration-300 hover:translate-y-[-4px] ${
+                className={`group bg-white border border-slate-200 rounded-md overflow-hidden hover:border-slate-400 transition-colors ${
                   viewMode === "list" ? "flex" : ""
                 }`}
               >
                 <div
-                  className={`relative overflow-hidden ${
-                    viewMode === "list" ? "w-48 shrink-0" : "h-48"
+                  className={`relative overflow-hidden bg-slate-100 ${
+                    viewMode === "list" ? "w-48 shrink-0" : "h-44"
                   }`}
                 >
                   <img
                     src={item.image}
                     alt={item.name}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    className="w-full h-full object-cover"
                   />
-                  <div className="absolute top-3 left-3">
-                    <span className="bg-accent text-black text-xs font-semibold px-2 py-1 rounded-full">
+                  <div className="absolute top-2 left-2">
+                    <span className="bg-white/95 border border-slate-200 text-slate-700 text-xs font-medium px-2 py-0.5 rounded-md">
                       {item.category}
                     </span>
                   </div>
-                  <div className="absolute top-3 right-3">
+                  <div className="absolute top-2 right-2">
                     <span
-                      className={`text-xs font-semibold px-2 py-1 rounded-full ${
+                      className={`text-xs font-medium px-2 py-0.5 rounded-md border ${
                         item.available
-                          ? "bg-green-500/90 text-white"
-                          : "bg-red-500/90 text-white"
+                          ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                          : "border-red-200 bg-red-50 text-red-700"
                       }`}
                     >
                       {item.available ? "Available" : "Rented"}
@@ -477,52 +479,60 @@ export function EquipmentCatalogue() {
 
                 <div className={`p-4 ${viewMode === "list" ? "flex-1" : ""}`}>
                   {item.hasEnoughReviewsToRate ? (
-                    <div className="flex items-center gap-2 mb-2">
-                      <Star className="w-4 h-4 text-accent fill-accent" />
-                      <span className="text-[#111111] font-semibold text-sm">
+                    <div className="flex items-center gap-1.5 mb-1.5">
+                      <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+                      <span className="text-slate-900 font-semibold text-sm">
                         {item.rating.toFixed(1)}
                       </span>
-                      <span className="text-[#666666] text-sm">({item.reviewCount})</span>
+                      <span className="text-slate-500 text-xs">({item.reviewCount})</span>
                     </div>
                   ) : (
-                    <p className="text-xs text-[#666666] mb-2">
+                    <p className="text-xs text-slate-500 mb-1.5">
                       {item.ratingMessage || "Newly listed"}
                     </p>
                   )}
 
-                  <h3 className="text-lg font-bold text-[#111111] mb-2 group-hover:text-accent transition-colors duration-300 line-clamp-1">
+                  <h3 className="text-base font-semibold text-slate-900 mb-2 group-hover:text-accent transition-colors line-clamp-1">
                     {item.name}
                   </h3>
 
                   {viewMode === "list" && (
-                    <p className="text-[#666666] text-sm mb-3 line-clamp-2">{item.description}</p>
+                    <p className="text-slate-600 text-sm mb-3 line-clamp-2">
+                      {item.description}
+                    </p>
                   )}
 
                   <div
-                    className={`grid grid-cols-3 gap-2 ${
-                      viewMode === "list" ? "max-w-xs" : "mb-4"
+                    className={`grid grid-cols-3 gap-1.5 ${
+                      viewMode === "list" ? "max-w-xs" : "mb-3"
                     }`}
                   >
-                    <div className="bg-[#F2F2F2] rounded-lg p-2 text-center">
-                      <div className="flex items-center justify-center gap-1 text-[#666666] text-xs mb-1">
+                    <div className="border border-slate-200 rounded-md p-2 text-center">
+                      <div className="flex items-center justify-center gap-1 text-slate-500 text-[11px] mb-0.5">
                         <Clock className="w-3 h-3" />
                         Hour
                       </div>
-                      <span className="text-accent font-bold text-sm">${item.hourlyRate}</span>
+                      <span className="text-slate-900 font-semibold text-sm">
+                        ${item.hourlyRate}
+                      </span>
                     </div>
-                    <div className="bg-[#F2F2F2] rounded-lg p-2 text-center">
-                      <div className="text-[#666666] text-xs mb-1">Day</div>
-                      <span className="text-accent font-bold text-sm">${item.dailyRate}</span>
+                    <div className="border border-slate-200 rounded-md p-2 text-center">
+                      <div className="text-slate-500 text-[11px] mb-0.5">Day</div>
+                      <span className="text-slate-900 font-semibold text-sm">
+                        ${item.dailyRate}
+                      </span>
                     </div>
-                    <div className="bg-[#F2F2F2] rounded-lg p-2 text-center">
-                      <div className="text-[#666666] text-xs mb-1">Week</div>
-                      <span className="text-accent font-bold text-sm">${item.weeklyRate}</span>
+                    <div className="border border-slate-200 rounded-md p-2 text-center">
+                      <div className="text-slate-500 text-[11px] mb-0.5">Week</div>
+                      <span className="text-slate-900 font-semibold text-sm">
+                        ${item.weeklyRate}
+                      </span>
                     </div>
                   </div>
 
                   {viewMode === "grid" && (
-                    <button className="w-full bg-accent/10 hover:bg-accent text-accent hover:text-black font-semibold py-2.5 rounded-lg transition-colors duration-300 text-sm">
-                      View Details
+                    <button className="w-full bg-slate-900 hover:bg-slate-800 text-white font-medium py-2 rounded-md transition-colors text-sm">
+                      View details
                     </button>
                   )}
                 </div>
@@ -530,19 +540,22 @@ export function EquipmentCatalogue() {
             ))}
           </div>
         ) : (
-          <div className="text-center py-20">
-            <div className="text-gray text-6xl mb-4">🔍</div>
-            <h3 className="text-xl font-bold text-[#111111] mb-2">No equipment found</h3>
-            <p className="text-[#666666] mb-6">Try adjusting your search or filter criteria</p>
+          <div className="rounded-md border border-dashed border-slate-300 bg-white text-center py-16">
+            <h3 className="text-lg font-semibold text-slate-900 mb-1">
+              No equipment found
+            </h3>
+            <p className="text-sm text-slate-600 mb-5">
+              Try adjusting your search or filter criteria.
+            </p>
             <button
               onClick={() => {
                 setSearchQuery("");
                 setSelectedCategory("all");
                 setAvailableOnly(false);
               }}
-              className="bg-accent hover:bg-[#C97F00] text-black font-semibold px-6 py-3 rounded-lg transition-colors"
+              className="inline-flex items-center bg-slate-900 hover:bg-slate-800 text-white font-medium px-4 py-2 rounded-md transition-colors text-sm"
             >
-              Clear Filters
+              Clear filters
             </button>
           </div>
         )}

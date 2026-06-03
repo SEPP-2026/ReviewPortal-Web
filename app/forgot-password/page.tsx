@@ -52,16 +52,20 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0F0F10] text-white pt-32 pb-20">
-      <div className="mx-auto max-w-md px-6">
-        <div className="rounded-2xl bg-white p-8 text-black shadow-xl">
-          <h1 className="text-2xl font-semibold">Forgot your password?</h1>
-          <p className="mt-2 text-sm text-gray-600">
-            Enter your email and we&apos;ll send instructions for resetting.
+    <div className="min-h-screen bg-slate-50 pt-28 pb-16">
+      <div className="mx-auto max-w-md px-4">
+        <div className="text-center mb-6">
+          <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
+            Forgot your password?
+          </h1>
+          <p className="mt-1.5 text-sm text-slate-600">
+            Enter your email and we&apos;ll send reset instructions.
           </p>
+        </div>
 
+        <div className="rounded-md border border-slate-200 bg-white p-6">
           {message && (
-            <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700">
+            <div className="mb-4 rounded-md border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700">
               {message}
               {resetToken && (
                 <div className="mt-2">
@@ -71,7 +75,7 @@ export default function ForgotPasswordPage() {
                   </p>
                   <Link
                     href={`/reset-password?email=${encodeURIComponent(email)}&token=${encodeURIComponent(resetToken)}`}
-                    className="mt-2 inline-block rounded-lg bg-accent px-3 py-1.5 text-xs font-semibold text-black hover:bg-[#C97F00]"
+                    className="mt-2 inline-flex items-center rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-black hover:bg-[#C97F00]"
                   >
                     Continue to reset
                   </Link>
@@ -82,7 +86,7 @@ export default function ForgotPasswordPage() {
 
           <form
             onSubmit={handleSubmit(onSubmit)}
-            className="mt-6 space-y-4"
+            className="space-y-4"
             noValidate
           >
             <div className="space-y-1.5">
@@ -102,23 +106,23 @@ export default function ForgotPasswordPage() {
 
             <Button
               type="submit"
-              size="lg"
+              variant="default"
               className="w-full"
               disabled={isSubmitting}
             >
               {isSubmitting ? "Sending..." : "Send reset instructions"}
             </Button>
           </form>
-
-          <p className="mt-6 text-center text-sm text-gray-600">
-            <Link
-              href="/login"
-              className="font-semibold text-accent hover:underline"
-            >
-              Back to sign in
-            </Link>
-          </p>
         </div>
+
+        <p className="mt-4 text-center text-sm text-slate-600">
+          <Link
+            href="/login"
+            className="font-medium text-accent hover:underline"
+          >
+            Back to sign in
+          </Link>
+        </p>
       </div>
     </div>
   );

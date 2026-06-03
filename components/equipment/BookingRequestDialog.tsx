@@ -154,7 +154,7 @@ export function BookingRequestDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm">
+        <div className="rounded-md border border-slate-200 bg-slate-50 p-4 text-sm">
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="font-semibold text-slate-900">{tool.name}</p>
@@ -167,7 +167,7 @@ export function BookingRequestDialog({
           </div>
           <div className="mt-3 flex items-center justify-between border-t border-slate-200 pt-3">
             <span className="text-slate-600">Estimated total</span>
-            <span className="text-lg font-bold text-accent">
+            <span className="text-base font-semibold text-slate-900">
               {estimatedCost === null ? "—" : formatCurrency(estimatedCost)}
             </span>
           </div>
