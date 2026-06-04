@@ -253,7 +253,7 @@ export default function EquipmentDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-50 pt-32 pb-16">
+      <div className="min-h-screen bg-slate-50 pt-[var(--nav-offset)] pb-16">
         <div className="max-w-7xl mx-auto px-4">
           <Spinner size="md" text="Loading tool details..." />
         </div>
@@ -263,7 +263,7 @@ export default function EquipmentDetailPage() {
 
   if (error || !tool) {
     return (
-      <div className="min-h-screen bg-slate-50 pt-32 pb-16">
+      <div className="min-h-screen bg-slate-50 pt-[var(--nav-offset)] pb-16">
         <div className="max-w-7xl mx-auto px-4">
           <div className="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-700">
             {error || "Tool not found."}
@@ -286,7 +286,7 @@ export default function EquipmentDetailPage() {
   const sortedImages = [...tool.images].sort((a, b) => a.displayOrder - b.displayOrder);
 
   return (
-    <div className="min-h-screen bg-slate-50 pt-32 pb-16">
+    <div className="min-h-screen bg-slate-50 pt-[var(--nav-offset)] pb-16">
       <div className="max-w-7xl mx-auto px-4">
         <nav className="flex items-center gap-1.5 text-xs mb-4 text-slate-500">
           <Link href="/" className="hover:text-accent transition-colors">

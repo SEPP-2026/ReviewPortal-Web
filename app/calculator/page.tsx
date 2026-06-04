@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function CalculatorLandingPage() {
   return (
-    <div className="min-h-screen bg-slate-50 pt-28 pb-16">
+    <div className="min-h-screen bg-slate-50 pt-[var(--nav-offset)] pb-16">
       <div className="mx-auto max-w-2xl px-4 sm:px-6">
         <div className="rounded-md border border-slate-200 bg-white p-8 text-center">
           <div className="mx-auto inline-flex h-10 w-10 items-center justify-center rounded-md bg-slate-100 text-slate-700">

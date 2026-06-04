@@ -15,6 +15,11 @@
 :root {
   --background: #F2F2F2;
   --foreground: #111111;
+  /* Height reserved for the fixed header (top bar ~36px + 80px nav + 1px
+     border ≈ 117px) plus a little breathing room. Pages offset their content
+     by this so nothing sits under the navbar. Keep this the single source of
+     truth — do not hardcode pt-28 / pt-32 on individual pages. */
+  --nav-offset: 8rem;
 }
 
 body {

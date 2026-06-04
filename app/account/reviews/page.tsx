@@ -11,7 +11,7 @@ export default async function MyReviewsPage() {
   const user = await requireAuthenticatedUser("/account/reviews");
 
   return (
-    <div className="min-h-screen bg-slate-50 pt-28 pb-16">
+    <div className="min-h-screen bg-slate-50 pt-[var(--nav-offset)] pb-16">
       <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
         <div className="mb-6">
           <p className="text-xs font-medium uppercase tracking-wider text-slate-500">
