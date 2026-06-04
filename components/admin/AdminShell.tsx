@@ -39,7 +39,7 @@ export function AdminShell({
   const navItems = ALL_NAV.filter((item) => !item.adminOnly || isAdmin);
 
   return (
-    <div className="min-h-screen bg-slate-50 pt-28 pb-16">
+    <div className="min-h-screen bg-slate-50 pt-[var(--nav-offset)] pb-16">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <header className="mb-6 rounded-md border border-slate-200 bg-white">
           <div className="flex flex-wrap items-start justify-between gap-4 p-6">

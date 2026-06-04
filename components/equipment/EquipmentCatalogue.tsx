@@ -272,7 +272,7 @@ export function EquipmentCatalogue() {
   );
 
   return (
-    <section className="min-h-screen bg-slate-50 pt-32 pb-16">
+    <section className="min-h-screen bg-slate-50 pt-[var(--nav-offset)] pb-16">
       <div className="max-w-7xl mx-auto px-4">
         <div className="mb-6">
           <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-slate-900 mb-1.5">

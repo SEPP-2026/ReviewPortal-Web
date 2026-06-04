@@ -2,6 +2,7 @@
 
 import { Suspense } from "react";
 import Link from "next/link";
+import { ShieldCheck } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -58,21 +59,35 @@ function LoginContent() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 pt-28 pb-16">
-      <div className="mx-auto max-w-md px-4">
-        <div className="text-center mb-6">
-          <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
-            Sign in
-          </h1>
-          <p className="mt-1.5 text-sm text-slate-600">
-            Access your rentals, bookings, and reviews.
-          </p>
-        </div>
+    <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 px-4 pt-[var(--nav-offset)] pb-16">
+      <div className="w-full max-w-md">
+        {/* Brand mark */}
+        <Link
+          href="/"
+          className="mb-8 flex items-center justify-center gap-2.5"
+          aria-label="Shelton Tool-Hire home"
+        >
+          <span className="flex h-9 w-9 items-center justify-center rounded-md bg-slate-900 text-sm font-semibold text-white">
+            ST
+          </span>
+          <span className="text-base font-semibold text-slate-900">
+            Shelton <span className="text-accent">Tool-Hire</span>
+          </span>
+        </Link>
 
-        <div className="rounded-md border border-slate-200 bg-white p-6">
+        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+          <div className="px-8 pt-8 pb-6 text-center">
+            <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
+              Welcome back
+            </h1>
+            <p className="mt-1.5 text-sm text-slate-600">
+              Sign in to manage your rentals, bookings, and reviews.
+            </p>
+          </div>
+
           <form
             onSubmit={handleSubmit(onSubmit)}
-            className="space-y-4"
+            className="space-y-5 px-8 pb-8"
             noValidate
           >
             <div className="space-y-1.5">
@@ -118,6 +133,7 @@ function LoginContent() {
             <Button
               type="submit"
               variant="default"
+              size="lg"
               className="w-full"
               disabled={isSubmitting}
             >
@@ -126,11 +142,16 @@ function LoginContent() {
           </form>
         </div>
 
-        <p className="mt-4 text-center text-sm text-slate-600">
+        <p className="mt-6 text-center text-sm text-slate-600">
           New here?{" "}
           <Link className="font-medium text-accent hover:underline" href="/register">
             Create an account
           </Link>
+        </p>
+
+        <p className="mt-4 flex items-center justify-center gap-1.5 text-xs text-slate-400">
+          <ShieldCheck className="h-3.5 w-3.5" />
+          Secured by Shelton Tool-Hire
         </p>
       </div>
     </div>

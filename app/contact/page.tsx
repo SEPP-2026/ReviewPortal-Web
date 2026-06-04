@@ -20,7 +20,7 @@ export default function ContactPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 pt-28 pb-16">
+    <div className="min-h-screen bg-slate-50 pt-[var(--nav-offset)] pb-16">
       <div className="max-w-6xl mx-auto px-4">
         <div className="mb-8">
           <p className="text-xs font-medium uppercase tracking-wider text-slate-500">

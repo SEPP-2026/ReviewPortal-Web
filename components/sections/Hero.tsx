@@ -32,12 +32,12 @@ export function Hero() {
   };
 
   return (
-    <section className="relative bg-white pt-[112px] overflow-hidden">
+    <section className="relative bg-white pt-[var(--nav-offset)] overflow-hidden">
       {/* Subtle background split */}
       <div className="absolute right-0 top-0 bottom-0 w-1/2 bg-[#F8F8F8] hidden lg:block" />
 
       <div className="relative max-w-7xl mx-auto px-4">
-        <div className="grid lg:grid-cols-2 gap-0 items-stretch min-h-[calc(100vh-112px)]">
+        <div className="grid lg:grid-cols-2 gap-0 items-stretch min-h-[calc(100vh-var(--nav-offset))]">
 
           {/* Left column */}
           <div className="flex flex-col justify-center py-16 lg:pr-16">

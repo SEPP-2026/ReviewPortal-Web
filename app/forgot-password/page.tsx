@@ -52,7 +52,7 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 pt-28 pb-16">
+    <div className="min-h-screen bg-slate-50 pt-[var(--nav-offset)] pb-16">
       <div className="mx-auto max-w-md px-4">
         <div className="text-center mb-6">
           <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
