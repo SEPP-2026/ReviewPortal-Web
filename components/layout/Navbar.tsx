@@ -35,6 +35,7 @@ const ADMIN_LINK: NavLink = {
     { name: "Dashboard", href: "/admin" },
     { name: "Moderation Queue", href: "/admin/moderation" },
     { name: "Bookings", href: "/admin/bookings" },
+    { name: "Messages", href: "/admin/contacts" },
     { name: "Manage Tools", href: "/admin/tools" },
     { name: "Manage Categories", href: "/admin/categories" },
   ],
@@ -46,6 +47,7 @@ const MODERATOR_LINK: NavLink = {
   submenu: [
     { name: "Moderation Queue", href: "/admin/moderation" },
     { name: "Bookings", href: "/admin/bookings" },
+    { name: "Messages", href: "/admin/contacts" },
   ],
 };
 
