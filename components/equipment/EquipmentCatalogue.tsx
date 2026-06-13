@@ -119,10 +119,13 @@ const sortItems = (items: CatalogueItem[], sortBy: SortOption) => {
 export function EquipmentCatalogue() {
   const searchParams = useSearchParams();
   const initialCategory = searchParams.get("category") || "all";
+  // Search term passed in from the homepage hero (e.g. /equipment?q=drill).
+  // Seed the search state so the term is actually applied and visible on arrival.
+  const initialQuery = searchParams.get("q")?.trim() || "";
   const searchInputRef = useRef<HTMLInputElement | null>(null);
 
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchExpanded, setSearchExpanded] = useState(false);
+  const [searchQuery, setSearchQuery] = useState(initialQuery);
+  const [searchExpanded, setSearchExpanded] = useState(Boolean(initialQuery));
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | number>("all");
   const [selectedCategorySlug, setSelectedCategorySlug] = useState(initialCategory);
   const [sortBy, setSortBy] = useState<SortOption>("featured");

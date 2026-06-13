@@ -47,14 +47,14 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
           {/* Company Info */}
           <div>
-            <Link href="/" className="flex items-center gap-2.5 mb-4">
-              <div className="w-9 h-9 bg-accent rounded-md flex items-center justify-center">
-                <span className="text-black font-semibold text-sm">ST</span>
-              </div>
-              <div>
-                <span className="text-white font-semibold text-base">Shelton</span>
-                <span className="text-accent font-semibold text-base"> Tool-Hire</span>
-              </div>
+            <Link href="/" className="inline-flex mb-4">
+              {/* Logo artwork has a light background, so frame it on the dark
+                  footer with a rounded white card. */}
+              <img
+                src="/logo.jpeg"
+                alt="Shelton Tool-Hire"
+                className="h-16 w-auto rounded-md bg-white p-1.5"
+              />
             </Link>
             <p className="text-sm text-slate-400 mb-5 leading-relaxed">
               Your trusted partner for professional tool and equipment rentals.

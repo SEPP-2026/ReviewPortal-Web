@@ -6,7 +6,14 @@ import { useRouter } from "next/navigation";
 import { Menu, X, Phone, ChevronDown } from "lucide-react";
 import { getCategories, toCategorySlug } from "@/lib/backend-api";
 
-const NAV_LINKS = [
+type NavSubLink = { name: string; href: string };
+type NavLink = {
+  name: string;
+  href: string;
+  submenu?: NavSubLink[] | null;
+};
+
+const NAV_LINKS: NavLink[] = [
   { name: "Home", href: "/" },
   {
     name: "Equipment",
@@ -21,7 +28,7 @@ const NAV_LINKS = [
 
 const STAFF_ROLES = new Set(["Admin", "Moderator"]);
 
-const ADMIN_LINK = {
+const ADMIN_LINK: NavLink = {
   name: "Admin",
   href: "/admin",
   submenu: [
@@ -33,7 +40,7 @@ const ADMIN_LINK = {
   ],
 };
 
-const MODERATOR_LINK = {
+const MODERATOR_LINK: NavLink = {
   name: "Admin",
   href: "/admin/moderation",
   submenu: [
@@ -212,14 +219,12 @@ export function Navbar() {
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between h-20">
             {/* Logo */}
-            <Link href="/" className="flex items-center gap-2.5">
-              <div className="w-9 h-9 bg-slate-900 rounded-md flex items-center justify-center">
-                <span className="text-white font-semibold text-sm">ST</span>
-              </div>
-              <div className="hidden sm:block">
-                <span className="text-slate-900 font-semibold text-base">Shelton</span>
-                <span className="text-accent font-semibold text-base"> Tool-Hire</span>
-              </div>
+            <Link href="/" className="flex items-center">
+              <img
+                src="/logo.jpeg"
+                alt="Shelton Tool-Hire"
+                className="h-14 w-auto"
+              />
             </Link>
 
             {/* Desktop Navigation */}
