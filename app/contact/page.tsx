@@ -2,21 +2,48 @@
 
 import { useState } from "react";
 import { Phone, Mail, MapPin, Clock, Send } from "lucide-react";
+import { toast } from "sonner";
+
+const EMPTY_FORM = {
+  name: "",
+  email: "",
+  phone: "",
+  subject: "",
+  message: "",
+};
 
 export default function ContactPage() {
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    subject: "",
-    message: "",
-  });
+  const [formData, setFormData] = useState(EMPTY_FORM);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle form submission
-    console.log("Form submitted:", formData);
-    alert("Thank you for your message! We'll get back to you soon.");
+    if (isSubmitting) return;
+
+    setIsSubmitting(true);
+    try {
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) {
+        const data = (await response.json().catch(() => null)) as
+          | { message?: string }
+          | null;
+        throw new Error(data?.message || "Failed to send message.");
+      }
+
+      toast.success("Thank you for your message! We'll get back to you soon.");
+      setFormData(EMPTY_FORM);
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to send message.",
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -206,10 +233,11 @@ export default function ContactPage() {
 
                 <button
                   type="submit"
-                  className="inline-flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-medium px-4 py-2 rounded-md transition-colors text-sm"
+                  disabled={isSubmitting}
+                  className="inline-flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-medium px-4 py-2 rounded-md transition-colors text-sm disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   <Send className="w-4 h-4" />
-                  Send message
+                  {isSubmitting ? "Sending…" : "Send message"}
                 </button>
               </form>
             </div>

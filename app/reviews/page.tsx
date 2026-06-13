@@ -11,6 +11,14 @@ import {
   type BackendToolSummary,
 } from "@/lib/backend-api";
 
+interface ReplyItem {
+  id: string;
+  author: string;
+  text: string;
+  date: string;
+  isStaff?: boolean;
+}
+
 interface ReviewCard {
   id: string;
   author: string;
@@ -24,7 +32,12 @@ interface ReviewCard {
   text: string;
   helpful: number;
   replies: number;
+  repliesList: ReplyItem[];
 }
+
+// The backend has no "helpful vote" endpoint (HelpfulCount is server-computed),
+// so a reader's own "found this helpful" mark is persisted per-browser.
+const HELPFUL_STORAGE_KEY = "rp_helpful_votes";
 
 const AVATAR_PALETTES = [
   "bg-blue-100 text-blue-700",
@@ -72,6 +85,41 @@ export default function ReviewsPage() {
   const [sortBy, setSortBy] = useState<"recent" | "helpful">("recent");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+  const [helpfulVotes, setHelpfulVotes] = useState<Record<string, boolean>>({});
+
+  // Load the reader's own "helpful" marks (client-only; no backend vote API).
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(HELPFUL_STORAGE_KEY);
+      if (raw) setHelpfulVotes(JSON.parse(raw) as Record<string, boolean>);
+    } catch {
+      // ignore malformed/unavailable storage
+    }
+  }, []);
+
+  const toggleHelpful = (id: string) => {
+    setHelpfulVotes((prev) => {
+      const next = { ...prev };
+      if (next[id]) delete next[id];
+      else next[id] = true;
+      try {
+        window.localStorage.setItem(HELPFUL_STORAGE_KEY, JSON.stringify(next));
+      } catch {
+        // ignore storage write failures (e.g. private browsing)
+      }
+      return next;
+    });
+  };
+
+  const toggleReplies = (id: string) => {
+    setExpandedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -115,20 +163,44 @@ export default function ReviewsPage() {
 
         const cards = reviewsByTool
           .flatMap(({ tool, reviews: toolReviews }) =>
-            toolReviews.map((review) => ({
-              id: `${tool.id}-${review.id}`,
-              author: review.reviewerName,
-              role: "Verified Customer",
-              date: toRelativeDate(review.createdDate),
-              createdAt: review.createdDate,
-              rating: review.overallRating,
-              category: tool.categoryName,
-              equipment: review.toolName,
-              title: toReviewTitle(review.reviewText),
-              text: review.reviewText,
-              helpful: review.comments.length + Math.round(review.overallRating * 2),
-              replies: review.comments.length + (review.companyResponse ? 1 : 0),
-            }))
+            toolReviews.map((review): ReviewCard => {
+              const repliesList: ReplyItem[] = [
+                // Staff/company response shown first when present.
+                ...(review.companyResponse
+                  ? [
+                      {
+                        id: `resp-${review.id}`,
+                        author: `${review.companyResponse.staffName} · Shelton Tool-Hire`,
+                        text: review.companyResponse.responseText,
+                        date: toRelativeDate(review.companyResponse.createdDate),
+                        isStaff: true,
+                      },
+                    ]
+                  : []),
+                ...review.comments.map((comment) => ({
+                  id: `cmt-${comment.id}`,
+                  author: comment.commenterName,
+                  text: comment.commentText,
+                  date: toRelativeDate(comment.createdDate),
+                })),
+              ];
+
+              return {
+                id: `${tool.id}-${review.id}`,
+                author: review.reviewerName,
+                role: "Verified Customer",
+                date: toRelativeDate(review.createdDate),
+                createdAt: review.createdDate,
+                rating: review.overallRating,
+                category: tool.categoryName,
+                equipment: review.toolName,
+                title: toReviewTitle(review.reviewText),
+                text: review.reviewText,
+                helpful: review.helpfulCount,
+                replies: repliesList.length,
+                repliesList,
+              };
+            })
           )
           // Backend returns newest-first per tool; after merging across tools
           // re-sort by date so the 60-item cap keeps the most recent reviews.
@@ -179,8 +251,8 @@ export default function ReviewsPage() {
     // Copy first so we never mutate the source `reviews` array in place.
     return [...matching].sort((a, b) => {
       if (sortBy === "helpful") {
-        // Helpful score is a client-side proxy (no backend votes metric);
-        // fall back to recency on ties for a stable order.
+        // `helpful` is the backend-computed HelpfulCount; fall back to recency
+        // on ties for a stable order.
         return b.helpful - a.helpful || byRecent(a, b);
       }
       return byRecent(a, b);
@@ -347,15 +419,74 @@ export default function ReviewsPage() {
                 </p>
 
                 <div className="flex items-center gap-5 pt-3 border-t border-slate-100">
-                  <button className="flex items-center gap-1.5 text-slate-500 hover:text-accent transition-colors">
-                    <ThumbsUp className="w-3.5 h-3.5" />
-                    <span className="text-xs">Helpful ({review.helpful})</span>
+                  <button
+                    type="button"
+                    onClick={() => toggleHelpful(review.id)}
+                    aria-pressed={Boolean(helpfulVotes[review.id])}
+                    className={`flex items-center gap-1.5 transition-colors ${
+                      helpfulVotes[review.id]
+                        ? "text-accent"
+                        : "text-slate-500 hover:text-accent"
+                    }`}
+                  >
+                    <ThumbsUp
+                      className={`w-3.5 h-3.5 ${
+                        helpfulVotes[review.id] ? "fill-accent" : ""
+                      }`}
+                    />
+                    <span className="text-xs">
+                      Helpful ({review.helpful + (helpfulVotes[review.id] ? 1 : 0)})
+                    </span>
                   </button>
-                  <button className="flex items-center gap-1.5 text-slate-500 hover:text-accent transition-colors">
+                  <button
+                    type="button"
+                    onClick={() => review.replies > 0 && toggleReplies(review.id)}
+                    aria-expanded={expandedIds.has(review.id)}
+                    disabled={review.replies === 0}
+                    className={`flex items-center gap-1.5 transition-colors ${
+                      review.replies === 0
+                        ? "cursor-not-allowed text-slate-300"
+                        : expandedIds.has(review.id)
+                          ? "text-accent"
+                          : "text-slate-500 hover:text-accent"
+                    }`}
+                  >
                     <MessageCircle className="w-3.5 h-3.5" />
                     <span className="text-xs">Replies ({review.replies})</span>
                   </button>
                 </div>
+
+                {expandedIds.has(review.id) && review.repliesList.length > 0 && (
+                  <div className="mt-3 space-y-2">
+                    {review.repliesList.map((reply) => (
+                      <div
+                        key={reply.id}
+                        className={`rounded-md p-3 ${
+                          reply.isStaff
+                            ? "border border-amber-100 bg-amber-50"
+                            : "border border-slate-100 bg-slate-50"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="flex items-center gap-1.5 text-xs font-semibold text-slate-900">
+                            {reply.author}
+                            {reply.isStaff && (
+                              <span className="rounded border border-amber-200 bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-amber-700">
+                                Staff
+                              </span>
+                            )}
+                          </span>
+                          <span className="shrink-0 text-xs text-slate-400">
+                            {reply.date}
+                          </span>
+                        </div>
+                        <p className="mt-1 whitespace-pre-line text-sm text-slate-700">
+                          {reply.text}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
 

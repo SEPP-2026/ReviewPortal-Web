@@ -160,14 +160,14 @@ export default function PricingPage() {
             Need an exact quote?
           </h2>
           <p className="text-sm text-slate-600 mb-4 max-w-lg mx-auto">
-            Use our rental calculator to get accurate pricing for your specific
-            equipment and rental duration.
+            Browse the catalogue to see exact hourly, daily, and weekly pricing
+            for your specific tool and rental duration.
           </p>
           <Link
             href="/equipment"
             className="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-medium px-4 py-2 rounded-md transition-colors text-sm"
           >
-            Calculate rental cost
+            Browse equipment
             <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
