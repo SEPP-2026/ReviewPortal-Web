@@ -87,8 +87,10 @@ export function ReviewItem({ review, currentUser, isStaff }: ReviewItemProps) {
         commenterName: currentUser?.name ?? values.commenterName,
         commentText: "",
       });
-      toast.success("Comment submitted", {
-        description: "It will appear after a moderator approves it.",
+      toast.success(isStaff ? "Comment posted" : "Comment submitted", {
+        description: isStaff
+          ? "Your comment is now visible on the review."
+          : "It will appear after a moderator approves it.",
       });
     } catch (error) {
       toast.error("Could not post comment", {
