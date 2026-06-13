@@ -119,11 +119,15 @@ const sortItems = (items: CatalogueItem[], sortBy: SortOption) => {
 export function EquipmentCatalogue() {
   const searchParams = useSearchParams();
   const initialCategory = searchParams.get("category") || "all";
+  // Search term passed in from the homepage hero (e.g. /equipment?q=drill).
+  // Seed the search state so the term is actually applied and visible on arrival.
+  const initialQuery = searchParams.get("q")?.trim() || "";
   const searchInputRef = useRef<HTMLInputElement | null>(null);
 
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchExpanded, setSearchExpanded] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState(initialCategory);
+  const [searchQuery, setSearchQuery] = useState(initialQuery);
+  const [searchExpanded, setSearchExpanded] = useState(Boolean(initialQuery));
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | number>("all");
+  const [selectedCategorySlug, setSelectedCategorySlug] = useState(initialCategory);
   const [sortBy, setSortBy] = useState<SortOption>("featured");
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [showFilters, setShowFilters] = useState(false);
@@ -157,12 +161,21 @@ export function EquipmentCatalogue() {
 
         setCategories(mapped);
 
-        const categoryExists =
-          initialCategory === "all" ||
-          mapped.some((category) => category.slug === initialCategory);
-
-        if (!categoryExists) {
-          setSelectedCategory("all");
+        // Find category ID from initial slug
+        if (initialCategory !== "all") {
+          const matchedCategory = mapped.find(
+            (category) => category.slug === initialCategory
+          );
+          if (matchedCategory) {
+            setSelectedCategoryId(matchedCategory.id);
+            setSelectedCategorySlug(initialCategory);
+          } else {
+            setSelectedCategoryId("all");
+            setSelectedCategorySlug("all");
+          }
+        } else {
+          setSelectedCategoryId("all");
+          setSelectedCategorySlug("all");
         }
       } catch (categoryError) {
         if (!isMounted) return;
@@ -171,6 +184,8 @@ export function EquipmentCatalogue() {
             ? categoryError.message
             : "Failed to load categories."
         );
+        setSelectedCategoryId("all");
+        setSelectedCategorySlug("all");
       }
     };
 
@@ -185,7 +200,9 @@ export function EquipmentCatalogue() {
     let isMounted = true;
 
     const loadTools = async () => {
-      if (categories.length === 0 && selectedCategory !== "all") {
+      // Wait for categories to load when a specific category is selected
+      if (categories.length === 0 && selectedCategoryId !== "all") {
+        setIsLoading(true);
         return;
       }
 
@@ -197,39 +214,39 @@ export function EquipmentCatalogue() {
         let tools: BackendToolSummary[] = [];
 
         if (query.length > 0) {
+          // When searching, apply category filter if selected
           const searchResult = await searchTools(query, { page: 1, pageSize: 50 });
           tools = searchResult.items;
 
-          if (selectedCategory !== "all") {
+          if (selectedCategorySlug !== "all") {
             tools = tools.filter(
-              (tool) => toCategorySlug(tool.categoryName) === selectedCategory
+              (tool) => toCategorySlug(tool.categoryName) === selectedCategorySlug
             );
           }
-        } else if (selectedCategory === "all") {
-          const categoryResults = await Promise.all(
-            categories.map((category) =>
-              getToolsByCategory(category.id, {
-                page: 1,
-                pageSize: 24,
-                sortBy: mapSortToApi(sortBy),
-              })
-            )
-          );
-
-          tools = categoryResults.flatMap((result) => result.items);
-        } else {
-          const matchedCategory = categories.find(
-            (category) => category.slug === selectedCategory
-          );
-
-          if (matchedCategory) {
-            const result = await getToolsByCategory(matchedCategory.id, {
-              page: 1,
-              pageSize: 50,
-              sortBy: mapSortToApi(sortBy),
-            });
-            tools = result.items;
+        } else if (selectedCategoryId === "all") {
+          // Load all categories
+          if (categories.length > 0) {
+            const categoryResults = await Promise.all(
+              categories.map((category) =>
+                getToolsByCategory(category.id, {
+                  page: 1,
+                  pageSize: 24,
+                  sortBy: mapSortToApi(sortBy),
+                })
+              )
+            );
+            tools = categoryResults.flatMap((result) => result.items);
           }
+        } else {
+          // Load specific category using ID
+          console.log(`Loading tools for category ID: ${selectedCategoryId}`);
+          const result = await getToolsByCategory(Number(selectedCategoryId), {
+            page: 1,
+            pageSize: 50,
+            sortBy: mapSortToApi(sortBy),
+          });
+          tools = result.items;
+          console.log(`Loaded ${tools.length} tools for category ID ${selectedCategoryId}`);
         }
 
         const deduplicated = Array.from(
@@ -258,13 +275,13 @@ export function EquipmentCatalogue() {
     return () => {
       isMounted = false;
     };
-  }, [categories, debouncedSearch, selectedCategory, sortBy, availableOnly]);
+  }, [categories, debouncedSearch, selectedCategoryId, selectedCategorySlug, sortBy, availableOnly]);
 
   const filterOptions = useMemo(
     () => [
-      { slug: "all", name: "All Categories" },
+      { id: "all", name: "All Equipment" },
       ...categories.map((category) => ({
-        slug: category.slug,
+        id: category.id,
         name: category.name,
       })),
     ],
@@ -284,7 +301,7 @@ export function EquipmentCatalogue() {
         </div>
 
         <div className="bg-white border border-slate-200 rounded-md p-4 mb-4">
-          <div className="flex flex-col lg:flex-row gap-3">
+          <div className="flex flex-col lg:flex-row gap-3 items-start lg:items-center">
             <div className="relative flex items-center">
               <button
                 type="button"
@@ -311,20 +328,31 @@ export function EquipmentCatalogue() {
               </div>
             </div>
 
-            <div className="hidden lg:flex items-center gap-1 overflow-x-auto">
-              {filterOptions.map((category) => (
-                <button
-                  key={category.slug}
-                  onClick={() => setSelectedCategory(category.slug)}
-                  className={`px-3 py-1.5 rounded-md text-sm font-medium whitespace-nowrap transition-colors ${
-                    selectedCategory === category.slug
-                      ? "bg-slate-900 text-white"
-                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-                  }`}
-                >
-                  {category.name}
-                </button>
-              ))}
+            {/* Desktop Category Dropdown */}
+            <div className="hidden lg:block relative">
+              <select
+                value={selectedCategoryId}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setSelectedCategoryId(value);
+                  const selected = filterOptions.find(opt => String(opt.id) === value);
+                  if (selected) {
+                    const cat = categories.find(c => c.id === Number(value));
+                    setSelectedCategorySlug(cat?.slug || "all");
+                  } else {
+                    setSelectedCategorySlug("all");
+                  }
+                }}
+                aria-label="Filter by category"
+                className="appearance-none bg-white border border-slate-200 rounded-md pl-3 pr-9 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent cursor-pointer hover:border-slate-400 transition-colors"
+              >
+                {filterOptions.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
             </div>
 
             <button
@@ -347,21 +375,25 @@ export function EquipmentCatalogue() {
                 <label className="block text-xs font-medium text-slate-500 mb-2">
                   Category
                 </label>
-                <div className="flex flex-wrap gap-1">
+                <select
+                  value={selectedCategoryId}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setSelectedCategoryId(value);
+                    const cat = categories.find(c => c.id === Number(value));
+                    setSelectedCategorySlug(cat?.slug || "all");
+                    setShowFilters(false);
+                  }}
+                  aria-label="Filter by category on mobile"
+                  className="w-full appearance-none bg-white border border-slate-200 rounded-md pl-3 pr-9 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent cursor-pointer"
+                >
                   {filterOptions.map((category) => (
-                    <button
-                      key={category.slug}
-                      onClick={() => setSelectedCategory(category.slug)}
-                      className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                        selectedCategory === category.slug
-                          ? "bg-slate-900 text-white"
-                          : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-slate-200"
-                      }`}
-                    >
+                    <option key={category.id} value={category.id}>
                       {category.name}
-                    </button>
+                    </option>
                   ))}
-                </div>
+                </select>
+                <ChevronDown className="absolute right-3 top-[176px] w-4 h-4 text-slate-400 pointer-events-none lg:hidden" />
               </div>
             </div>
           )}
@@ -550,7 +582,8 @@ export function EquipmentCatalogue() {
             <button
               onClick={() => {
                 setSearchQuery("");
-                setSelectedCategory("all");
+                setSelectedCategoryId("all");
+                setSelectedCategorySlug("all");
                 setAvailableOnly(false);
               }}
               className="inline-flex items-center bg-slate-900 hover:bg-slate-800 text-white font-medium px-4 py-2 rounded-md transition-colors text-sm"
