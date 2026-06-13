@@ -40,17 +40,16 @@ export function CTASection() {
                 Ready to start your project?
               </h2>
               <p className="mt-2 text-sm text-slate-600 max-w-lg">
-                Use our rental calculator to estimate costs, choose your
-                equipment, and book online in minutes. Delivery available.
+                Browse our equipment, see clear pricing on every product, and
+                book online in minutes. Delivery available.
               </p>
 
               <div className="mt-5 flex flex-wrap gap-2">
                 <Link
-                  href="/calculator"
+                  href="/equipment"
                   className="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-medium px-4 py-2 rounded-md transition-colors text-sm"
                 >
-                  <Calculator className="w-4 h-4" />
-                  Calculate rental cost
+                  Browse equipment
                 </Link>
                 <Link
                   href="/contact"
