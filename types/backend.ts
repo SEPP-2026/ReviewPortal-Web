@@ -109,6 +109,8 @@ export interface BackendReview {
   status: string;
   rejectionReason: string | null;
   createdDate: string;
+  /** Server-computed helpfulness score (approved comments + rating weight). */
+  helpfulCount: number;
   comments: BackendReviewComment[];
   companyResponse: BackendCompanyResponse | null;
 }
