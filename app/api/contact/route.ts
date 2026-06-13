@@ -14,7 +14,16 @@ const ALLOWED_SUBJECTS: ReadonlySet<ContactSubject> = new Set([
   "other",
 ]);
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// Linear, backtracking-free email check. Avoids a regex with overlapping
+// quantifiers (ReDoS / js/polynomial-redos) running on user-controlled input.
+const isValidEmail = (email: string): boolean => {
+  if (email.length > 254 || /\s/.test(email)) return false; // RFC max length; no whitespace
+  const at = email.indexOf("@");
+  if (at <= 0 || at !== email.lastIndexOf("@")) return false; // exactly one "@", non-empty local part
+  const domain = email.slice(at + 1);
+  const dot = domain.lastIndexOf(".");
+  return dot > 0 && dot < domain.length - 1; // domain has a dot, not first/last char
+};
 
 interface ContactPayload {
   name?: string;
@@ -27,7 +36,7 @@ interface ContactPayload {
 const validate = (payload: ContactPayload): string | null => {
   if (!payload.name || typeof payload.name !== "string" || !payload.name.trim())
     return "name is required";
-  if (!payload.email || typeof payload.email !== "string" || !EMAIL_RE.test(payload.email))
+  if (!payload.email || typeof payload.email !== "string" || !isValidEmail(payload.email))
     return "a valid email is required";
   if (!payload.subject || !ALLOWED_SUBJECTS.has(payload.subject))
     return "subject must be one of rental, quote, support, corporate, other";
