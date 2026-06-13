@@ -22,10 +22,17 @@
   --nav-offset: 8rem;
 }
 
+html {
+  /* Stop the rubber-band/bounce at the scroll boundaries. Once the user
+     reaches the bottom (the footer) and keeps scrolling, the page stays
+     pinned instead of springing back up. */
+  overscroll-behavior-y: none;
+}
+
 body {
-  background: var(--background);
   color: var(--foreground);
   font-family: system-ui, -apple-system, sans-serif;
+  overscroll-behavior-y: none;
 }
 
 @layer base {
