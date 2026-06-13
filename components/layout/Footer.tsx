@@ -10,7 +10,6 @@ import {
   Twitter,
   Instagram,
   Linkedin,
-  ArrowRight,
 } from "lucide-react";
 
 const FOOTER_LINKS = {
