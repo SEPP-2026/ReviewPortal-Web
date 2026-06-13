@@ -4,20 +4,14 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Menu, X, Phone, ChevronDown } from "lucide-react";
+import { getCategories, toCategorySlug } from "@/lib/backend-api";
 
 const NAV_LINKS = [
   { name: "Home", href: "/" },
   {
     name: "Equipment",
     href: "/equipment",
-    submenu: [
-      { name: "All Equipment", href: "/equipment" },
-      { name: "Construction", href: "/equipment?category=construction" },
-      { name: "Landscaping", href: "/equipment?category=landscaping" },
-      { name: "Plumbing", href: "/equipment?category=plumbing" },
-      { name: "Electrical", href: "/equipment?category=electrical" },
-      { name: "Decorating", href: "/equipment?category=decorating" },
-    ],
+    submenu: null, // Will be populated dynamically
   },
   { name: "Services", href: "/services" },
   { name: "Pricing", href: "/pricing" },
@@ -55,6 +49,45 @@ export function Navbar() {
   const [userName, setUserName] = useState<string | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [isAuthResolved, setIsAuthResolved] = useState(false);
+  const [navLinksWithCategories, setNavLinksWithCategories] = useState(NAV_LINKS);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    // Load categories for Equipment submenu
+    const loadCategories = async () => {
+      try {
+        const categories = await getCategories();
+        if (!isMounted) return;
+
+        const updatedLinks = NAV_LINKS.map((link) => {
+          if (link.name === "Equipment" && categories.length > 0) {
+            return {
+              ...link,
+              submenu: [
+                { name: "All Equipment", href: "/equipment" },
+                ...categories.map((cat) => ({
+                  name: cat.name,
+                  href: `/equipment?category=${toCategorySlug(cat.name)}`,
+                })),
+              ],
+            };
+          }
+          return link;
+        });
+
+        setNavLinksWithCategories(updatedLinks);
+      } catch (error) {
+        console.error("Failed to load categories for navbar:", error);
+      }
+    };
+
+    loadCategories();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -109,7 +142,7 @@ export function Navbar() {
   const isStaff = userRole ? STAFF_ROLES.has(userRole) : false;
   const isAdmin = userRole === "Admin";
   const adminLink = isAdmin ? ADMIN_LINK : MODERATOR_LINK;
-  const navLinks = isStaff ? [...NAV_LINKS, adminLink] : NAV_LINKS;
+  const navLinks = isStaff ? [...navLinksWithCategories, adminLink] : navLinksWithCategories;
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50">
