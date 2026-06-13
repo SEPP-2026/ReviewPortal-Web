@@ -126,7 +126,7 @@ export default function ReviewsPage() {
               equipment: review.toolName,
               title: toReviewTitle(review.reviewText),
               text: review.reviewText,
-              helpful: review.comments.length + Math.round(review.overallRating * 2),
+              helpful: review.helpfulCount,
               replies: review.comments.length + (review.companyResponse ? 1 : 0),
             }))
           )
@@ -179,8 +179,8 @@ export default function ReviewsPage() {
     // Copy first so we never mutate the source `reviews` array in place.
     return [...matching].sort((a, b) => {
       if (sortBy === "helpful") {
-        // Helpful score is a client-side proxy (no backend votes metric);
-        // fall back to recency on ties for a stable order.
+        // `helpful` is the backend-computed HelpfulCount; fall back to recency
+        // on ties for a stable order.
         return b.helpful - a.helpful || byRecent(a, b);
       }
       return byRecent(a, b);
