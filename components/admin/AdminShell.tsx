@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   Wrench,
   Layers,
+  Mail,
   ShieldCheck,
 } from "lucide-react";
 
@@ -14,6 +15,7 @@ const ALL_NAV = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true, adminOnly: true },
   { href: "/admin/moderation", label: "Moderation", icon: ShieldCheck, adminOnly: false },
   { href: "/admin/bookings", label: "Bookings", icon: CalendarCheck, adminOnly: false },
+  { href: "/admin/contacts", label: "Messages", icon: Mail, adminOnly: false },
   { href: "/admin/tools", label: "Tools", icon: Wrench, adminOnly: true },
   { href: "/admin/categories", label: "Categories", icon: Layers, adminOnly: true },
 ];
