@@ -16,6 +16,7 @@ interface ReviewCard {
   author: string;
   role: string;
   date: string;
+  createdAt: string;
   rating: number;
   category: string;
   equipment?: string;
@@ -119,6 +120,7 @@ export default function ReviewsPage() {
               author: review.reviewerName,
               role: "Verified Customer",
               date: toRelativeDate(review.createdDate),
+              createdAt: review.createdDate,
               rating: review.overallRating,
               category: tool.categoryName,
               equipment: review.toolName,
@@ -128,7 +130,12 @@ export default function ReviewsPage() {
               replies: review.comments.length + (review.companyResponse ? 1 : 0),
             }))
           )
-          .sort((a, b) => b.rating - a.rating)
+          // Backend returns newest-first per tool; after merging across tools
+          // re-sort by date so the 60-item cap keeps the most recent reviews.
+          .sort(
+            (a, b) =>
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          )
           .slice(0, 60);
 
         if (!isMounted) return;
@@ -166,9 +173,17 @@ export default function ReviewsPage() {
         : review.category === selectedCategory
     );
 
-    return matching.sort((a, b) => {
-      if (sortBy === "helpful") return b.helpful - a.helpful;
-      return 0;
+    const byRecent = (a: ReviewCard, b: ReviewCard) =>
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+
+    // Copy first so we never mutate the source `reviews` array in place.
+    return [...matching].sort((a, b) => {
+      if (sortBy === "helpful") {
+        // Helpful score is a client-side proxy (no backend votes metric);
+        // fall back to recency on ties for a stable order.
+        return b.helpful - a.helpful || byRecent(a, b);
+      }
+      return byRecent(a, b);
     });
   }, [reviews, selectedCategory, sortBy]);
 
