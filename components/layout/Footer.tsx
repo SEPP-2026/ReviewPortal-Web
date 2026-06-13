@@ -51,7 +51,7 @@ export function Footer() {
               {/* Logo artwork has a light background, so frame it on the dark
                   footer with a rounded white card. */}
               <img
-                src="/logo.jpeg"
+                src="/logo.png"
                 alt="Shelton Tool-Hire"
                 className="h-16 w-auto rounded-md bg-white p-1.5"
               />

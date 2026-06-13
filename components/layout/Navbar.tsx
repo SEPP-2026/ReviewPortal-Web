@@ -221,7 +221,7 @@ export function Navbar() {
             {/* Logo */}
             <Link href="/" className="flex items-center">
               <img
-                src="/logo.jpeg"
+                src="/logo.png"
                 alt="Shelton Tool-Hire"
                 className="h-14 w-auto"
               />
