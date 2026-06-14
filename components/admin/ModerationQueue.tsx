@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 
 import { Spinner } from "@/components/ui/spinner";
+import { Pagination } from "@/components/ui/pagination";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -55,6 +56,7 @@ export function ModerationQueue() {
   );
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
 
   const [activeId, setActiveId] = useState<{
     kind: "review" | "comment";
@@ -76,7 +78,7 @@ export function ModerationQueue() {
     setErrorMessage(null);
 
     try {
-      const data = await getPendingModerationReviews({ page: 1, pageSize: 50 });
+      const data = await getPendingModerationReviews({ page, pageSize: 10 });
       setQueue(data);
     } catch (error) {
       setQueue(null);
@@ -86,7 +88,7 @@ export function ModerationQueue() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [page]);
 
   useEffect(() => {
     loadQueue();
@@ -455,6 +457,16 @@ export function ModerationQueue() {
             </>
           )}
         </div>
+      )}
+
+      {queue && (
+        <Pagination
+          page={page}
+          totalPages={queue.totalPages}
+          totalCount={queue.totalCount}
+          onPageChange={setPage}
+          isLoading={isLoading}
+        />
       )}
 
       {/* Rejection modal */}
