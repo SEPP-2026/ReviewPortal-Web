@@ -2,12 +2,15 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { formatDistanceToNow } from "date-fns";
-import { Star, ThumbsUp, MessageCircle, Filter } from "lucide-react";
+import { Star, ThumbsUp, MessageCircle, Filter, Send } from "lucide-react";
+import { toast } from "sonner";
 import { Spinner } from "@/components/ui/spinner";
+import { useCurrentUser } from "@/hooks/use-current-user";
 import {
   getCategories,
   getToolReviews,
   getToolsByCategory,
+  createReviewComment,
   type BackendToolSummary,
 } from "@/lib/backend-api";
 
@@ -21,6 +24,7 @@ interface ReplyItem {
 
 interface ReviewCard {
   id: string;
+  reviewId: number;
   author: string;
   role: string;
   date: string;
@@ -87,6 +91,9 @@ export default function ReviewsPage() {
   const [error, setError] = useState<string | null>(null);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [helpfulVotes, setHelpfulVotes] = useState<Record<string, boolean>>({});
+  const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({});
+  const [submittingReplyId, setSubmittingReplyId] = useState<string | null>(null);
+  const { user: currentUser, isStaff } = useCurrentUser();
 
   // Load the reader's own "helpful" marks (client-only; no backend vote API).
   useEffect(() => {
@@ -119,6 +126,52 @@ export default function ReviewsPage() {
       else next.add(id);
       return next;
     });
+  };
+
+  // Staff (Admin/Moderator) can reply directly from the reviews list. Their
+  // comment is auto-approved server-side, so it appears immediately.
+  const handlePostReply = async (card: ReviewCard) => {
+    const text = (replyDrafts[card.id] ?? "").trim();
+    if (text.length < 10) {
+      toast.error("Reply must be at least 10 characters");
+      return;
+    }
+
+    setSubmittingReplyId(card.id);
+    try {
+      const created = await createReviewComment(card.reviewId, {
+        commenterName: currentUser?.name ?? "Staff",
+        commentText: text,
+      });
+      const newReply: ReplyItem = {
+        id: `cmt-${created.id}`,
+        author: created.commenterName,
+        text: created.commentText,
+        date: toRelativeDate(created.createdDate),
+        isStaff: true,
+      };
+      setReviews((prev) =>
+        prev.map((r) =>
+          r.id === card.id
+            ? {
+                ...r,
+                repliesList: [...r.repliesList, newReply],
+                replies: r.replies + 1,
+              }
+            : r,
+        ),
+      );
+      setReplyDrafts((prev) => ({ ...prev, [card.id]: "" }));
+      setExpandedIds((prev) => new Set(prev).add(card.id));
+      toast.success("Reply posted");
+    } catch (postError) {
+      toast.error("Could not post reply", {
+        description:
+          postError instanceof Error ? postError.message : "Please try again.",
+      });
+    } finally {
+      setSubmittingReplyId(null);
+    }
   };
 
   useEffect(() => {
@@ -187,6 +240,7 @@ export default function ReviewsPage() {
 
               return {
                 id: `${tool.id}-${review.id}`,
+                reviewId: review.id,
                 author: review.reviewerName,
                 role: "Verified Customer",
                 date: toRelativeDate(review.createdDate),
@@ -440,11 +494,13 @@ export default function ReviewsPage() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => review.replies > 0 && toggleReplies(review.id)}
+                    onClick={() =>
+                      (review.replies > 0 || isStaff) && toggleReplies(review.id)
+                    }
                     aria-expanded={expandedIds.has(review.id)}
-                    disabled={review.replies === 0}
+                    disabled={review.replies === 0 && !isStaff}
                     className={`flex items-center gap-1.5 transition-colors ${
-                      review.replies === 0
+                      review.replies === 0 && !isStaff
                         ? "cursor-not-allowed text-slate-300"
                         : expandedIds.has(review.id)
                           ? "text-accent"
@@ -456,37 +512,76 @@ export default function ReviewsPage() {
                   </button>
                 </div>
 
-                {expandedIds.has(review.id) && review.repliesList.length > 0 && (
-                  <div className="mt-3 space-y-2">
-                    {review.repliesList.map((reply) => (
-                      <div
-                        key={reply.id}
-                        className={`rounded-md p-3 ${
-                          reply.isStaff
-                            ? "border border-amber-100 bg-amber-50"
-                            : "border border-slate-100 bg-slate-50"
-                        }`}
-                      >
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="flex items-center gap-1.5 text-xs font-semibold text-slate-900">
-                            {reply.author}
-                            {reply.isStaff && (
-                              <span className="rounded border border-amber-200 bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-amber-700">
-                                Staff
-                              </span>
-                            )}
-                          </span>
-                          <span className="shrink-0 text-xs text-slate-400">
-                            {reply.date}
-                          </span>
+                {expandedIds.has(review.id) &&
+                  (review.repliesList.length > 0 || isStaff) && (
+                    <div className="mt-3 space-y-2">
+                      {review.repliesList.map((reply) => (
+                        <div
+                          key={reply.id}
+                          className={`rounded-md p-3 ${
+                            reply.isStaff
+                              ? "border border-amber-100 bg-amber-50"
+                              : "border border-slate-100 bg-slate-50"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="flex items-center gap-1.5 text-xs font-semibold text-slate-900">
+                              {reply.author}
+                              {reply.isStaff && (
+                                <span className="rounded border border-amber-200 bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-amber-700">
+                                  Staff
+                                </span>
+                              )}
+                            </span>
+                            <span className="shrink-0 text-xs text-slate-400">
+                              {reply.date}
+                            </span>
+                          </div>
+                          <p className="mt-1 whitespace-pre-line text-sm text-slate-700">
+                            {reply.text}
+                          </p>
                         </div>
-                        <p className="mt-1 whitespace-pre-line text-sm text-slate-700">
-                          {reply.text}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                      ))}
+
+                      {/* Staff reply box — comment is auto-approved server-side. */}
+                      {isStaff && (
+                        <div className="rounded-md border border-slate-200 bg-white p-3">
+                          <label
+                            htmlFor={`reply-${review.id}`}
+                            className="mb-1.5 block text-xs font-medium text-slate-600"
+                          >
+                            Reply as staff
+                          </label>
+                          <textarea
+                            id={`reply-${review.id}`}
+                            rows={2}
+                            value={replyDrafts[review.id] ?? ""}
+                            onChange={(e) =>
+                              setReplyDrafts((prev) => ({
+                                ...prev,
+                                [review.id]: e.target.value,
+                              }))
+                            }
+                            placeholder="Write a reply (at least 10 characters)…"
+                            className="w-full resize-none rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent"
+                          />
+                          <div className="mt-2 flex justify-end">
+                            <button
+                              type="button"
+                              onClick={() => handlePostReply(review)}
+                              disabled={submittingReplyId === review.id}
+                              className="inline-flex items-center gap-1.5 rounded-md bg-slate-900 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                              <Send className="h-3.5 w-3.5" />
+                              {submittingReplyId === review.id
+                                ? "Posting…"
+                                : "Post reply"}
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
               </div>
             ))}
 
