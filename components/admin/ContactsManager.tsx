@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   AlertCircle,
   Inbox,
@@ -13,8 +13,10 @@ import {
 } from "lucide-react";
 
 import { Spinner } from "@/components/ui/spinner";
+import { Pagination } from "@/components/ui/pagination";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useDebounce } from "@/hooks/use-debounce";
 // Type-only import — the store is server-side state and must not be bundled
 // into this client component.
 import type { ContactMessage, ContactSubject } from "@/lib/contact-store";
@@ -49,6 +51,10 @@ const formatDate = (iso: string) =>
 
 interface ApiContactsResponse {
   items: ContactMessage[];
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
 }
 
 export function ContactsManager() {
@@ -57,12 +63,22 @@ export function ContactsManager() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [subjectFilter, setSubjectFilter] = useState<SubjectFilter>("");
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageMeta, setPageMeta] = useState({ totalPages: 1, totalCount: 0 });
+
+  const debouncedSearch = useDebounce(search, 300);
 
   const load = useCallback(async () => {
     setIsLoading(true);
     setErrorMessage(null);
     try {
-      const response = await fetch("/api/contact");
+      const params = new URLSearchParams();
+      params.set("page", String(page));
+      params.set("pageSize", "10");
+      if (subjectFilter) params.set("subject", subjectFilter);
+      if (debouncedSearch.trim()) params.set("search", debouncedSearch.trim());
+
+      const response = await fetch(`/api/contact?${params.toString()}`);
       if (!response.ok) {
         if (response.status === 401 || response.status === 403) {
           throw new Error("You don't have access to view messages.");
@@ -71,6 +87,7 @@ export function ContactsManager() {
       }
       const data = (await response.json()) as ApiContactsResponse;
       setMessages(data.items);
+      setPageMeta({ totalPages: data.totalPages, totalCount: data.totalCount });
     } catch (error) {
       setErrorMessage(
         error instanceof Error ? error.message : "Failed to load messages.",
@@ -78,25 +95,16 @@ export function ContactsManager() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [page, subjectFilter, debouncedSearch]);
 
   useEffect(() => {
     load();
   }, [load]);
 
-  const filtered = useMemo(() => {
-    const term = search.trim().toLowerCase();
-    return messages.filter((m) => {
-      if (subjectFilter && m.subject !== subjectFilter) return false;
-      if (!term) return true;
-      return (
-        m.name.toLowerCase().includes(term) ||
-        m.email.toLowerCase().includes(term) ||
-        m.message.toLowerCase().includes(term) ||
-        (m.phone?.toLowerCase().includes(term) ?? false)
-      );
-    });
-  }, [messages, subjectFilter, search]);
+  // Reset to the first page when a filter or the search term changes.
+  useEffect(() => {
+    setPage(1);
+  }, [subjectFilter, debouncedSearch]);
 
   return (
     <div className="space-y-4">
@@ -107,9 +115,9 @@ export function ContactsManager() {
             <Inbox className="h-4 w-4 text-slate-500" />
             <span>
               <span className="font-semibold text-slate-900">
-                {messages.length}
+                {pageMeta.totalCount}
               </span>{" "}
-              {messages.length === 1 ? "message" : "messages"}
+              {pageMeta.totalCount === 1 ? "message" : "messages"}
             </span>
           </div>
           <div className="flex flex-1 flex-wrap items-center justify-end gap-2">
@@ -142,10 +150,6 @@ export function ContactsManager() {
         <div className="mt-3 flex flex-wrap items-center gap-1 border-t border-slate-100 pt-3">
           {SUBJECT_FILTERS.map((filter) => {
             const active = subjectFilter === filter.value;
-            const count =
-              filter.value === ""
-                ? messages.length
-                : messages.filter((m) => m.subject === filter.value).length;
             return (
               <button
                 key={filter.label}
@@ -158,11 +162,6 @@ export function ContactsManager() {
                 }`}
               >
                 {filter.label}
-                <span
-                  className={`ml-1.5 ${active ? "text-slate-300" : "text-slate-400"}`}
-                >
-                  {count}
-                </span>
               </button>
             );
           })}
@@ -182,27 +181,23 @@ export function ContactsManager() {
         <div className="rounded-md border border-slate-200 bg-white p-10">
           <Spinner size="md" text="Loading messages..." />
         </div>
-      ) : messages.length === 0 ? (
+      ) : pageMeta.totalCount === 0 ? (
         <div className="rounded-md border border-dashed border-slate-300 bg-white p-12 text-center">
           <p className="text-base font-semibold text-slate-900">
-            No messages yet.
+            {subjectFilter || debouncedSearch.trim()
+              ? "No matching messages."
+              : "No messages yet."}
           </p>
           <p className="mt-1 text-sm text-slate-600">
-            Enquiries submitted through the contact form will appear here.
-          </p>
-        </div>
-      ) : filtered.length === 0 ? (
-        <div className="rounded-md border border-dashed border-slate-300 bg-white p-12 text-center">
-          <p className="text-base font-semibold text-slate-900">
-            No matching messages.
-          </p>
-          <p className="mt-1 text-sm text-slate-600">
-            Try a different search term or filter.
+            {subjectFilter || debouncedSearch.trim()
+              ? "Try a different search term or filter."
+              : "Enquiries submitted through the contact form will appear here."}
           </p>
         </div>
       ) : (
-        <div className="space-y-3">
-          {filtered.map((message) => {
+        <>
+          <div className="space-y-3">
+          {messages.map((message) => {
             const subject = SUBJECT_META[message.subject];
             // Prefill the admin's mail client with recipient, subject, and a
             // body that greets the sender and quotes their original enquiry.
@@ -288,7 +283,15 @@ export function ContactsManager() {
               </article>
             );
           })}
-        </div>
+          </div>
+          <Pagination
+            page={page}
+            totalPages={pageMeta.totalPages}
+            totalCount={pageMeta.totalCount}
+            onPageChange={setPage}
+            isLoading={isLoading}
+          />
+        </>
       )}
     </div>
   );

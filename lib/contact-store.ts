@@ -6,6 +6,8 @@
 // and survive Next.js HMR via globalThis. Production-grade delivery (email or a
 // backend table) would replace this.
 
+import { paginate, type PagedResult } from "@/lib/pagination";
+
 export type ContactSubject =
   | "rental"
   | "quote"
@@ -51,6 +53,32 @@ export const addContactMessage = (input: ContactCreateInput): ContactMessage => 
   return record;
 };
 
-export const listContactMessages = (): ContactMessage[] => [...messages];
+export const listContactMessages = (
+  options: {
+    page?: number;
+    pageSize?: number;
+    subject?: ContactSubject;
+    search?: string;
+  } = {},
+): PagedResult<ContactMessage> => {
+  let result: ContactMessage[] = messages;
+
+  if (options.subject) {
+    result = result.filter((message) => message.subject === options.subject);
+  }
+
+  const term = options.search?.trim().toLowerCase();
+  if (term) {
+    result = result.filter(
+      (message) =>
+        message.name.toLowerCase().includes(term) ||
+        message.email.toLowerCase().includes(term) ||
+        message.message.toLowerCase().includes(term) ||
+        (message.phone?.toLowerCase().includes(term) ?? false),
+    );
+  }
+
+  return paginate(result, options.page, options.pageSize);
+};
 
 export const getContactMessagesCount = () => messages.length;

@@ -2,13 +2,15 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { formatDistanceToNow } from "date-fns";
-import { Star, ThumbsUp, MessageCircle, Filter } from "lucide-react";
+import { Star, ThumbsUp, MessageCircle, Filter, Send } from "lucide-react";
+import { toast } from "sonner";
 import { Spinner } from "@/components/ui/spinner";
+import { Pagination } from "@/components/ui/pagination";
+import { useCurrentUser } from "@/hooks/use-current-user";
 import {
-  getCategories,
-  getToolReviews,
-  getToolsByCategory,
-  type BackendToolSummary,
+  getAllReviews,
+  createReviewComment,
+  type BackendReview,
 } from "@/lib/backend-api";
 
 interface ReplyItem {
@@ -21,12 +23,12 @@ interface ReplyItem {
 
 interface ReviewCard {
   id: string;
+  reviewId: number;
   author: string;
   role: string;
   date: string;
   createdAt: string;
   rating: number;
-  category: string;
   equipment?: string;
   title: string;
   text: string;
@@ -34,6 +36,9 @@ interface ReviewCard {
   replies: number;
   repliesList: ReplyItem[];
 }
+
+// Reviews are now served page-by-page from GET /api/reviews.
+const PAGE_SIZE = 8;
 
 // The backend has no "helpful vote" endpoint (HelpfulCount is server-computed),
 // so a reader's own "found this helpful" mark is persisted per-browser.
@@ -79,14 +84,58 @@ const toRelativeDate = (isoDate: string) => {
   return formatDistanceToNow(date, { addSuffix: true });
 };
 
+const buildCard = (review: BackendReview): ReviewCard => {
+  const repliesList: ReplyItem[] = [
+    // Staff/company response shown first when present.
+    ...(review.companyResponse
+      ? [
+          {
+            id: `resp-${review.id}`,
+            author: `${review.companyResponse.staffName} · Shelton Tool-Hire`,
+            text: review.companyResponse.responseText,
+            date: toRelativeDate(review.companyResponse.createdDate),
+            isStaff: true,
+          },
+        ]
+      : []),
+    ...review.comments.map((comment) => ({
+      id: `cmt-${comment.id}`,
+      author: comment.commenterName,
+      text: comment.commentText,
+      date: toRelativeDate(comment.createdDate),
+    })),
+  ];
+
+  return {
+    id: String(review.id),
+    reviewId: review.id,
+    author: review.reviewerName,
+    role: "Verified Customer",
+    date: toRelativeDate(review.createdDate),
+    createdAt: review.createdDate,
+    rating: review.overallRating,
+    equipment: review.toolName,
+    title: toReviewTitle(review.reviewText),
+    text: review.reviewText,
+    helpful: review.helpfulCount,
+    replies: repliesList.length,
+    repliesList,
+  };
+};
+
 export default function ReviewsPage() {
   const [reviews, setReviews] = useState<ReviewCard[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState("All Reviews");
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
   const [sortBy, setSortBy] = useState<"recent" | "helpful">("recent");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [helpfulVotes, setHelpfulVotes] = useState<Record<string, boolean>>({});
+  const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({});
+  const [submittingReplyId, setSubmittingReplyId] = useState<string | null>(null);
+  const { user: currentUser, isStaff } = useCurrentUser();
 
   // Load the reader's own "helpful" marks (client-only; no backend vote API).
   useEffect(() => {
@@ -97,6 +146,37 @@ export default function ReviewsPage() {
       // ignore malformed/unavailable storage
     }
   }, []);
+
+  // Server-side pagination + sort: refetch whenever the page or sort changes.
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadReviews = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const data = await getAllReviews({ page, pageSize: PAGE_SIZE, sortBy });
+        if (!isMounted) return;
+        setReviews(data.items.map(buildCard));
+        setTotalPages(data.totalPages);
+        setTotalCount(data.totalCount);
+      } catch (loadError) {
+        if (!isMounted) return;
+        setError(
+          loadError instanceof Error ? loadError.message : "Failed to load reviews.",
+        );
+        setReviews([]);
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    };
+
+    loadReviews();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [page, sortBy]);
 
   const toggleHelpful = (id: string) => {
     setHelpfulVotes((prev) => {
@@ -121,145 +201,59 @@ export default function ReviewsPage() {
     });
   };
 
-  useEffect(() => {
-    let isMounted = true;
+  // Staff (Admin/Moderator) can reply directly from the reviews list. Their
+  // comment is auto-approved server-side, so it appears immediately.
+  const handlePostReply = async (card: ReviewCard) => {
+    const text = (replyDrafts[card.id] ?? "").trim();
+    if (text.length < 10) {
+      toast.error("Reply must be at least 10 characters");
+      return;
+    }
 
-    const loadReviews = async () => {
-      setIsLoading(true);
-      setError(null);
+    setSubmittingReplyId(card.id);
+    try {
+      const created = await createReviewComment(card.reviewId, {
+        commenterName: currentUser?.name ?? "Staff",
+        commentText: text,
+      });
+      const newReply: ReplyItem = {
+        id: `cmt-${created.id}`,
+        author: created.commenterName,
+        text: created.commentText,
+        date: toRelativeDate(created.createdDate),
+        isStaff: true,
+      };
+      setReviews((prev) =>
+        prev.map((r) =>
+          r.id === card.id
+            ? {
+                ...r,
+                repliesList: [...r.repliesList, newReply],
+                replies: r.replies + 1,
+              }
+            : r,
+        ),
+      );
+      setReplyDrafts((prev) => ({ ...prev, [card.id]: "" }));
+      setExpandedIds((prev) => new Set(prev).add(card.id));
+      toast.success("Reply posted");
+    } catch (postError) {
+      toast.error("Could not post reply", {
+        description:
+          postError instanceof Error ? postError.message : "Please try again.",
+      });
+    } finally {
+      setSubmittingReplyId(null);
+    }
+  };
 
-      try {
-        const categories = await getCategories();
+  const handleSortChange = (value: "recent" | "helpful") => {
+    setSortBy(value);
+    setPage(1);
+  };
 
-        const toolPages = await Promise.all(
-          categories.map((category) =>
-            getToolsByCategory(category.id, {
-              page: 1,
-              pageSize: 8,
-              sortBy: "rating_desc",
-            })
-          )
-        );
-
-        const uniqueTools = Array.from(
-          new Map(
-            toolPages
-              .flatMap((page) => page.items)
-              .map((tool) => [tool.id, tool])
-          ).values()
-        ) as BackendToolSummary[];
-
-        const topTools = uniqueTools.slice(0, 12);
-
-        const reviewsByTool = await Promise.all(
-          topTools.map(async (tool) => {
-            const data = await getToolReviews(tool.id, { page: 1, pageSize: 4 });
-            return {
-              tool,
-              reviews: data.reviews.items,
-            };
-          })
-        );
-
-        const cards = reviewsByTool
-          .flatMap(({ tool, reviews: toolReviews }) =>
-            toolReviews.map((review): ReviewCard => {
-              const repliesList: ReplyItem[] = [
-                // Staff/company response shown first when present.
-                ...(review.companyResponse
-                  ? [
-                      {
-                        id: `resp-${review.id}`,
-                        author: `${review.companyResponse.staffName} · Shelton Tool-Hire`,
-                        text: review.companyResponse.responseText,
-                        date: toRelativeDate(review.companyResponse.createdDate),
-                        isStaff: true,
-                      },
-                    ]
-                  : []),
-                ...review.comments.map((comment) => ({
-                  id: `cmt-${comment.id}`,
-                  author: comment.commenterName,
-                  text: comment.commentText,
-                  date: toRelativeDate(comment.createdDate),
-                })),
-              ];
-
-              return {
-                id: `${tool.id}-${review.id}`,
-                author: review.reviewerName,
-                role: "Verified Customer",
-                date: toRelativeDate(review.createdDate),
-                createdAt: review.createdDate,
-                rating: review.overallRating,
-                category: tool.categoryName,
-                equipment: review.toolName,
-                title: toReviewTitle(review.reviewText),
-                text: review.reviewText,
-                helpful: review.helpfulCount,
-                replies: repliesList.length,
-                repliesList,
-              };
-            })
-          )
-          // Backend returns newest-first per tool; after merging across tools
-          // re-sort by date so the 60-item cap keeps the most recent reviews.
-          .sort(
-            (a, b) =>
-              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-          )
-          .slice(0, 60);
-
-        if (!isMounted) return;
-        setReviews(cards);
-      } catch (loadError) {
-        if (!isMounted) return;
-        setError(loadError instanceof Error ? loadError.message : "Failed to load reviews.");
-        setReviews([]);
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    loadReviews();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  const categories = useMemo(
-    () => [
-      "All Reviews",
-      ...Array.from(new Set(reviews.map((review) => review.category))).sort(),
-    ],
-    [reviews]
-  );
-
-  const filteredReviews = useMemo(() => {
-    const matching = reviews.filter((review) =>
-      selectedCategory === "All Reviews"
-        ? true
-        : review.category === selectedCategory
-    );
-
-    const byRecent = (a: ReviewCard, b: ReviewCard) =>
-      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-
-    // Copy first so we never mutate the source `reviews` array in place.
-    return [...matching].sort((a, b) => {
-      if (sortBy === "helpful") {
-        // `helpful` is the backend-computed HelpfulCount; fall back to recency
-        // on ties for a stable order.
-        return b.helpful - a.helpful || byRecent(a, b);
-      }
-      return byRecent(a, b);
-    });
-  }, [reviews, selectedCategory, sortBy]);
-
-  const averageRating = useMemo(() => {
+  // Average across the current page (the API has no site-wide aggregate).
+  const pageAverageRating = useMemo(() => {
     if (reviews.length === 0) return 0;
     return reviews.reduce((acc, review) => acc + review.rating, 0) / reviews.length;
   }, [reviews]);
@@ -284,17 +278,17 @@ export default function ReviewsPage() {
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-3xl font-semibold tracking-tight text-slate-900">
-                  {averageRating.toFixed(1)}
+                  {pageAverageRating.toFixed(1)}
                 </span>
                 <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
               </div>
               <p className="mt-1 text-xs font-medium uppercase tracking-wider text-slate-500">
-                Average rating
+                Average (this page)
               </p>
             </div>
             <div>
               <span className="text-3xl font-semibold tracking-tight text-slate-900">
-                {reviews.length}
+                {totalCount}
               </span>
               <p className="mt-1 text-xs font-medium uppercase tracking-wider text-slate-500">
                 Total reviews
@@ -303,7 +297,7 @@ export default function ReviewsPage() {
             </div>
             <div>
               <span className="text-3xl font-semibold tracking-tight text-slate-900">
-                {reviews.length > 0 ? "100%" : "0%"}
+                {totalCount > 0 ? "100%" : "0%"}
               </span>
               <p className="mt-1 text-xs font-medium uppercase tracking-wider text-slate-500">
                 Verified content
@@ -323,26 +317,16 @@ export default function ReviewsPage() {
         </div>
 
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 mb-4">
-          <div className="flex flex-wrap gap-1">
-            {categories.map((category) => (
-              <button
-                key={category}
-                onClick={() => setSelectedCategory(category)}
-                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                  selectedCategory === category
-                    ? "bg-slate-900 text-white"
-                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-                }`}
-              >
-                {category}
-              </button>
-            ))}
-          </div>
+          <p className="text-sm text-slate-600">
+            Showing approved reviews across all equipment.
+          </p>
           <div className="flex items-center gap-2">
             <Filter className="w-4 h-4 text-slate-500" />
             <select
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as "recent" | "helpful")}
+              onChange={(e) =>
+                handleSortChange(e.target.value as "recent" | "helpful")
+              }
               className="bg-white border border-slate-200 rounded-md px-3 py-1.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent"
             >
               <option value="recent">Most recent</option>
@@ -363,7 +347,7 @@ export default function ReviewsPage() {
           </div>
         ) : (
           <div className="space-y-3">
-            {filteredReviews.map((review) => (
+            {reviews.map((review) => (
               <div
                 key={review.id}
                 className="bg-white border border-slate-200 rounded-md p-5"
@@ -384,22 +368,17 @@ export default function ReviewsPage() {
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <div className="flex items-center gap-0.5">
-                      {[...Array(5)].map((_, i) => (
-                        <Star
-                          key={i}
-                          className={`w-3.5 h-3.5 ${
-                            i < Math.round(review.rating)
-                              ? "text-amber-400 fill-amber-400"
-                              : "text-slate-300"
-                          }`}
-                        />
-                      ))}
-                    </div>
-                    <span className="text-xs text-slate-700 border border-slate-200 px-2 py-0.5 rounded-md">
-                      {review.category}
-                    </span>
+                  <div className="flex items-center gap-0.5">
+                    {[...Array(5)].map((_, i) => (
+                      <Star
+                        key={i}
+                        className={`w-3.5 h-3.5 ${
+                          i < Math.round(review.rating)
+                            ? "text-amber-400 fill-amber-400"
+                            : "text-slate-300"
+                        }`}
+                      />
+                    ))}
                   </div>
                 </div>
 
@@ -440,11 +419,13 @@ export default function ReviewsPage() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => review.replies > 0 && toggleReplies(review.id)}
+                    onClick={() =>
+                      (review.replies > 0 || isStaff) && toggleReplies(review.id)
+                    }
                     aria-expanded={expandedIds.has(review.id)}
-                    disabled={review.replies === 0}
+                    disabled={review.replies === 0 && !isStaff}
                     className={`flex items-center gap-1.5 transition-colors ${
-                      review.replies === 0
+                      review.replies === 0 && !isStaff
                         ? "cursor-not-allowed text-slate-300"
                         : expandedIds.has(review.id)
                           ? "text-accent"
@@ -456,45 +437,93 @@ export default function ReviewsPage() {
                   </button>
                 </div>
 
-                {expandedIds.has(review.id) && review.repliesList.length > 0 && (
-                  <div className="mt-3 space-y-2">
-                    {review.repliesList.map((reply) => (
-                      <div
-                        key={reply.id}
-                        className={`rounded-md p-3 ${
-                          reply.isStaff
-                            ? "border border-amber-100 bg-amber-50"
-                            : "border border-slate-100 bg-slate-50"
-                        }`}
-                      >
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="flex items-center gap-1.5 text-xs font-semibold text-slate-900">
-                            {reply.author}
-                            {reply.isStaff && (
-                              <span className="rounded border border-amber-200 bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-amber-700">
-                                Staff
-                              </span>
-                            )}
-                          </span>
-                          <span className="shrink-0 text-xs text-slate-400">
-                            {reply.date}
-                          </span>
+                {expandedIds.has(review.id) &&
+                  (review.repliesList.length > 0 || isStaff) && (
+                    <div className="mt-3 space-y-2">
+                      {review.repliesList.map((reply) => (
+                        <div
+                          key={reply.id}
+                          className={`rounded-md p-3 ${
+                            reply.isStaff
+                              ? "border border-amber-100 bg-amber-50"
+                              : "border border-slate-100 bg-slate-50"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="flex items-center gap-1.5 text-xs font-semibold text-slate-900">
+                              {reply.author}
+                              {reply.isStaff && (
+                                <span className="rounded border border-amber-200 bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-amber-700">
+                                  Staff
+                                </span>
+                              )}
+                            </span>
+                            <span className="shrink-0 text-xs text-slate-400">
+                              {reply.date}
+                            </span>
+                          </div>
+                          <p className="mt-1 whitespace-pre-line text-sm text-slate-700">
+                            {reply.text}
+                          </p>
                         </div>
-                        <p className="mt-1 whitespace-pre-line text-sm text-slate-700">
-                          {reply.text}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                      ))}
+
+                      {/* Staff reply box — comment is auto-approved server-side. */}
+                      {isStaff && (
+                        <div className="rounded-md border border-slate-200 bg-white p-3">
+                          <label
+                            htmlFor={`reply-${review.id}`}
+                            className="mb-1.5 block text-xs font-medium text-slate-600"
+                          >
+                            Reply as staff
+                          </label>
+                          <textarea
+                            id={`reply-${review.id}`}
+                            rows={2}
+                            value={replyDrafts[review.id] ?? ""}
+                            onChange={(e) =>
+                              setReplyDrafts((prev) => ({
+                                ...prev,
+                                [review.id]: e.target.value,
+                              }))
+                            }
+                            placeholder="Write a reply (at least 10 characters)…"
+                            className="w-full resize-none rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent"
+                          />
+                          <div className="mt-2 flex justify-end">
+                            <button
+                              type="button"
+                              onClick={() => handlePostReply(review)}
+                              disabled={submittingReplyId === review.id}
+                              className="inline-flex items-center gap-1.5 rounded-md bg-slate-900 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                              <Send className="h-3.5 w-3.5" />
+                              {submittingReplyId === review.id
+                                ? "Posting…"
+                                : "Post reply"}
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
               </div>
             ))}
 
-            {!error && filteredReviews.length === 0 && (
+            {!error && reviews.length === 0 && (
               <div className="text-center py-12 text-sm text-slate-500 rounded-md border border-dashed border-slate-300 bg-white">
-                No reviews found for this filter.
+                No reviews yet.
               </div>
             )}
+
+            <Pagination
+              page={page}
+              totalPages={totalPages}
+              totalCount={totalCount}
+              onPageChange={setPage}
+              isLoading={isLoading}
+              className="mt-6"
+            />
           </div>
         )}
       </div>
