@@ -91,3 +91,15 @@ export const getMyReviews = (
     `/users/me/reviews${qs}`
   );
 };
+
+/** GET /api/reviews  (all approved reviews across tools, paged) */
+export const getAllReviews = (
+  options: { page?: number; pageSize?: number; sortBy?: string } = {}
+): Promise<BackendPagedList<BackendReview>> => {
+  const qs = buildQuery({
+    page: options.page ?? 1,
+    pageSize: options.pageSize ?? 10,
+    sortBy: options.sortBy,
+  });
+  return backendFetch<BackendPagedList<BackendReview>>(`/reviews${qs}`);
+};

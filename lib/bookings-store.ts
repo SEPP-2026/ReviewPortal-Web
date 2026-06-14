@@ -6,6 +6,8 @@
 // them. This module keeps records in process memory and survives Next.js HMR
 // via globalThis. Production-grade persistence would require a backend table.
 
+import { paginate, type PagedResult } from "@/lib/pagination";
+
 export type BookingStatus = "Pending" | "Confirmed" | "Declined" | "Completed";
 
 export type RentalPeriod = "hourly" | "daily" | "weekly";
@@ -67,9 +69,13 @@ export const addBooking = (input: BookingCreateInput): BookingRecord => {
 export interface ListBookingsFilter {
   status?: BookingStatus;
   userId?: number;
+  page?: number;
+  pageSize?: number;
 }
 
-export const listBookings = (filter: ListBookingsFilter = {}): BookingRecord[] => {
+export const listBookings = (
+  filter: ListBookingsFilter = {},
+): PagedResult<BookingRecord> => {
   let result = [...bookings];
   if (filter.status) {
     result = result.filter((b) => b.status === filter.status);
@@ -77,7 +83,7 @@ export const listBookings = (filter: ListBookingsFilter = {}): BookingRecord[] =
   if (filter.userId !== undefined) {
     result = result.filter((b) => b.userId === filter.userId);
   }
-  return result;
+  return paginate(result, filter.page, filter.pageSize);
 };
 
 export const getBooking = (id: string): BookingRecord | undefined =>

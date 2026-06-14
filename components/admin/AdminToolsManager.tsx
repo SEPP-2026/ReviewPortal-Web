@@ -74,6 +74,8 @@ export function AdminToolsManager() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"" | "active" | "inactive">("");
   const [categoryFilter, setCategoryFilter] = useState<number | "">("");
+  const [page, setPage] = useState(1);
+  const [pageMeta, setPageMeta] = useState({ totalPages: 1, totalCount: 0 });
 
   const [formMode, setFormMode] = useState<FormMode>({ kind: "closed" });
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -125,13 +127,14 @@ export function AdminToolsManager() {
     setErrorMessage(null);
     try {
       const data = await getAdminTools({
-        page: 1,
-        pageSize: 50,
+        page,
+        pageSize: 10,
         searchTerm: search || undefined,
         categoryId: categoryFilter === "" ? undefined : categoryFilter,
         status: statusFilter || undefined,
       });
       setTools(data.items);
+      setPageMeta({ totalPages: data.totalPages, totalCount: data.totalCount });
     } catch (error) {
       setErrorMessage(
         error instanceof Error ? error.message : "Failed to load tools.",
@@ -139,6 +142,11 @@ export function AdminToolsManager() {
     } finally {
       setIsLoading(false);
     }
+  }, [search, statusFilter, categoryFilter, page]);
+
+  // Reset to the first page whenever a filter narrows the result set.
+  useEffect(() => {
+    setPage(1);
   }, [search, statusFilter, categoryFilter]);
 
   useEffect(() => {
@@ -488,6 +496,17 @@ export function AdminToolsManager() {
           </div>
         )}
       </div>
+
+      {!isLoading && (
+        <Pagination
+          page={page}
+          totalPages={pageMeta.totalPages}
+          totalCount={pageMeta.totalCount}
+          onPageChange={setPage}
+          isLoading={isLoading}
+          className="mt-4"
+        />
+      )}
 
       {formMode.kind !== "closed" && (
         <div className="fixed inset-0 z-50 flex items-start justify-center bg-slate-900/60 p-4 overflow-y-auto">

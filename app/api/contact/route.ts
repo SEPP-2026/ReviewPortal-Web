@@ -76,7 +76,7 @@ export const POST = async (request: NextRequest) => {
   );
 };
 
-export const GET = async () => {
+export const GET = async (request: NextRequest) => {
   const user = await getSessionUser();
   if (!user) {
     return NextResponse.json({ message: "Not authenticated" }, { status: 401 });
@@ -85,5 +85,9 @@ export const GET = async () => {
     return NextResponse.json({ message: "Forbidden" }, { status: 403 });
   }
 
-  return NextResponse.json({ items: listContactMessages() });
+  const { searchParams } = new URL(request.url);
+  const page = Number(searchParams.get("page")) || 1;
+  const pageSize = Number(searchParams.get("pageSize")) || 10;
+
+  return NextResponse.json(listContactMessages({ page, pageSize }));
 };

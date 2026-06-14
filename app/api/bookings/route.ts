@@ -112,7 +112,10 @@ export const GET = async (request: NextRequest) => {
       ? (statusParam as BookingStatus)
       : undefined;
 
-  return NextResponse.json({
-    items: listBookings({ status: filterStatus }),
-  });
+  const page = Number(request.nextUrl.searchParams.get("page")) || 1;
+  const pageSize = Number(request.nextUrl.searchParams.get("pageSize")) || 10;
+
+  return NextResponse.json(
+    listBookings({ status: filterStatus, page, pageSize }),
+  );
 };
