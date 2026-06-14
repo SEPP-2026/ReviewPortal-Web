@@ -105,3 +105,17 @@ export const updateBookingStatus = (
 };
 
 export const getBookingsCount = () => bookings.length;
+
+/** Counts per status across ALL bookings (for accurate summary cards under pagination). */
+export const getBookingStatusCounts = (): Record<BookingStatus, number> => {
+  const counts: Record<BookingStatus, number> = {
+    Pending: 0,
+    Confirmed: 0,
+    Declined: 0,
+    Completed: 0,
+  };
+  for (const booking of bookings) {
+    counts[booking.status] += 1;
+  }
+  return counts;
+};

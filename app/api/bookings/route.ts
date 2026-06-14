@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import {
   addBooking,
   listBookings,
+  getBookingStatusCounts,
   type BookingStatus,
   type RentalPeriod,
 } from "@/lib/bookings-store";
@@ -115,7 +116,8 @@ export const GET = async (request: NextRequest) => {
   const page = Number(request.nextUrl.searchParams.get("page")) || 1;
   const pageSize = Number(request.nextUrl.searchParams.get("pageSize")) || 10;
 
-  return NextResponse.json(
-    listBookings({ status: filterStatus, page, pageSize }),
-  );
+  return NextResponse.json({
+    ...listBookings({ status: filterStatus, page, pageSize }),
+    statusCounts: getBookingStatusCounts(),
+  });
 };

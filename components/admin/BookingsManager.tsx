@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import {
   AlertCircle,
@@ -18,6 +18,7 @@ import {
 import { toast } from "sonner";
 
 import { Spinner } from "@/components/ui/spinner";
+import { Pagination } from "@/components/ui/pagination";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import type { BookingRecord, BookingStatus } from "@/lib/bookings-store";
@@ -63,7 +64,18 @@ const formatDate = (iso: string) =>
 
 interface ApiBookingsResponse {
   items: BookingRecord[];
+  page: number;
+  totalPages: number;
+  totalCount: number;
+  statusCounts: Record<BookingStatus, number>;
 }
+
+const EMPTY_STATUS_COUNTS: Record<BookingStatus, number> = {
+  Pending: 0,
+  Confirmed: 0,
+  Declined: 0,
+  Completed: 0,
+};
 
 interface BusyState {
   id: string;
@@ -76,13 +88,20 @@ export function BookingsManager() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<"" | BookingStatus>("");
   const [busy, setBusy] = useState<BusyState | null>(null);
+  const [page, setPage] = useState(1);
+  const [pageMeta, setPageMeta] = useState({ totalPages: 1, totalCount: 0 });
+  const [counts, setCounts] =
+    useState<Record<BookingStatus, number>>(EMPTY_STATUS_COUNTS);
 
   const load = useCallback(async () => {
     setIsLoading(true);
     setErrorMessage(null);
     try {
-      const search = statusFilter ? `?status=${statusFilter}` : "";
-      const response = await fetch(`/api/bookings${search}`);
+      const params = new URLSearchParams();
+      if (statusFilter) params.set("status", statusFilter);
+      params.set("page", String(page));
+      params.set("pageSize", "10");
+      const response = await fetch(`/api/bookings?${params.toString()}`);
       if (!response.ok) {
         if (response.status === 401 || response.status === 403) {
           throw new Error("You don't have access to view bookings.");
@@ -91,6 +110,8 @@ export function BookingsManager() {
       }
       const data = (await response.json()) as ApiBookingsResponse;
       setBookings(data.items);
+      setPageMeta({ totalPages: data.totalPages, totalCount: data.totalCount });
+      setCounts(data.statusCounts ?? EMPTY_STATUS_COUNTS);
     } catch (error) {
       setErrorMessage(
         error instanceof Error ? error.message : "Failed to load bookings.",
@@ -98,24 +119,16 @@ export function BookingsManager() {
     } finally {
       setIsLoading(false);
     }
-  }, [statusFilter]);
+  }, [statusFilter, page]);
 
   useEffect(() => {
     load();
   }, [load]);
 
-  const counts = useMemo(() => {
-    const initial: Record<BookingStatus, number> = {
-      Pending: 0,
-      Confirmed: 0,
-      Declined: 0,
-      Completed: 0,
-    };
-    return bookings.reduce((acc, booking) => {
-      acc[booking.status] += 1;
-      return acc;
-    }, initial);
-  }, [bookings]);
+  // Reset to page 1 when the status filter changes.
+  useEffect(() => {
+    setPage(1);
+  }, [statusFilter]);
 
   const handleStatusChange = async (
     booking: BookingRecord,
@@ -382,6 +395,14 @@ export function BookingsManager() {
           ))}
         </div>
       )}
+
+      <Pagination
+        page={page}
+        totalPages={pageMeta.totalPages}
+        totalCount={pageMeta.totalCount}
+        onPageChange={setPage}
+        isLoading={isLoading}
+      />
     </div>
   );
 }

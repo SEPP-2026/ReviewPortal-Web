@@ -88,6 +88,14 @@ export const GET = async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const page = Number(searchParams.get("page")) || 1;
   const pageSize = Number(searchParams.get("pageSize")) || 10;
+  const subjectParam = searchParams.get("subject");
+  const subject =
+    subjectParam && ALLOWED_SUBJECTS.has(subjectParam as ContactSubject)
+      ? (subjectParam as ContactSubject)
+      : undefined;
+  const search = searchParams.get("search") || undefined;
 
-  return NextResponse.json(listContactMessages({ page, pageSize }));
+  return NextResponse.json(
+    listContactMessages({ page, pageSize, subject, search }),
+  );
 };
